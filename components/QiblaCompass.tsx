@@ -1,18 +1,21 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { View, Text, StyleSheet, Platform } from "react-native";
+import { useEffect, useState, useRef } from "react";
+import { View, Text, StyleSheet, Platform, Animated } from "react-native";
 import * as Location from "expo-location";
 
 interface QiblaCompassProps {
   /** Bearing vers la Mecque en degrés (0-360, nord = 0) */
   bearing: number;
   size?: number;
+  /** Masquer le label "Qibla" (ex: dans la bottom bar) */
+  hideLabel?: boolean;
 }
 
-export default function QiblaCompass({ bearing, size = 64 }: QiblaCompassProps) {
+export default function QiblaCompass({ bearing, size = 64, hideLabel }: QiblaCompassProps) {
   const [heading, setHeading] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const needleAnim = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
     if (Platform.OS === "web") {
@@ -40,8 +43,16 @@ export default function QiblaCompass({ bearing, size = 64 }: QiblaCompassProps) 
     };
   }, []);
 
-  // Angle de l'aiguille : quand le téléphone pointe vers la Mecque, l'aiguille doit être en haut (0°)
+  // Angle de l'aiguille : pointe vers le haut quand le téléphone est dirigé vers la Mecque
   const needleAngle = heading !== null ? (bearing - heading + 360) % 360 : 0;
+
+  useEffect(() => {
+    Animated.timing(needleAnim, {
+      toValue: needleAngle,
+      duration: 120,
+      useNativeDriver: true,
+    }).start();
+  }, [needleAngle, needleAnim]);
 
   if (error) {
     return (
@@ -53,11 +64,10 @@ export default function QiblaCompass({ bearing, size = 64 }: QiblaCompassProps) 
 
   const needleLength = size / 2 - 8;
   return (
-    <View style={[styles.wrapper, { width: size, height: size + 18 }]}>
+    <View style={[styles.wrapper, { width: size, height: hideLabel ? size : size + 18 }]}>
       <View style={[styles.circle, { width: size, height: size, borderRadius: size / 2 }]}>
         <View style={[styles.northDot, { top: 4 }]} />
-        {/* Aiguille : du centre vers la Qibla (pointe vers le haut quand téléphone dirigé vers La Mecque) */}
-        <View
+        <Animated.View
           style={[
             styles.needle,
             {
@@ -65,12 +75,19 @@ export default function QiblaCompass({ bearing, size = 64 }: QiblaCompassProps) 
               height: needleLength,
               marginLeft: -2,
               marginTop: -needleLength,
-              transform: [{ rotate: `${needleAngle}deg` }],
+              transform: [
+                {
+                  rotate: needleAnim.interpolate({
+                    inputRange: [0, 360],
+                    outputRange: ["0deg", "360deg"],
+                  }),
+                },
+              ],
             },
           ]}
         />
       </View>
-      <Text style={styles.label}>Qibla</Text>
+      {!hideLabel && <Text style={styles.label}>Qibla</Text>}
     </View>
   );
 }

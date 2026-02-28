@@ -10,7 +10,7 @@ import {
   View,
 } from "react-native";
 import Feather from "@expo/vector-icons/Feather";
-import { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { router, useLocalSearchParams } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { toHijri } from "hijri-converter";
@@ -50,12 +50,39 @@ function useTodayDates() {
 }
 
 const homeBackground = require("@/assets/images/home-background.png");
+const mosqueImage = require("../../../mosquée.png");
+
+const MosqueImage = React.memo(function MosqueImage() {
+  return (
+    <View style={styles.mosqueWrap}>
+      <Image
+        source={mosqueImage}
+        style={styles.mosqueImage}
+        resizeMode="contain"
+      />
+    </View>
+  );
+});
+
+const HeaderAvatarBell = React.memo(function HeaderAvatarBell({
+  avatarUri,
+}: {
+  avatarUri: string | undefined;
+}) {
+  return (
+    <View className="flex flex-row items-center gap-4 mt-2">
+      <Image
+        source={{ uri: avatarUri }}
+        className="size-14 rounded-full"
+      />
+      <Image source={icons.bell} className="size-8" />
+    </View>
+  );
+});
 
 import Filters from "@/components/Filters";
 import NoResults from "@/components/NoResults";
 import { Card, FeaturedCard } from "@/components/Cards";
-import QiblaCompass from "@/components/QiblaCompass";
-
 import { useAppwrite } from "@/lib/useAppwrite";
 import { useGlobalContext } from "@/lib/global-provider";
 import { getLatestProperties, getProperties } from "@/lib/appwrite";
@@ -67,12 +94,11 @@ import {
 } from "@/lib/usePrayerTimes";
 import { usePrayersChecked } from "@/lib/usePrayersChecked";
 import {
-  getQiblaBearing,
   getNextPrayerInfo,
   getCurrentPrayer,
   getNextPrayerTimestamp,
   formatCountdown,
-  formatCountdownHMS,
+  formatCountdownHM,
 } from "@/lib/prayerUtils";
 import type { PrayerTimes } from "@/lib/usePrayerTimes";
 
@@ -87,10 +113,9 @@ type HomeListHeaderProps = {
   currentPrayer: { label: string } | null;
   nextPrayer: { label: string; inMinutes: number } | null;
   remainingCount: number;
-  qiblaBearing: number | null;
   prayerCoords: { latitude: number; longitude: number } | null;
   showNextPrayerCountdown: boolean;
-  nextPrayerCountdownHMS: string | null;
+  nextPrayerCountdownHM: string | null;
   onTogglePrayerDisplay: () => void;
   nextPrayerTimeStr: string | null;
   isPrayerChecked: (key: PrayerKey) => boolean;
@@ -111,10 +136,9 @@ function HomeListHeader({
   currentPrayer,
   nextPrayer,
   remainingCount,
-  qiblaBearing,
   prayerCoords,
   showNextPrayerCountdown,
-  nextPrayerCountdownHMS,
+  nextPrayerCountdownHM,
   onTogglePrayerDisplay,
   nextPrayerTimeStr,
   isPrayerChecked,
@@ -154,7 +178,7 @@ function HomeListHeader({
                     {nextPrayer.label}
                   </Text>
                   <Text className="text-xs font-rubik text-black-200 mt-0.5">
-                    {nextPrayerCountdownHMS ?? "—"}
+                    {nextPrayerCountdownHM ?? "—"}
                   </Text>
                 </>
               ) : (
@@ -171,13 +195,7 @@ function HomeListHeader({
               )}
             </TouchableOpacity>
           )}
-          <View className="flex flex-row items-center gap-4 mt-2">
-            <Image
-              source={{ uri: user?.avatar }}
-              className="size-14 rounded-full"
-            />
-            <Image source={icons.bell} className="size-8" />
-          </View>
+          <HeaderAvatarBell avatarUri={user?.avatar} />
         </View>
       </View>
 
@@ -212,6 +230,8 @@ function HomeListHeader({
           );
         })}
       </View>
+
+      <MosqueImage />
 
       <View className="mt-5 mb-1">
         <Text className="text-2xl font-rubik-bold text-black-300 mb-3">
@@ -308,9 +328,9 @@ function HomeListHeader({
                       </Text>
                     </View>
                   </View>
-                  {nextPrayerCountdownHMS != null && (
+                  {nextPrayerCountdownHM != null && (
                     <Text style={styles.prayerNextCountdown}>
-                      {nextPrayerCountdownHMS}
+                      {nextPrayerCountdownHM}
                     </Text>
                   )}
                 </View>
@@ -328,11 +348,6 @@ function HomeListHeader({
         </View>
 
         <View style={styles.prayerFooter}>
-          {qiblaBearing !== null && (
-            <View style={styles.prayerFooterItem}>
-              <QiblaCompass bearing={qiblaBearing} size={56} />
-            </View>
-          )}
           <View style={styles.prayerFooterItem}>
             <Text className="text-sm font-rubik text-black-200">
               {remainingCount} prière{remainingCount !== 1 ? "s" : ""} restante{remainingCount !== 1 ? "s" : ""} à faire
@@ -409,18 +424,17 @@ const Home = () => {
   const currentPrayer = prayerTimes ? getCurrentPrayer(prayerTimes) : null;
   const SALAT_KEYS: PrayerKey[] = ["Fajr", "Dhuhr", "Asr", "Maghrib", "Isha"];
   const remainingCount = 5 - SALAT_KEYS.filter((k) => isPrayerChecked(k)).length;
-  const qiblaBearing = prayerCoords ? getQiblaBearing(prayerCoords.latitude, prayerCoords.longitude) : null;
 
   const nextPrayerTimestamp = prayerTimes ? getNextPrayerTimestamp(prayerTimes) : null;
-  const nextPrayerCountdownHMS = useMemo(() => {
+  const nextPrayerCountdownHM = useMemo(() => {
     if (nextPrayerTimestamp == null) return null;
     const remainingSeconds = Math.max(0, Math.floor((nextPrayerTimestamp - countdownNow) / 1000));
-    return formatCountdownHMS(remainingSeconds);
+    return formatCountdownHM(remainingSeconds);
   }, [nextPrayerTimestamp, countdownNow]);
 
   useEffect(() => {
     if (!prayerTimes || !nextPrayer) return;
-    const id = setInterval(() => setCountdownNow(Date.now()), 1000);
+    const id = setInterval(() => setCountdownNow(Date.now()), 60000);
     return () => clearInterval(id);
   }, [prayerTimes, nextPrayer]);
 
@@ -467,9 +481,8 @@ const Home = () => {
       currentPrayer={currentPrayer}
       nextPrayer={nextPrayer}
       remainingCount={remainingCount}
-      qiblaBearing={qiblaBearing}
       showNextPrayerCountdown={showNextPrayerCountdown}
-      nextPrayerCountdownHMS={nextPrayerCountdownHMS}
+      nextPrayerCountdownHM={nextPrayerCountdownHM}
       onTogglePrayerDisplay={() => setShowNextPrayerCountdown((v) => !v)}
       nextPrayerTimeStr={nextPrayer && prayerTimes ? prayerTimes[nextPrayer.name as PrayerKey] : null}
       isPrayerChecked={isPrayerChecked}
@@ -489,7 +502,7 @@ const Home = () => {
       <SafeAreaView className="h-full bg-transparent">
         <FlatList
         data={properties ?? []}
-        extraData={{ showNextPrayerCountdown, nextPrayerCountdownHMS }}
+        extraData={{ showNextPrayerCountdown, nextPrayerCountdownHM }}
         numColumns={2}
         renderItem={({ item }) => (
           <Card item={item} onPress={() => handleCardPress(item.$id)} />
@@ -527,6 +540,15 @@ const styles = StyleSheet.create({
     height: 36,
     borderRadius: 12,
     marginTop: 6,
+  },
+  mosqueWrap: {
+    alignItems: "center",
+    marginTop: 16,
+    marginBottom: 8,
+  },
+  mosqueImage: {
+    width: 200,
+    height: 156,
   },
   prayerCard: {
     backgroundColor: "transparent",

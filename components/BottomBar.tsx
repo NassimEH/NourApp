@@ -13,6 +13,7 @@ import type { BottomTabBarProps } from "@react-navigation/bottom-tabs";
 
 const TAB_ROUTES = [
   { name: "index" as const, label: "Home", icon: "home" as const },
+  { name: "qibla" as const, label: "Qibla", icon: "navigation" as const },
   { name: "explore" as const, label: "Explore", icon: "search" as const },
   { name: "profile" as const, label: "Profile", icon: "user" as const },
 ];
@@ -53,7 +54,7 @@ export default function BottomBar({
   );
 }
 
-type FeatherIconName = "home" | "search" | "user";
+type FeatherIconName = "home" | "navigation" | "search" | "user";
 
 interface BottomBarItemProps {
   icon: FeatherIconName;
@@ -134,7 +135,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     paddingVertical: 6,
     paddingHorizontal: 6,
-    width: 300,
+    width: 360,
     alignItems: "center",
     justifyContent: "space-between",
     borderRadius: 999,

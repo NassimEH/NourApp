@@ -154,3 +154,12 @@ export function formatCountdownHMS(totalSeconds: number): string {
   const pad = (n: number) => n.toString().padStart(2, "0");
   return `${pad(h)}:${pad(m)}:${pad(s)}`;
 }
+
+/** Formate un nombre de secondes en HH:MM (heures et minutes uniquement) */
+export function formatCountdownHM(totalSeconds: number): string {
+  if (totalSeconds <= 0) return "0h 00";
+  const h = Math.floor(totalSeconds / 3600);
+  const m = Math.floor((totalSeconds % 3600) / 60);
+  const pad = (n: number) => n.toString().padStart(2, "0");
+  return h > 0 ? `${h}h ${pad(m)}` : `${pad(m)} min`;
+}
