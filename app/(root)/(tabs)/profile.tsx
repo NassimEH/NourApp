@@ -2,12 +2,12 @@ import {
   Alert,
   Image,
   ImageSourcePropType,
-  SafeAreaView,
   ScrollView,
   Text,
   TouchableOpacity,
   View,
 } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 import { logout } from "@/lib/appwrite";
 import { useGlobalContext } from "@/lib/global-provider";
@@ -59,7 +59,7 @@ const Profile = () => {
   };
 
   return (
-    <SafeAreaView className="h-full bg-white">
+    <SafeAreaView className="h-full bg-transparent">
       <ScrollView
         showsVerticalScrollIndicator={false}
         contentContainerClassName="pb-32 px-7"

@@ -2,11 +2,11 @@ import {
   ActivityIndicator,
   FlatList,
   Image,
-  SafeAreaView,
   Text,
   TouchableOpacity,
   View,
 } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { useEffect } from "react";
 import { router, useLocalSearchParams } from "expo-router";
 
@@ -45,7 +45,7 @@ const Explore = () => {
   const handleCardPress = (id: string) => router.push(`/properties/${id}`);
 
   return (
-    <SafeAreaView className="h-full bg-white">
+    <SafeAreaView className="h-full bg-transparent">
       <FlatList
         data={properties}
         numColumns={2}

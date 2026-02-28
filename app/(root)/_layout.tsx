@@ -5,17 +5,17 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useGlobalContext } from "@/lib/global-provider";
 
 export default function AppLayout() {
-  const { loading, isLogged } = useGlobalContext();
+  const { loading, isLogged, isGuest } = useGlobalContext();
 
   if (loading) {
     return (
-      <SafeAreaView className="bg-white h-full flex justify-center items-center">
+      <SafeAreaView className="bg-transparent h-full flex justify-center items-center">
         <ActivityIndicator className="text-primary-300" size="large" />
       </SafeAreaView>
     );
   }
 
-  if (!isLogged) {
+  if (!isLogged && !isGuest) {
     return <Redirect href="/sign-in" />;
   }
 

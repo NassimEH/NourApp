@@ -5,12 +5,12 @@ module.exports = {
   theme: {
     extend: {
       fontFamily: {
-        rubik: ["Rubik-Regular", "sans-serif"],
-        "rubik-bold": ["Rubik-Bold", "sans-serif"],
-        "rubik-extrabold": ["Rubik-ExtraBold", "sans-serif"],
-        "rubik-medium": ["Rubik-Medium", "sans-serif"],
-        "rubik-semibold": ["Rubik-SemiBold", "sans-serif"],
-        "rubik-light": ["Rubik-Light", "sans-serif"],
+        rubik: ["PlusJakartaSans-Regular", "sans-serif"],
+        "rubik-bold": ["PlusJakartaSans-Bold", "sans-serif"],
+        "rubik-extrabold": ["PlusJakartaSans-ExtraBold", "sans-serif"],
+        "rubik-medium": ["PlusJakartaSans-Medium", "sans-serif"],
+        "rubik-semibold": ["PlusJakartaSans-SemiBold", "sans-serif"],
+        "rubik-light": ["PlusJakartaSans-Light", "sans-serif"],
       },
       colors: {
         primary: {

@@ -10,13 +10,13 @@ import {
 } from "react-native";
 
 import { login } from "@/lib/appwrite";
-import { Redirect } from "expo-router";
+import { Redirect, router } from "expo-router";
 import { useGlobalContext } from "@/lib/global-provider";
 import icons from "@/constants/icons";
 import images from "@/constants/images";
 
 const Auth = () => {
-  const { refetch, loading, isLogged } = useGlobalContext();
+  const { refetch, loading, isLogged, enterAsGuest } = useGlobalContext();
 
   if (!loading && isLogged) return <Redirect href="/" />;
 
@@ -30,7 +30,7 @@ const Auth = () => {
   };
 
   return (
-    <SafeAreaView className="bg-white h-full">
+    <SafeAreaView className="bg-transparent h-full">
       <ScrollView
         contentContainerStyle={{
           height: "100%",
@@ -70,6 +70,19 @@ const Auth = () => {
                 Continue with Google
               </Text>
             </View>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            onPress={() => {
+              enterAsGuest();
+              router.replace("/");
+            }}
+            className="mt-6"
+            activeOpacity={0.7}
+          >
+            <Text className="text-center text-base font-rubik text-primary-300 underline">
+              Accéder à l'app sans connexion
+            </Text>
           </TouchableOpacity>
         </View>
       </ScrollView>

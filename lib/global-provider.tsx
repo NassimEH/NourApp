@@ -1,14 +1,15 @@
-import React, { createContext, useContext, ReactNode } from "react";
+import React, { createContext, useContext, ReactNode, useState } from "react";
 
 import { getCurrentUser } from "./appwrite";
 import { useAppwrite } from "./useAppwrite";
-import { Redirect } from "expo-router";
 
 interface GlobalContextType {
   isLogged: boolean;
   user: User | null;
   loading: boolean;
   refetch: () => void;
+  isGuest: boolean;
+  enterAsGuest: () => void;
 }
 
 interface User {
@@ -25,6 +26,7 @@ interface GlobalProviderProps {
 }
 
 export const GlobalProvider = ({ children }: GlobalProviderProps) => {
+  const [isGuest, setIsGuest] = useState(false);
   const {
     data: user,
     loading,
@@ -39,9 +41,11 @@ export const GlobalProvider = ({ children }: GlobalProviderProps) => {
     <GlobalContext.Provider
       value={{
         isLogged,
-        user,
+        user: user ?? null,
         loading,
         refetch,
+        isGuest,
+        enterAsGuest: () => setIsGuest(true),
       }}
     >
       {children}
