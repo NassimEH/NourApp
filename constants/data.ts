@@ -56,15 +56,15 @@ export const featuredCards = [
 ];
 
 export const categories = [
-  { title: "All", category: "All" },
-  { title: "Houses", category: "House" },
-  { title: "Condos", category: "Condos" },
-  { title: "Duplexes", category: "Duplexes" },
-  { title: "Studios", category: "Studios" },
-  { title: "Villas", category: "Villa" },
-  { title: "Apartments", category: "Apartments" },
-  { title: "Townhomes", category: "Townhomes" },
-  { title: "Others", category: "Others" },
+  { title: "Tout", category: "All" },
+  { title: "Coran", category: "Coran" },
+  { title: "Hadith", category: "Hadith" },
+  { title: "Invocations", category: "Invocations" },
+  { title: "Tafsir", category: "Tafsir" },
+  { title: "Fiqh", category: "Fiqh" },
+  { title: "Biographie", category: "Biographie" },
+  { title: "Histoire", category: "Histoire" },
+  { title: "Autres", category: "Others" },
 ];
 
 export const settings = [

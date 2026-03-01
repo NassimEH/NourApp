@@ -15,14 +15,53 @@ import { ITEM_HEIGHT, ITEM_WIDTH } from "@/constants";
 import Spacing from "@/constants/Spacing";
 import images from "@/constants/images";
 
+const READING_CARD_HEIGHT = 200;
+const READING_CARD_WIDTH = 160;
+
+export type ReadingItem = {
+  id: string;
+  title: string;
+  subtitle: string;
+  icon: "book" | "book-open" | "sun" | "moon" | "heart" | "message-circle";
+};
+
+interface ReadingCardProps {
+  item: ReadingItem;
+  onPress?: () => void;
+}
+
+export const ReadingCard = ({ item, onPress }: ReadingCardProps) => {
+  return (
+    <TouchableOpacity
+      onPress={onPress}
+      style={styles.readingCard}
+      activeOpacity={0.85}
+    >
+      <View style={styles.readingCardInner}>
+        <View style={styles.readingCardIconWrap}>
+          <Feather name={item.icon} size={28} color="#3d6b47" />
+        </View>
+        <Text style={styles.readingCardTitle} numberOfLines={2}>
+          {item.title}
+        </Text>
+        <Text style={styles.readingCardSubtitle} numberOfLines={1}>
+          {item.subtitle}
+        </Text>
+      </View>
+    </TouchableOpacity>
+  );
+};
+
 interface Props {
   item: Models.Document & { image?: string | null; name?: string; price?: number | string };
   onPress?: () => void;
+  /** Libellé du bouton d’action (ex: "Lire" pour la section lecture) */
+  actionLabel?: string;
 }
 
 const defaultImage = images.background;
 
-export const FeaturedCard = ({ item, onPress }: Props) => {
+export const FeaturedCard = ({ item, onPress, actionLabel = "Voir le bien" }: Props) => {
   const router = useRouter();
   const imageSource = item.image ? { uri: item.image } : defaultImage;
   const title = item.name ?? "Bien immobilier";
@@ -38,6 +77,7 @@ export const FeaturedCard = ({ item, onPress }: Props) => {
       onPress={handlePress}
       style={[
         styles.card,
+        styles.featuredCardAccent,
         {
           height: ITEM_HEIGHT,
           width: ITEM_WIDTH,
@@ -53,15 +93,15 @@ export const FeaturedCard = ({ item, onPress }: Props) => {
         resizeMode="cover"
       >
         <View style={styles.imageDivider} />
+        <View style={styles.contentOverlay} />
         <View style={styles.content}>
           <View style={styles.topRow}>
-            <Text
-              style={[styles.title, { width: "60%" }]}
-              numberOfLines={2}
-            >
+            <Text style={styles.title} numberOfLines={2}>
               {title}
             </Text>
-            <Text style={styles.price}>{price}</Text>
+            <Text style={styles.price} numberOfLines={2}>
+              {price}
+            </Text>
           </View>
           <View style={styles.bottomRow}>
             <TouchableOpacity
@@ -71,7 +111,7 @@ export const FeaturedCard = ({ item, onPress }: Props) => {
               }}
               style={styles.viewButton}
             >
-              <Text style={styles.viewButtonText}>Voir le bien</Text>
+              <Text style={styles.viewButtonText}>{actionLabel}</Text>
             </TouchableOpacity>
             <TouchableOpacity
               onPress={(e) => e.stopPropagation()}
@@ -91,10 +131,58 @@ export const FeaturedCard = ({ item, onPress }: Props) => {
 };
 
 const styles = StyleSheet.create({
+  readingCard: {
+    width: READING_CARD_WIDTH,
+    height: READING_CARD_HEIGHT,
+    marginRight: 12,
+    borderRadius: 16,
+    overflow: "hidden",
+    backgroundColor: "rgba(61, 107, 71, 0.12)",
+    borderWidth: 1,
+    borderColor: "rgba(61, 107, 71, 0.25)",
+  },
+  readingCardInner: {
+    flex: 1,
+    padding: 16,
+    justifyContent: "space-between",
+  },
+  readingCardIconWrap: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: "rgba(255, 255, 255, 0.9)",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  readingCardTitle: {
+    fontFamily: "PlusJakartaSans-SemiBold",
+    fontSize: 15,
+    color: "#191D31",
+    lineHeight: 20,
+  },
+  readingCardSubtitle: {
+    fontFamily: "PlusJakartaSans-Regular",
+    fontSize: 12,
+    color: "#5b5d5e",
+  },
   card: {
     overflow: "hidden",
     borderWidth: 1,
     borderColor: "rgba(0, 0, 0, 0.07)",
+  },
+  featuredCardAccent: {
+    borderWidth: 1.5,
+    borderColor: "rgba(0, 0, 0, 0.12)",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.12,
+    shadowRadius: 12,
+    elevation: 6,
+  },
+  contentOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: "rgba(255, 255, 255, 0.08)",
+    zIndex: 1,
   },
   imageBg: {
     height: "100%",
@@ -106,29 +194,39 @@ const styles = StyleSheet.create({
     right: 0,
     top: "50%",
     height: 1,
-    backgroundColor: "rgba(255, 255, 255, 0.25)",
+    backgroundColor: "rgba(255, 255, 255, 0.35)",
     zIndex: 0,
   },
   content: {
     padding: Spacing * 3,
     justifyContent: "space-between",
     height: "100%",
-    zIndex: 1,
+    zIndex: 2,
   },
   topRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
+    flexDirection: "column",
     alignItems: "flex-start",
+    gap: 4,
+    flex: 1,
+    minHeight: 0,
   },
   title: {
-    color: Colors.onPrimary,
+    color: "#191D31",
     fontFamily: "PlusJakartaSans-Bold",
-    fontSize: 20,
+    fontSize: 18,
+    textShadowColor: "rgba(255, 255, 255, 0.9)",
+    textShadowOffset: { width: 0, height: 0 },
+    textShadowRadius: 8,
+    width: "100%",
   },
   price: {
-    color: Colors.onPrimary,
-    fontFamily: "PlusJakartaSans-Bold",
-    fontSize: 20,
+    color: "#191D31",
+    fontFamily: "PlusJakartaSans-SemiBold",
+    fontSize: 14,
+    textShadowColor: "rgba(255, 255, 255, 0.9)",
+    textShadowOffset: { width: 0, height: 0 },
+    textShadowRadius: 8,
+    width: "100%",
   },
   bottomRow: {
     flexDirection: "row",
@@ -136,12 +234,14 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   viewButton: {
-    backgroundColor: Colors.background,
+    backgroundColor: "rgba(255, 255, 255, 0.95)",
     paddingVertical: Spacing * 1.5,
     paddingHorizontal: Spacing * 3,
     borderRadius: Spacing * 5,
     alignItems: "center",
     justifyContent: "center",
+    borderWidth: 1,
+    borderColor: "rgba(0, 0, 0, 0.06)",
   },
   viewButtonText: {
     fontFamily: "PlusJakartaSans-SemiBold",
@@ -149,12 +249,14 @@ const styles = StyleSheet.create({
     color: Colors.text,
   },
   bookmarkButton: {
-    backgroundColor: Colors.background,
+    backgroundColor: "rgba(255, 255, 255, 0.95)",
     borderRadius: Spacing * 5,
     width: Spacing * 6,
     height: Spacing * 6,
     justifyContent: "center",
     alignItems: "center",
+    borderWidth: 1,
+    borderColor: "rgba(0, 0, 0, 0.06)",
   },
 });
 

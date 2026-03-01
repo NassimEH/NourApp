@@ -8,6 +8,7 @@ import {
   Query,
   Storage,
 } from "react-native-appwrite";
+import * as FileSystem from "expo-file-system";
 import * as Linking from "expo-linking";
 import { openAuthSessionAsync } from "expo-web-browser";
 
@@ -82,14 +83,26 @@ export async function getCurrentUser() {
   try {
     const result = await account.get();
     if (result.$id) {
-      const userAvatar = avatar.getInitials(result.name);
-
+      let avatarUrl: string;
+      try {
+        const prefs = await account.getPrefs<{ avatar?: string }>();
+        if (prefs?.avatar && typeof prefs.avatar === "string") {
+          avatarUrl = prefs.avatar;
+        } else {
+          const name = result.name ?? result.email ?? "Utilisateur";
+          const initials = name.slice(0, 2).toUpperCase();
+          avatarUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(initials)}&size=128&background=3d6b47&color=fff`;
+        }
+      } catch {
+        const name = result.name ?? result.email ?? "Utilisateur";
+        const initials = name.slice(0, 2).toUpperCase();
+        avatarUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(initials)}&size=128&background=3d6b47&color=fff`;
+      }
       return {
         ...result,
-        avatar: userAvatar.toString(),
+        avatar: avatarUrl,
       };
     }
-
     return null;
   } catch (error) {
     console.log(error);
@@ -97,14 +110,68 @@ export async function getCurrentUser() {
   }
 }
 
+/** Upload une image (URI locale) vers le bucket et retourne l'URL de vue, ou null en cas d'erreur. */
+export async function uploadAvatarPhoto(localUri: string): Promise<string | null> {
+  const bucketId = config.bucketId;
+  if (!bucketId || !config.endpoint) return null;
+  try {
+    const info = await FileSystem.getInfoAsync(localUri, { size: true });
+    const size = info.size ?? 0;
+    const fileId = ID.unique();
+    const file = {
+      name: "avatar.jpg",
+      type: "image/jpeg",
+      size,
+      uri: localUri,
+    };
+    await storage.createFile(
+      bucketId,
+      fileId,
+      file,
+      ['read("any")']
+    );
+    const viewUrl = `${config.endpoint.replace(/\/$/, "")}/storage/buckets/${bucketId}/files/${fileId}/view`;
+    return viewUrl;
+  } catch (error) {
+    console.error("uploadAvatarPhoto", error);
+    return null;
+  }
+}
+
+/** Enregistre l'URL de l'avatar dans les préférences du compte. */
+export async function updateUserAvatar(avatarUrl: string): Promise<boolean> {
+  try {
+    const prefs = await account.getPrefs<Record<string, unknown>>().catch(() => ({}));
+    await account.updatePrefs({ ...prefs, avatar: avatarUrl });
+    return true;
+  } catch (error) {
+    console.error("updateUserAvatar", error);
+    return false;
+  }
+}
+
+/** Change le mot de passe du compte connecté. Nouveau mot de passe + ancien requis (sauf OAuth). */
+export async function updateUserPassword(
+  newPassword: string,
+  oldPassword: string
+): Promise<boolean> {
+  try {
+    await account.updatePassword(newPassword, oldPassword);
+    return true;
+  } catch (error) {
+    console.error("updateUserPassword", error);
+    return false;
+  }
+}
+
 export async function getLatestProperties() {
+  if (!config.databaseId || !config.propertiesCollectionId) return [];
   try {
     const result = await databases.listDocuments(
-      config.databaseId!,
-      config.propertiesCollectionId!,
+      config.databaseId,
+      config.propertiesCollectionId,
       [Query.orderAsc("$createdAt"), Query.limit(5)]
     );
-
     return result.documents;
   } catch (error) {
     console.error(error);
@@ -121,6 +188,7 @@ export async function getProperties({
   query: string;
   limit?: number;
 }) {
+  if (!config.databaseId || !config.propertiesCollectionId) return [];
   try {
     const buildQuery = [Query.orderDesc("$createdAt")];
 
@@ -139,11 +207,10 @@ export async function getProperties({
     if (limit) buildQuery.push(Query.limit(limit));
 
     const result = await databases.listDocuments(
-      config.databaseId!,
-      config.propertiesCollectionId!,
+      config.databaseId,
+      config.propertiesCollectionId,
       buildQuery
     );
-
     return result.documents;
   } catch (error) {
     console.error(error);
@@ -153,10 +220,11 @@ export async function getProperties({
 
 // write function to get property by id
 export async function getPropertyById({ id }: { id: string }) {
+  if (!config.databaseId || !config.propertiesCollectionId) return null;
   try {
     const result = await databases.getDocument(
-      config.databaseId!,
-      config.propertiesCollectionId!,
+      config.databaseId,
+      config.propertiesCollectionId,
       id
     );
     return result;

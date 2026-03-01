@@ -1,8 +1,10 @@
 import React, { useState } from "react";
 import { router, useLocalSearchParams } from "expo-router";
-import { Text, ScrollView, TouchableOpacity } from "react-native";
+import { Text, ScrollView, TouchableOpacity, StyleSheet } from "react-native";
 
 import { categories } from "@/constants/data";
+
+const FILTER_GREEN = "#3d6b47";
 
 const Filters = () => {
   const params = useLocalSearchParams<{ filter?: string }>();
@@ -25,31 +27,67 @@ const Filters = () => {
     <ScrollView
       horizontal
       showsHorizontalScrollIndicator={false}
-      className="mt-3 mb-2"
+      style={styles.scroll}
+      contentContainerStyle={styles.scrollContent}
     >
-      {categories.map((item, index) => (
-        <TouchableOpacity
-          onPress={() => handleCategoryPress(item.category)}
-          key={index}
-          className={`flex flex-col items-start mr-4 px-4 py-2 rounded-full ${
-            selectedCategory === item.category
-              ? "bg-primary-300"
-              : "bg-primary-100 border border-primary-200"
-          }`}
-        >
-          <Text
-            className={`text-sm ${
-              selectedCategory === item.category
-                ? "text-white font-rubik-bold mt-0.5"
-                : "text-black-300 font-rubik"
-            }`}
+      {categories.map((item, index) => {
+        const isSelected = selectedCategory === item.category;
+        return (
+          <TouchableOpacity
+            onPress={() => handleCategoryPress(item.category)}
+            key={index}
+            style={[
+              styles.pill,
+              isSelected ? styles.pillSelected : styles.pillDefault,
+            ]}
           >
-            {item.title}
-          </Text>
-        </TouchableOpacity>
-      ))}
+            <Text
+              style={[
+                styles.pillText,
+                isSelected ? styles.pillTextSelected : styles.pillTextDefault,
+              ]}
+              numberOfLines={1}
+            >
+              {item.title}
+            </Text>
+          </TouchableOpacity>
+        );
+      })}
     </ScrollView>
   );
 };
+
+const styles = StyleSheet.create({
+  scroll: { marginTop: 12, marginBottom: 8 },
+  scrollContent: { paddingRight: 8 },
+  pill: {
+    flexDirection: "column",
+    alignItems: "center",
+    justifyContent: "center",
+    marginRight: 16,
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderRadius: 9999,
+  },
+  pillSelected: {
+    backgroundColor: FILTER_GREEN,
+  },
+  pillDefault: {
+    backgroundColor: "rgba(61, 107, 71, 0.12)",
+    borderWidth: 1,
+    borderColor: "rgba(61, 107, 71, 0.3)",
+  },
+  pillText: {
+    fontSize: 14,
+  },
+  pillTextSelected: {
+    color: "#fff",
+    fontFamily: "PlusJakartaSans-SemiBold",
+  },
+  pillTextDefault: {
+    color: "#191D31",
+    fontFamily: "PlusJakartaSans-Regular",
+  },
+});
 
 export default Filters;

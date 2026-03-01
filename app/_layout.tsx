@@ -6,8 +6,22 @@ import * as SplashScreen from "expo-splash-screen";
 
 import "./global.css";
 import GlobalProvider from "@/lib/global-provider";
+import { TabBarPreferenceProvider } from "@/lib/tab-bar-preference";
+import { AppPreferencesProvider } from "@/lib/app-preferences";
 
 const backgroundImage = require("../assets/images/background.png");
+
+const transparentTheme = {
+  dark: false,
+  colors: {
+    primary: "#3d6b47",
+    background: "transparent",
+    card: "transparent",
+    text: "#191D31",
+    border: "transparent",
+    notification: "#3d6b47",
+  },
+};
 
 export default function RootLayout() {
   const [fontsLoaded] = useFonts({
@@ -37,7 +51,17 @@ export default function RootLayout() {
     >
       <View style={styles.overlay}>
         <GlobalProvider>
-          <Stack screenOptions={{ headerShown: false }} />
+          <TabBarPreferenceProvider>
+            <AppPreferencesProvider>
+            <Stack
+              screenOptions={{
+                headerShown: false,
+                contentStyle: { backgroundColor: "transparent" },
+              }}
+              theme={transparentTheme}
+            />
+            </AppPreferencesProvider>
+          </TabBarPreferenceProvider>
         </GlobalProvider>
       </View>
     </ImageBackground>

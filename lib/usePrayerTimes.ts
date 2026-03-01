@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import * as Location from "expo-location";
 
 const ALADHAN_BY_ADDRESS = "https://api.aladhan.com/v1/timingsByAddress";
@@ -73,6 +73,7 @@ async function fetchTimingsByAddress(address: string): Promise<PrayerTimes | nul
 }
 
 const FALLBACK_ADDRESS = "Paris";
+const FALLBACK_COORDS = { latitude: 48.8566, longitude: 2.3522 };
 
 export function usePrayerTimes() {
   const [timings, setTimings] = useState<PrayerTimes | null>(null);
@@ -80,6 +81,7 @@ export function usePrayerTimes() {
   const [error, setError] = useState<string | null>(null);
   const [cityName, setCityName] = useState<string | null>(null);
   const [coords, setCoords] = useState<{ latitude: number; longitude: number } | null>(null);
+  const [refetchTrigger, setRefetchTrigger] = useState(0);
 
   useEffect(() => {
     let cancelled = false;
@@ -97,6 +99,7 @@ export function usePrayerTimes() {
           if (!cancelled && fallback) {
             setTimings(fallback);
             setCityName(FALLBACK_ADDRESS);
+            setCoords(FALLBACK_COORDS);
           } else if (!cancelled) setError("Impossible de charger les horaires");
           return;
         }
@@ -107,12 +110,13 @@ export function usePrayerTimes() {
         if (cancelled) return;
 
         const { latitude, longitude } = position.coords;
+        setCoords({ latitude, longitude });
+
         const coordsTimings = await fetchTimingsByCoords(latitude, longitude);
         if (cancelled) return;
 
         if (coordsTimings) {
           setTimings(coordsTimings);
-          if (!cancelled) setCoords({ latitude, longitude });
           try {
             const [address] = await Location.reverseGeocodeAsync({
               latitude,
@@ -138,6 +142,7 @@ export function usePrayerTimes() {
             if (!cancelled && fallback) {
               setTimings(fallback);
               setCityName(FALLBACK_ADDRESS);
+              setCoords(FALLBACK_COORDS);
               setError(null);
             }
           } catch {
@@ -152,7 +157,9 @@ export function usePrayerTimes() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [refetchTrigger]);
 
-  return { timings, loading, error, cityName, coords };
+  const refetch = useCallback(() => setRefetchTrigger((t) => t + 1), []);
+
+  return { timings, loading, error, cityName, coords, refetch };
 }
