@@ -1,0 +1,36 @@
+/**
+ * Premier numéro de sourate par Juz (1-30).
+ * Permet de naviguer du Juz vers l’écran de lecture.
+ */
+export const JUZ_TO_FIRST_SURA: Record<number, number> = {
+  1: 1,
+  2: 2,
+  3: 2,
+  4: 2,
+  5: 4,
+  6: 5,
+  7: 6,
+  8: 7,
+  9: 8,
+  10: 9,
+  11: 10,
+  12: 11,
+  13: 12,
+  14: 15,
+  15: 17,
+  16: 18,
+  17: 21,
+  18: 23,
+  19: 25,
+  20: 27,
+  21: 29,
+  22: 33,
+  23: 36,
+  24: 39,
+  25: 41,
+  26: 46,
+  27: 51,
+  28: 58,
+  29: 67,
+  30: 78,
+};

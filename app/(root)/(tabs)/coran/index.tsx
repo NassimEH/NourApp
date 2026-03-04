@@ -74,6 +74,10 @@ const BLOCK_HEIGHT = 320;
 const ROW_GAP = 8;
 const smallCardHeight = (BLOCK_HEIGHT - ROW_GAP) / 2;
 
+function pushLibraryRoute(route: LibraryRoute) {
+  router.push(`/(root)/(tabs)/coran/${route}` as const);
+}
+
 function CoranHeroBlock() {
   const { left, topRight, bottomRight } = CORAN_HERO_ITEMS;
   return (
@@ -81,7 +85,7 @@ function CoranHeroBlock() {
       <View style={styles.heroLeft}>
         <FeaturedCard
           item={left as Parameters<typeof FeaturedCard>[0]["item"]}
-          onPress={() => router.push(left.$id)}
+          onPress={() => pushLibraryRoute(left.$id)}
           actionLabel="Ouvrir"
           cardWidth={coranColWidth}
           cardHeight={BLOCK_HEIGHT}
@@ -91,7 +95,7 @@ function CoranHeroBlock() {
       <View style={styles.heroRight}>
         <FeaturedCard
           item={topRight as Parameters<typeof FeaturedCard>[0]["item"]}
-          onPress={() => router.push(topRight.$id)}
+          onPress={() => pushLibraryRoute(topRight.$id)}
           actionLabel="Ouvrir"
           cardWidth={coranColWidth}
           cardHeight={smallCardHeight}
@@ -100,7 +104,7 @@ function CoranHeroBlock() {
         <View style={styles.heroGap} />
         <FeaturedCard
           item={bottomRight as Parameters<typeof FeaturedCard>[0]["item"]}
-          onPress={() => router.push(bottomRight.$id)}
+          onPress={() => pushLibraryRoute(bottomRight.$id)}
           actionLabel="Ouvrir"
           cardWidth={coranColWidth}
           cardHeight={smallCardHeight}
@@ -119,7 +123,7 @@ function InvocationsHeroBlock() {
       <View style={styles.heroLeft}>
         <FeaturedCard
           item={topLeft as Parameters<typeof FeaturedCard>[0]["item"]}
-          onPress={() => router.push(topLeft.$id)}
+          onPress={() => pushLibraryRoute(topLeft.$id)}
           actionLabel="Ouvrir"
           cardWidth={coranColWidth}
           cardHeight={smallCardHeight}
@@ -128,7 +132,7 @@ function InvocationsHeroBlock() {
         <View style={styles.heroGap} />
         <FeaturedCard
           item={bottomLeft as Parameters<typeof FeaturedCard>[0]["item"]}
-          onPress={() => router.push(bottomLeft.$id)}
+          onPress={() => pushLibraryRoute(bottomLeft.$id)}
           actionLabel="Ouvrir"
           cardWidth={coranColWidth}
           cardHeight={smallCardHeight}
@@ -138,7 +142,7 @@ function InvocationsHeroBlock() {
       <View style={styles.heroRight}>
         <FeaturedCard
           item={right as Parameters<typeof FeaturedCard>[0]["item"]}
-          onPress={() => router.push(right.$id)}
+          onPress={() => pushLibraryRoute(right.$id)}
           actionLabel="Ouvrir"
           cardWidth={coranColWidth}
           cardHeight={BLOCK_HEIGHT}
@@ -157,7 +161,7 @@ function HadithsHeroBlock() {
       <View style={styles.hadithsTopRow}>
         <FeaturedCard
           item={topLeft as Parameters<typeof FeaturedCard>[0]["item"]}
-          onPress={() => router.push(topLeft.$id)}
+          onPress={() => pushLibraryRoute(topLeft.$id)}
           actionLabel="Ouvrir"
           cardWidth={coranColWidth}
           cardHeight={smallCardHeight}
@@ -166,7 +170,7 @@ function HadithsHeroBlock() {
         <View style={styles.heroGapHorizontal} />
         <FeaturedCard
           item={topRight as Parameters<typeof FeaturedCard>[0]["item"]}
-          onPress={() => router.push(topRight.$id)}
+          onPress={() => pushLibraryRoute(topRight.$id)}
           actionLabel="Ouvrir"
           cardWidth={coranColWidth}
           cardHeight={smallCardHeight}
@@ -177,7 +181,7 @@ function HadithsHeroBlock() {
       <View style={styles.hadithsBottom}>
         <FeaturedCard
           item={bottom as Parameters<typeof FeaturedCard>[0]["item"]}
-          onPress={() => router.push(bottom.$id)}
+          onPress={() => pushLibraryRoute(bottom.$id)}
           actionLabel="Ouvrir"
           cardWidth={contentWidth}
           cardHeight={smallCardHeight}
