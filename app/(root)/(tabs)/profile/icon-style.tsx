@@ -13,7 +13,7 @@ import Feather from "@expo/vector-icons/Feather";
 import { useAppPreferences, ICON_STYLE_LABELS, type IconStyleMode } from "@/lib/app-preferences";
 
 const ICON_COLOR = "#191D31";
-import { PreferenceOptionRow } from "./PreferenceOptionRow";
+import { PreferenceOptionRow } from "@/components/PreferenceOptionRow";
 
 const homeBackground = require("@/assets/images/home-background.png");
 

@@ -1,4 +1,5 @@
 import {
+  Dimensions,
   ImageBackground,
   ScrollView,
   StyleSheet,
@@ -12,6 +13,9 @@ import { router } from "expo-router";
 import { FeaturedCard } from "@/components/Cards";
 
 const homeBackground = require("@/assets/images/home-background.png");
+
+const H_PADDING = 20;
+const CORAN_GAP = 8;
 
 type LibraryRoute =
   | "sourates"
@@ -37,61 +41,149 @@ interface LibraryCardItem {
   image?: string | null;
 }
 
-/** Coran : sourates, recherche, récitateurs, player, tafsir, traduction, mémorisation */
-const SECTION_CORAN: LibraryCardItem[] = [
-  { $id: "sourates", name: "Liste des Sourates", price: "114 sourates" },
-  { $id: "recherche", name: "Recherche Coran", price: "Mots, versets" },
-  { $id: "recitateurs", name: "Récitateurs", price: "Écoute en audio" },
-  { $id: "player", name: "Player plein écran", price: "Lecture immersive" },
-  { $id: "tafsir", name: "Tafsir", price: "Exégèse des versets" },
-  { $id: "traduction", name: "Traduction", price: "Plusieurs langues" },
-  { $id: "memorisation", name: "Mode mémorisation", price: "Hifz et révision" },
-];
+/** Coran : grande carte à gauche, deux petites à droite */
+const CORAN_HERO_ITEMS: { left: LibraryCardItem; topRight: LibraryCardItem; bottomRight: LibraryCardItem } = {
+  left: { $id: "sourates", name: "Sourates", price: "114 sourates" },
+  topRight: { $id: "tafsir", name: "Tafsir", price: "Exégèse des versets" },
+  bottomRight: { $id: "recitateurs", name: "Récitateurs", price: "Écoute en audio" },
+};
 
-/** Invocations : toutes, météo, matin/soir, sommeil */
-const SECTION_INVOCATIONS: LibraryCardItem[] = [
-  { $id: "invocations", name: "Toutes les invocations", price: "Du'as et adhkar" },
-  { $id: "invocations-meteo", name: "Invocations sur la météo", price: "Pluie, orage, vent" },
-  { $id: "invocations-matin-soir", name: "Matin et soir", price: "Sabah et Massa" },
-  { $id: "invocations-sommeil", name: "Avant le sommeil", price: "Du'as du coucher" },
-];
+/** Invocations : deux petites à gauche, une grande à droite (inverse de Coran) */
+const INVOCATIONS_HERO_ITEMS: { topLeft: LibraryCardItem; bottomLeft: LibraryCardItem; right: LibraryCardItem } = {
+  topLeft: { $id: "invocations", name: "Toutes les invocations", price: "Du'as et adhkar" },
+  bottomLeft: { $id: "invocations-meteo", name: "Invocations météo", price: "Pluie, orage, vent" },
+  right: { $id: "invocations-matin-soir", name: "Matin et soir", price: "Sabah et Massa" },
+};
 
-/** Hadiths : tous, du jour, par thème */
-const SECTION_HADITHS: LibraryCardItem[] = [
-  { $id: "hadiths", name: "Tous les hadiths", price: "Par recueil" },
-  { $id: "hadith-jour", name: "Hadith du jour", price: "Parole du jour" },
-  { $id: "hadiths-theme", name: "Hadiths par thème", price: "Foi, prière, etc." },
-];
+/** Hadiths : deux petites en haut côte à côte, une grande en bas */
+const HADITHS_HERO_ITEMS: {
+  topLeft: LibraryCardItem;
+  topRight: LibraryCardItem;
+  bottom: LibraryCardItem;
+} = {
+  topLeft: { $id: "hadith-jour", name: "Hadith du jour", price: "Parole du jour" },
+  topRight: { $id: "hadiths-theme", name: "Hadiths par thème", price: "Foi, prière, etc." },
+  bottom: { $id: "hadiths", name: "Tous les hadiths", price: "Par recueil" },
+};
 
-function LibrarySection({
-  title,
-  data,
-}: {
-  title: string;
-  data: LibraryCardItem[];
-}) {
+const { width: screenWidth } = Dimensions.get("window");
+const contentWidth = screenWidth - 2 * H_PADDING;
+const coranColWidth = (contentWidth - CORAN_GAP) / 2;
+
+const BLOCK_HEIGHT = 320;
+const ROW_GAP = 8;
+const smallCardHeight = (BLOCK_HEIGHT - ROW_GAP) / 2;
+
+function CoranHeroBlock() {
+  const { left, topRight, bottomRight } = CORAN_HERO_ITEMS;
   return (
-    <View style={styles.section}>
-      <View style={styles.sectionHeader}>
-        <Text style={styles.sectionTitle}>{title}</Text>
-        <TouchableOpacity style={styles.seeAllTouch} activeOpacity={0.7}>
-          <Text style={styles.seeAllLink}>Tout voir</Text>
-        </TouchableOpacity>
+    <View style={styles.heroBlock}>
+      <View style={styles.heroLeft}>
+        <FeaturedCard
+          item={left as Parameters<typeof FeaturedCard>[0]["item"]}
+          onPress={() => router.push(left.$id)}
+          actionLabel="Ouvrir"
+          cardWidth={coranColWidth}
+          cardHeight={BLOCK_HEIGHT}
+          noMargin
+        />
       </View>
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        contentContainerStyle={styles.cardsContent}
-      >
-        {data.map((item) => (
-          <FeaturedCard
-            key={item.$id}
-            item={item as Parameters<typeof FeaturedCard>[0]["item"]}
-            onPress={() => router.push(item.$id)}
-            actionLabel="Ouvrir"
-          />
-        ))}
-      </ScrollView>
+      <View style={styles.heroRight}>
+        <FeaturedCard
+          item={topRight as Parameters<typeof FeaturedCard>[0]["item"]}
+          onPress={() => router.push(topRight.$id)}
+          actionLabel="Ouvrir"
+          cardWidth={coranColWidth}
+          cardHeight={smallCardHeight}
+          noMargin
+        />
+        <View style={styles.heroGap} />
+        <FeaturedCard
+          item={bottomRight as Parameters<typeof FeaturedCard>[0]["item"]}
+          onPress={() => router.push(bottomRight.$id)}
+          actionLabel="Ouvrir"
+          cardWidth={coranColWidth}
+          cardHeight={smallCardHeight}
+          noMargin
+        />
+      </View>
+    </View>
+  );
+}
+
+/** Invocations : deux petites à gauche empilées, une grande à droite */
+function InvocationsHeroBlock() {
+  const { topLeft, bottomLeft, right } = INVOCATIONS_HERO_ITEMS;
+  return (
+    <View style={styles.heroBlock}>
+      <View style={styles.heroLeft}>
+        <FeaturedCard
+          item={topLeft as Parameters<typeof FeaturedCard>[0]["item"]}
+          onPress={() => router.push(topLeft.$id)}
+          actionLabel="Ouvrir"
+          cardWidth={coranColWidth}
+          cardHeight={smallCardHeight}
+          noMargin
+        />
+        <View style={styles.heroGap} />
+        <FeaturedCard
+          item={bottomLeft as Parameters<typeof FeaturedCard>[0]["item"]}
+          onPress={() => router.push(bottomLeft.$id)}
+          actionLabel="Ouvrir"
+          cardWidth={coranColWidth}
+          cardHeight={smallCardHeight}
+          noMargin
+        />
+      </View>
+      <View style={styles.heroRight}>
+        <FeaturedCard
+          item={right as Parameters<typeof FeaturedCard>[0]["item"]}
+          onPress={() => router.push(right.$id)}
+          actionLabel="Ouvrir"
+          cardWidth={coranColWidth}
+          cardHeight={BLOCK_HEIGHT}
+          noMargin
+        />
+      </View>
+    </View>
+  );
+}
+
+/** Hadiths : deux petites en haut côte à côte, une grande en bas pleine largeur */
+function HadithsHeroBlock() {
+  const { topLeft, topRight, bottom } = HADITHS_HERO_ITEMS;
+  return (
+    <View style={[styles.heroBlock, styles.hadithsBlock]}>
+      <View style={styles.hadithsTopRow}>
+        <FeaturedCard
+          item={topLeft as Parameters<typeof FeaturedCard>[0]["item"]}
+          onPress={() => router.push(topLeft.$id)}
+          actionLabel="Ouvrir"
+          cardWidth={coranColWidth}
+          cardHeight={smallCardHeight}
+          noMargin
+        />
+        <View style={styles.heroGapHorizontal} />
+        <FeaturedCard
+          item={topRight as Parameters<typeof FeaturedCard>[0]["item"]}
+          onPress={() => router.push(topRight.$id)}
+          actionLabel="Ouvrir"
+          cardWidth={coranColWidth}
+          cardHeight={smallCardHeight}
+          noMargin
+        />
+      </View>
+      <View style={styles.heroGap} />
+      <View style={styles.hadithsBottom}>
+        <FeaturedCard
+          item={bottom as Parameters<typeof FeaturedCard>[0]["item"]}
+          onPress={() => router.push(bottom.$id)}
+          actionLabel="Ouvrir"
+          cardWidth={contentWidth}
+          cardHeight={smallCardHeight}
+          noMargin
+        />
+      </View>
     </View>
   );
 }
@@ -110,16 +202,38 @@ export default function BibliothequeScreen() {
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
         >
-          <LibrarySection title="Coran" data={SECTION_CORAN} />
-          <LibrarySection title="Invocations" data={SECTION_INVOCATIONS} />
-          <LibrarySection title="Hadiths" data={SECTION_HADITHS} />
+          <View style={styles.section}>
+            <View style={styles.sectionHeader}>
+              <Text style={styles.sectionTitle}>Coran</Text>
+              <TouchableOpacity style={styles.seeAllTouch} activeOpacity={0.7}>
+                <Text style={styles.seeAllLink}>Tout voir</Text>
+              </TouchableOpacity>
+            </View>
+            <CoranHeroBlock />
+          </View>
+          <View style={styles.section}>
+            <View style={styles.sectionHeader}>
+              <Text style={styles.sectionTitle}>Invocations</Text>
+              <TouchableOpacity style={styles.seeAllTouch} activeOpacity={0.7}>
+                <Text style={styles.seeAllLink}>Tout voir</Text>
+              </TouchableOpacity>
+            </View>
+            <InvocationsHeroBlock />
+          </View>
+          <View style={styles.section}>
+            <View style={styles.sectionHeader}>
+              <Text style={styles.sectionTitle}>Hadiths</Text>
+              <TouchableOpacity style={styles.seeAllTouch} activeOpacity={0.7}>
+                <Text style={styles.seeAllLink}>Tout voir</Text>
+              </TouchableOpacity>
+            </View>
+            <HadithsHeroBlock />
+          </View>
         </ScrollView>
       </SafeAreaView>
     </ImageBackground>
   );
 }
-
-const H_PADDING = 20;
 
 const styles = StyleSheet.create({
   background: { flex: 1 },
@@ -172,5 +286,37 @@ const styles = StyleSheet.create({
   },
   cardsContent: {
     paddingRight: H_PADDING,
+  },
+  heroBlock: {
+    flexDirection: "row",
+    height: BLOCK_HEIGHT,
+    marginBottom: 4,
+  },
+  heroLeft: {
+    width: coranColWidth,
+    marginRight: CORAN_GAP,
+    flexDirection: "column",
+  },
+  heroRight: {
+    width: coranColWidth,
+    flexDirection: "column",
+  },
+  heroGap: {
+    height: ROW_GAP,
+  },
+  heroGapHorizontal: {
+    width: ROW_GAP,
+  },
+  hadithsBlock: {
+    flexDirection: "column",
+    height: BLOCK_HEIGHT,
+  },
+  hadithsTopRow: {
+    flexDirection: "row",
+    height: smallCardHeight,
+  },
+  hadithsBottom: {
+    height: smallCardHeight,
+    width: contentWidth,
   },
 });

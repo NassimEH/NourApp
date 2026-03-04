@@ -36,3 +36,5 @@ const styles = StyleSheet.create({
     color: "#191D31",
   },
 });
+
+export default PreferenceOptionRow;

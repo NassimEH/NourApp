@@ -11,7 +11,7 @@ import { router } from "expo-router";
 import Feather from "@expo/vector-icons/Feather";
 
 import { useAppPreferences, THEME_LABELS, type ThemeMode } from "@/lib/app-preferences";
-import { PreferenceOptionRow } from "./PreferenceOptionRow";
+import { PreferenceOptionRow } from "@/components/PreferenceOptionRow";
 
 const ICON_COLOR = "#191D31";
 

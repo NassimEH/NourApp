@@ -80,6 +80,7 @@ export async function logout() {
 }
 
 export async function getCurrentUser() {
+  if (!config.endpoint || !config.projectId) return null;
   try {
     const result = await account.get();
     if (result.$id) {

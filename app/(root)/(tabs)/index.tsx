@@ -52,46 +52,9 @@ function useTodayDates() {
 }
 
 const homeBackground = require("@/assets/images/home-background.png");
-const mosqueImage = require("../../../mosquée.png");
+const mosqueImage = require("@/mosquée.png");
 
-const weatherImages: Record<WeatherImageKey, number> = {
-  orage: require("@/assets/images/villes/orage.png"),
-  neige: require("@/assets/images/villes/neige.png"),
-  pluie: require("@/assets/images/villes/pluie.png"),
-  brouillard: require("@/assets/images/villes/brouillard.png"),
-  crépuscule: require("@/assets/images/villes/crépuscule.png"),
-  nuageux: require("@/assets/images/villes/nuageux.png"),
-};
-
-const WEATHER_DOU3A: Record<
-  WeatherImageKey,
-  { dou3a: string; reason: string }
-> = {
-  pluie: {
-    dou3a: "اللَّهُمَّ صَيِّباً نَافِعاً — Allâhumma sayyiban nâfi'an. « Ô Allah, (fais qu'il tombe) une pluie bénéfique. »",
-    reason: "La pluie est un moment privilégié où les invocations sont exaucées ; le Prophète (ﷺ) nous a enseigné cette invocation lorsqu'il pleut.",
-  },
-  orage: {
-    dou3a: "سُبْحَانَ الَّذِي يُسَبِّحُ الرَّعْدُ بِحَمْدِهِ وَالْمَلَائِكَةُ مِنْ خِيفَتِهِ — Gloire à Celui que le tonnerre glorifie par Sa louange, ainsi que les anges par crainte de Lui.",
-    reason: "L'orage rappelle la puissance d'Allah ; il est recommandé de glorifier Allah et de se rappeler de Lui quand on entend le tonnerre.",
-  },
-  neige: {
-    dou3a: "اللَّهُمَّ احْفَظْنَا مِنْ شَرِّ الْبَرْدِ وَالثَلْجِ — Allâhumma hfaznâ min charri al-bardi wa at-thalj. « Ô Allah, préserve-nous du mal du froid et de la neige. »",
-    reason: "Le froid et la neige nous invitent à demander la protection d'Allah et à être reconnaissants pour l'abri qu'Il nous accorde.",
-  },
-  brouillard: {
-    dou3a: "بِسْمِ اللهِ الَّذِي لَا يَضُرُّ مَعَ اسْمِهِ شَيْءٌ — Bismi Llâhi lladhî lâ yadurru ma'a smihi shay'. « Au nom d'Allah, avec le nom de qui rien ne peut nuire. »",
-    reason: "Le brouillard réduit la visibilité ; invoquer Allah nous rappelle de nous en remettre à Lui pour la sécurité et la clarté du chemin.",
-  },
-  crépuscule: {
-    dou3a: "أَمْسَيْنَا وَأَمْسَى الْمُلْكُ لِلَّهِ — Amsaynâ wa amsâ al-mulku li Llâh. « Nous avons atteint le soir, et la royauté appartient à Allah. »",
-    reason: "Le crépuscule est le moment des adhkâr du soir ; il rappelle que le jour et la nuit appartiennent à Allah.",
-  },
-  nuageux: {
-    dou3a: "اللَّهُمَّ إِنِّي أَسْأَلُكَ خَيْرَ هَذَا الْيَوْمِ — Allâhumma innî as'aluka khayra hâdhâ al-yawm. « Ô Allah, je Te demande le bien de ce jour. »",
-    reason: "Un temps nuageux ou doux nous invite à demander à Allah le bien du jour et à Lui être reconnaissants pour Ses bienfaits.",
-  },
-};
+import { weatherImages, WEATHER_DOU3A } from "@/constants/weather";
 
 const MosqueImage = React.memo(function MosqueImage({ compact }: { compact?: boolean }) {
   const sizeStyle = compact ? styles.mosqueImageCompact : styles.mosqueImage;
@@ -252,7 +215,12 @@ const HomeListHeader = React.memo(function HomeListHeader({
         >
           <View style={[styles.carouselSlide, { width: slideWidth }]}>
             <View style={styles.carouselSlideInner}>
-              <Text style={styles.carouselSlideTitle}>Ma mosquée</Text>
+              <View style={styles.carouselSlideHeader}>
+                <Text style={styles.carouselSlideTitle}>Ma mosquée</Text>
+                <TouchableOpacity onPress={() => router.push("/mosquee")} activeOpacity={0.7}>
+                  <Text style={styles.seeAllLink}>Voir tout</Text>
+                </TouchableOpacity>
+              </View>
               {prayerLoading ? (
                 <ActivityIndicator size="small" color="#3d6b47" style={{ paddingVertical: 20 }} />
               ) : prayerTimes ? (
@@ -286,7 +254,12 @@ const HomeListHeader = React.memo(function HomeListHeader({
           </View>
           <View style={[styles.carouselSlide, { width: slideWidth }]}>
             <View style={styles.carouselSlideInner}>
-              <Text style={styles.carouselSlideTitle}>La météo chez moi</Text>
+              <View style={styles.carouselSlideHeader}>
+                <Text style={styles.carouselSlideTitle}>La météo chez moi</Text>
+                <TouchableOpacity onPress={() => router.push("/meteo")} activeOpacity={0.7}>
+                  <Text style={styles.seeAllLink}>Voir tout</Text>
+                </TouchableOpacity>
+              </View>
               {!prayerCoords && prayerLoading ? (
                 <ActivityIndicator size="small" color="#3d6b47" style={{ paddingVertical: 20 }} />
               ) : weatherLoading ? (
@@ -656,11 +629,16 @@ const styles = StyleSheet.create({
   carouselSlideInner: {
     paddingHorizontal: 24,
   },
+  carouselSlideHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginBottom: 16,
+  },
   carouselSlideTitle: {
     fontSize: 20,
     fontFamily: "PlusJakartaSans-Bold",
     color: "#191D31",
-    marginBottom: 16,
   },
   carouselDots: {
     flexDirection: "row",

@@ -280,13 +280,15 @@ export default function ProfileScreen() {
           </View>
 
           <View style={styles.avatarBlock}>
-            <View style={styles.avatarPlaceholderRing}>
-              {user?.avatar ? (
-                <Image
-                  source={{ uri: user.avatar }}
-                  style={styles.avatar}
-                />
-              ) : null}
+            <View style={styles.avatarRingWrapper}>
+              <View style={styles.avatarPlaceholderRing}>
+                {user?.avatar ? (
+                  <Image
+                    source={{ uri: user.avatar }}
+                    style={styles.avatar}
+                  />
+                ) : null}
+              </View>
               <TouchableOpacity
                 style={styles.editPencilButton}
                 onPress={handleChangePhoto}
@@ -296,7 +298,9 @@ export default function ProfileScreen() {
                 {uploadingPhoto ? (
                   <ActivityIndicator size="small" color="#3d6b47" />
                 ) : (
-                  <Feather name="edit-2" size={18} color={ICON_COLOR} />
+                  <View style={styles.editPencilIconWrap}>
+                    <Feather name="edit-2" size={16} color={ICON_COLOR} />
+                  </View>
                 )}
               </TouchableOpacity>
             </View>
@@ -414,11 +418,33 @@ const styles = StyleSheet.create({
     color: "#191D31",
   },
   avatarBlock: { alignItems: "center", marginTop: 24, marginBottom: 32 },
+  avatarRingWrapper: {
+    width: 140,
+    height: 140,
+    position: "relative",
+  },
   editPencilButton: {
     position: "absolute",
-    bottom: 4,
-    right: 4,
-    padding: 4,
+    bottom: 0,
+    right: 0,
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: "rgba(255,255,255,0.95)",
+    borderWidth: 1.5,
+    borderColor: "#191D31",
+    alignItems: "center",
+    justifyContent: "center",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 3,
+    zIndex: 10,
+  },
+  editPencilIconWrap: {
+    alignItems: "center",
+    justifyContent: "center",
   },
   avatarPlaceholderRing: {
     width: 140,
@@ -429,7 +455,6 @@ const styles = StyleSheet.create({
     backgroundColor: "transparent",
     alignItems: "center",
     justifyContent: "center",
-    position: "relative",
     overflow: "hidden",
   },
   avatar: {

@@ -6,10 +6,11 @@ import Feather from "@expo/vector-icons/Feather";
 import BottomBar from "@/components/BottomBar";
 import { useTabBarPreference } from "@/lib/tab-bar-preference";
 
-const TAB_ICONS: Record<string, "home" | "sunrise" | "book-open" | "search" | "user"> = {
+const TAB_ICONS: Record<string, "home" | "sunrise" | "book-open" | "award" | "search" | "user"> = {
   index: "home",
   qibla: "sunrise",
   coran: "book-open",
+  apprendre: "award",
   explore: "search",
   profile: "user",
 };
@@ -18,6 +19,7 @@ const TAB_LABELS: Record<string, string> = {
   index: "Accueil",
   qibla: "Mes prières",
   coran: "Bibliothèque",
+  apprendre: "Apprendre",
   explore: "Explore",
   profile: "Profil",
 };
@@ -75,6 +77,7 @@ export default function TabsLayout() {
       <Tabs.Screen name="index" options={{ title: "Accueil" }} />
       <Tabs.Screen name="qibla" options={{ title: "Mes prières" }} />
       <Tabs.Screen name="coran" options={{ title: "Bibliothèque" }} />
+      <Tabs.Screen name="apprendre" options={{ title: "Apprendre" }} />
       <Tabs.Screen name="explore" options={{ title: "Explore" }} />
       <Tabs.Screen name="profile" options={{ title: "Profil" }} />
     </Tabs>

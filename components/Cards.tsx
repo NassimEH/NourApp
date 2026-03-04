@@ -57,11 +57,23 @@ interface Props {
   onPress?: () => void;
   /** Libellé du bouton d’action (ex: "Lire" pour la section lecture) */
   actionLabel?: string;
+  /** Dimensions optionnelles pour layouts personnalisés (ex. grille asymétrique) */
+  cardWidth?: number;
+  cardHeight?: number;
+  /** Désactive la marge à droite (utile en grille) */
+  noMargin?: boolean;
 }
 
 const defaultImage = images.background;
 
-export const FeaturedCard = ({ item, onPress, actionLabel = "Voir le bien" }: Props) => {
+export const FeaturedCard = ({
+  item,
+  onPress,
+  actionLabel = "Voir le bien",
+  cardWidth,
+  cardHeight,
+  noMargin,
+}: Props) => {
   const router = useRouter();
   const imageSource = item.image ? { uri: item.image } : defaultImage;
   const title = item.name ?? "Bien immobilier";
@@ -72,6 +84,9 @@ export const FeaturedCard = ({ item, onPress, actionLabel = "Voir le bien" }: Pr
     else if (item.$id && item.$id !== "_placeholder") router.push(`/properties/${item.$id}`);
   };
 
+  const width = cardWidth ?? ITEM_WIDTH;
+  const height = cardHeight ?? ITEM_HEIGHT;
+
   return (
     <TouchableOpacity
       onPress={handlePress}
@@ -79,9 +94,9 @@ export const FeaturedCard = ({ item, onPress, actionLabel = "Voir le bien" }: Pr
         styles.card,
         styles.featuredCardAccent,
         {
-          height: ITEM_HEIGHT,
-          width: ITEM_WIDTH,
-          marginRight: Spacing * 2,
+          height,
+          width,
+          marginRight: noMargin ? 0 : Spacing * 2,
           borderRadius: Spacing * 3,
         },
       ]}
@@ -103,27 +118,16 @@ export const FeaturedCard = ({ item, onPress, actionLabel = "Voir le bien" }: Pr
               {price}
             </Text>
           </View>
-          <View style={styles.bottomRow}>
-            <TouchableOpacity
-              onPress={(e) => {
-                e.stopPropagation();
-                handlePress();
-              }}
-              style={styles.viewButton}
-            >
-              <Text style={styles.viewButtonText}>{actionLabel}</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              onPress={(e) => e.stopPropagation()}
-              style={styles.bookmarkButton}
-            >
-              <Feather
-                name="bookmark"
-                size={22}
-                color={Colors.text}
-              />
-            </TouchableOpacity>
-          </View>
+          <TouchableOpacity
+            onPress={(e) => {
+              e.stopPropagation();
+              handlePress();
+            }}
+            style={styles.arrowCorner}
+            activeOpacity={0.8}
+          >
+            <Feather name="chevron-right" size={24} color={Colors.text} />
+          </TouchableOpacity>
         </View>
       </ImageBackground>
     </TouchableOpacity>
@@ -228,35 +232,13 @@ const styles = StyleSheet.create({
     textShadowRadius: 8,
     width: "100%",
   },
-  bottomRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-  },
-  viewButton: {
-    backgroundColor: "rgba(255, 255, 255, 0.95)",
-    paddingVertical: Spacing * 1.5,
-    paddingHorizontal: Spacing * 3,
-    borderRadius: Spacing * 5,
+  arrowCorner: {
+    position: "absolute",
+    right: 12,
+    bottom: 12,
+    padding: 6,
     alignItems: "center",
     justifyContent: "center",
-    borderWidth: 1,
-    borderColor: "rgba(0, 0, 0, 0.06)",
-  },
-  viewButtonText: {
-    fontFamily: "PlusJakartaSans-SemiBold",
-    fontSize: 16,
-    color: Colors.text,
-  },
-  bookmarkButton: {
-    backgroundColor: "rgba(255, 255, 255, 0.95)",
-    borderRadius: Spacing * 5,
-    width: Spacing * 6,
-    height: Spacing * 6,
-    justifyContent: "center",
-    alignItems: "center",
-    borderWidth: 1,
-    borderColor: "rgba(0, 0, 0, 0.06)",
   },
 });
 
