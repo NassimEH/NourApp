@@ -5,6 +5,7 @@ import Feather from "@expo/vector-icons/Feather";
 
 import BottomBar from "@/components/BottomBar";
 import { useTabBarPreference } from "@/lib/tab-bar-preference";
+import { QuranAudioProvider } from "@/lib/quran/QuranAudioContext";
 
 const TAB_ICONS: Record<string, "home" | "sunrise" | "book-open" | "award" | "search" | "user"> = {
   index: "home",
@@ -61,8 +62,9 @@ export default function TabsLayout() {
       };
 
   return (
-    <Tabs
-      tabBar={useNativeTabBar ? undefined : (props) => <BottomBar {...props} />}
+    <QuranAudioProvider>
+      <Tabs
+        tabBar={useNativeTabBar ? undefined : (props) => <BottomBar {...props} />}
       screenOptions={({ route }) => ({
         ...screenOptions,
         ...(useNativeTabBar && {
@@ -80,6 +82,7 @@ export default function TabsLayout() {
       <Tabs.Screen name="apprendre" options={{ title: "Apprendre" }} />
       <Tabs.Screen name="explore" options={{ title: "Explore" }} />
       <Tabs.Screen name="profile" options={{ title: "Profil" }} />
-    </Tabs>
+      </Tabs>
+    </QuranAudioProvider>
   );
 }

@@ -5,6 +5,7 @@ import {
   Platform,
   StyleSheet,
   Animated,
+  LayoutAnimation,
 } from "react-native";
 import { BlurView } from "expo-blur";
 import {
@@ -17,6 +18,10 @@ import Feather from "@expo/vector-icons/Feather";
 import { router } from "expo-router";
 import type { BottomTabBarProps } from "@react-navigation/bottom-tabs";
 
+import { QuranMiniPlayer } from "@/components/quran/QuranMiniPlayer";
+import { useQuranAudioContextOptional } from "@/lib/quran/QuranAudioContext";
+import { useSuraList } from "@/lib/quran/hooks/useSuraList";
+
 const TAB_ROUTES = [
   { name: "index" as const, label: "Accueil", icon: "home" as const, href: "/(root)/(tabs)" as const },
   { name: "qibla" as const, label: "Mes prières", icon: "sunrise" as const, href: "/(root)/(tabs)/qibla" as const },
@@ -25,6 +30,8 @@ const TAB_ROUTES = [
   { name: "explore" as const, label: "Explore", icon: "search" as const, href: "/(root)/(tabs)/explore" as const },
   { name: "profile" as const, label: "Profil", icon: "user" as const, href: "/(root)/(tabs)/profile" as const },
 ];
+
+const VERTICAL_BAR_WIDTH = 56;
 
 const useGlassAvailable = () => {
   const [available, setAvailable] = useState(false);
@@ -43,10 +50,12 @@ function TabIconButton({
   route,
   isActive,
   onPress,
+  vertical,
 }: {
   route: (typeof TAB_ROUTES)[number];
   isActive: boolean;
   onPress: () => void;
+  vertical?: boolean;
 }) {
   const scale = useRef(new Animated.Value(1)).current;
   const prevActive = useRef(isActive);
@@ -101,6 +110,7 @@ function TabIconButton({
       style={[
         styles.tabIconButton,
         isActive && styles.tabIconButtonActive,
+        vertical && styles.tabIconButtonVertical,
       ]}
     >
       <Animated.View style={{ transform: [{ scale }] }}>
@@ -120,25 +130,89 @@ export default function BottomBar({
 }: BottomTabBarProps) {
   const insets = useSafeAreaInsets();
   const glassAvailable = useGlassAvailable();
+  const audio = useQuranAudioContextOptional();
+  const { list: suraList } = useSuraList();
   const currentRoute = state.routes[state.index]?.name;
 
   const paddingBottom = Math.max(insets.bottom, 12);
   const isIOS = Platform.OS === "ios";
+  const isPlayerVisible = audio?.isPlayerVisible ?? false;
 
-  const renderGlassPill = () => (
-    <View style={styles.glassPill}>
-      <View style={styles.pillInner}>
+  const suraName = audio?.currentSura != null
+    ? suraList.find((s) => s.number === audio.currentSura)?.englishName
+    : undefined;
+
+  useEffect(() => {
+    LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+  }, [isPlayerVisible]);
+
+  const renderGlassPill = (vertical?: boolean) => (
+    <View style={[styles.glassPill, vertical && styles.glassPillVertical]}>
+      <View style={[styles.pillInner, vertical && styles.pillInnerVertical]}>
         {TAB_ROUTES.map((route) => (
           <TabIconButton
             key={route.name}
             route={route}
             isActive={currentRoute === route.name}
             onPress={() => router.push(route.href)}
+            vertical={vertical}
           />
         ))}
       </View>
     </View>
   );
+
+  const renderPillContent = (vertical?: boolean) =>
+    glassAvailable ? (
+      <GlassView
+        style={[styles.glassPillOuter, vertical && styles.glassPillOuterVertical]}
+        glassEffectStyle="regular"
+        isInteractive
+      >
+        {renderGlassPill(vertical)}
+      </GlassView>
+    ) : (
+      <View style={[styles.glassPillOuter, vertical && styles.glassPillOuterVertical]}>
+        <BlurView
+          intensity={isIOS ? 120 : 140}
+          tint="light"
+          style={StyleSheet.absoluteFill}
+        >
+          <View style={StyleSheet.absoluteFill} collapsable />
+        </BlurView>
+        <View style={styles.glassPillOverlay} pointerEvents="none" />
+        {renderGlassPill(vertical)}
+      </View>
+    );
+
+  if (isPlayerVisible && audio && audio.currentSura != null) {
+    return (
+      <View
+        style={[
+          styles.container,
+          styles.containerRow,
+          { paddingBottom: paddingBottom + (isIOS ? 22 : 12) },
+        ]}
+        pointerEvents="box-none"
+      >
+        <View style={styles.verticalBarWrap}>
+          {renderPillContent(true)}
+        </View>
+        <View style={styles.miniPlayerWrap}>
+          <QuranMiniPlayer
+            suraNumber={audio.currentSura}
+            suraName={suraName}
+            isPlaying={audio.isPlaying}
+            isLoading={audio.isLoading}
+            error={audio.error}
+            progress={audio.progress}
+            onPlayPause={audio.togglePlayPause}
+            onClose={audio.unload}
+          />
+        </View>
+      </View>
+    );
+  }
 
   return (
     <View
@@ -149,27 +223,7 @@ export default function BottomBar({
       pointerEvents="box-none"
     >
       <View style={styles.pillWrap}>
-        {glassAvailable ? (
-          <GlassView
-            style={styles.glassPillOuter}
-            glassEffectStyle="regular"
-            isInteractive
-          >
-            {renderGlassPill()}
-          </GlassView>
-        ) : (
-          <View style={styles.glassPillOuter}>
-            <BlurView
-              intensity={isIOS ? 120 : 140}
-              tint="light"
-              style={StyleSheet.absoluteFill}
-            >
-              <View style={StyleSheet.absoluteFill} collapsable />
-            </BlurView>
-            <View style={styles.glassPillOverlay} pointerEvents="none" />
-            {renderGlassPill()}
-          </View>
-        )}
+        {renderPillContent(false)}
       </View>
     </View>
   );
@@ -186,7 +240,22 @@ const styles = StyleSheet.create({
     justifyContent: "flex-end",
     borderTopWidth: 0,
   },
+  containerRow: {
+    flexDirection: "row",
+    alignItems: "flex-end",
+    paddingHorizontal: 0,
+    paddingLeft: 12,
+    paddingRight: 12,
+  },
   pillWrap: {},
+  verticalBarWrap: {
+    width: VERTICAL_BAR_WIDTH,
+    marginRight: 8,
+  },
+  miniPlayerWrap: {
+    flex: 1,
+    minWidth: 0,
+  },
   glassPillOuter: {
     borderRadius: 32,
     overflow: "hidden",
@@ -208,6 +277,11 @@ const styles = StyleSheet.create({
       backgroundColor: "rgba(255,255,255,0.25)",
     }),
   },
+  glassPillOuterVertical: {
+    maxWidth: undefined,
+    width: VERTICAL_BAR_WIDTH,
+    minHeight: 280,
+  },
   glassPillOverlay: {
     ...StyleSheet.absoluteFillObject,
     backgroundColor: "rgba(255,255,255,0.06)",
@@ -219,6 +293,9 @@ const styles = StyleSheet.create({
       backgroundColor: "rgba(255,255,255,0.2)",
     }),
   },
+  glassPillVertical: {
+    paddingVertical: 12,
+  },
   pillInner: {
     flexDirection: "row",
     alignItems: "center",
@@ -227,12 +304,23 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     gap: 8,
   },
+  pillInnerVertical: {
+    flexDirection: "column",
+    justifyContent: "space-between",
+    paddingVertical: 12,
+    paddingHorizontal: 8,
+    gap: 4,
+    flex: 1,
+  },
   tabIconButton: {
     width: 40,
     height: 40,
     borderRadius: 20,
     alignItems: "center",
     justifyContent: "center",
+  },
+  tabIconButtonVertical: {
+    marginVertical: 2,
   },
   tabIconButtonActive: {
     backgroundColor: "rgba(61, 107, 71, 0.9)",

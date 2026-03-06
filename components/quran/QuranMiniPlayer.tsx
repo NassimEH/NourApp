@@ -52,6 +52,11 @@ export function QuranMiniPlayer({
             <Feather name={isPlaying ? "pause" : "play"} size={24} color="#fff" />
           )}
         </TouchableOpacity>
+        {onClose && (
+          <TouchableOpacity style={styles.closeButton} onPress={onClose} hitSlop={8}>
+            <Feather name="x" size={22} color="#fff" />
+          </TouchableOpacity>
+        )}
       </View>
     </View>
   );
@@ -111,5 +116,13 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(0,0,0,0.25)",
     alignItems: "center",
     justifyContent: "center",
+  },
+  closeButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    alignItems: "center",
+    justifyContent: "center",
+    marginLeft: 8,
   },
 });

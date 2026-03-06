@@ -10,13 +10,12 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router, useLocalSearchParams } from "expo-router";
 import Feather from "@expo/vector-icons/Feather";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { useSura } from "@/lib/quran/hooks/useSura";
 import { useLastRead } from "@/lib/quran/hooks/useLastRead";
-import { useQuranAudio } from "@/lib/quran/hooks/useQuranAudio";
+import { useQuranAudioContext } from "@/lib/quran/QuranAudioContext";
 import { useAppPreferences } from "@/lib/app-preferences";
-import { QuranMiniPlayer } from "@/components/quran/QuranMiniPlayer";
 
 const homeBackground = require("@/assets/images/home-background.png");
 const H_PADDING = 24;
@@ -29,15 +28,17 @@ const ARABIC_SIZE_MAP = { small: 22, medium: 26, large: 30 } as const;
 const TRANS_SIZE_MAP = { small: 14, medium: 15, large: 17 } as const;
 
 export default function QuranReaderScreen() {
-  const { number } = useLocalSearchParams<{ number: string }>();
+  const { number, autoplay } = useLocalSearchParams<{ number: string; autoplay?: string }>();
   const suraNumber = number ? parseInt(number, 10) : null;
   const { data, loading, error, refetch } = useSura(suraNumber);
   const { lastRead, setLastReadState } = useLastRead();
   const { textSize } = useAppPreferences();
-  const audio = useQuranAudio(data?.arabic?.ayahs);
+  const audio = useQuranAudioContext();
 
   const [showTranslation, setShowTranslation] = useState(true);
   const [currentIndex, setCurrentIndex] = useState(0);
+  const autoplayRequested = autoplay === "1";
+  const autoplayDoneRef = useRef(false);
 
   const arabicSize = ARABIC_SIZE_MAP[textSize];
   const transSize = TRANS_SIZE_MAP[textSize];
@@ -75,6 +76,19 @@ export default function QuranReaderScreen() {
   const playSura = useCallback(() => {
     if (suraNumber) audio.playSura(suraNumber);
   }, [suraNumber, audio]);
+
+  useEffect(() => {
+    if (
+      autoplayRequested &&
+      suraNumber != null &&
+      data &&
+      !loading &&
+      !autoplayDoneRef.current
+    ) {
+      autoplayDoneRef.current = true;
+      audio.playSura(suraNumber);
+    }
+  }, [autoplayRequested, suraNumber, data, loading, audio]);
 
   const panResponder = useMemo(
     () =>
@@ -206,19 +220,6 @@ export default function QuranReaderScreen() {
               </TouchableOpacity>
             </View>
 
-            {(audio.currentSura === suraNumber || audio.isPlaying || audio.isLoading) && (
-              <View style={styles.playerWrap}>
-                <QuranMiniPlayer
-                  suraNumber={suraNumber}
-                  suraName={data.arabic.englishName}
-                  isPlaying={audio.isPlaying}
-                  isLoading={audio.isLoading}
-                  error={audio.error}
-                  progress={audio.progress}
-                  onPlayPause={audio.togglePlayPause}
-                />
-              </View>
-            )}
           </>
         ) : null}
       </SafeAreaView>
@@ -299,12 +300,6 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontFamily: "PlusJakartaSans-Medium",
     color: ICON_COLOR,
-  },
-  playerWrap: {
-    position: "absolute",
-    left: 0,
-    right: 0,
-    bottom: 0,
   },
   loadingWrap: {
     flex: 1,

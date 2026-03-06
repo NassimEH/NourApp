@@ -61,6 +61,8 @@ export function useQuranAudio(_ayahs?: AyahText[]) {
       } catch {}
       soundRef.current = null;
     }
+    positionRef.current = 0;
+    durationRef.current = 0;
     setState((s) => ({ ...s, isPlaying: false, isLoading: false, progress: 0, durationMs: 0 }));
   }, []);
 
@@ -75,26 +77,34 @@ export function useQuranAudio(_ayahs?: AyahText[]) {
     await setAudioMode();
     await unload();
     setState((s) => ({ ...s, isLoading: true, error: null, currentSura: suraNumber, currentAyah: null, mode: "sura" }));
+    let playRequested = false;
     try {
       const url = getSuraAudioUrl(suraNumber);
+      // iOS: create with shouldPlay: false so AVPlayerItem can load before play (evits "AVPlayerItem has failed")
       const { sound } = await Audio.Sound.createAsync(
         { uri: url },
-        { shouldPlay: true }
+        { shouldPlay: false }
       );
       soundRef.current = sound;
-      const status = await sound.getStatusAsync();
-      if (status.isLoaded && status.durationMillis) {
-        durationRef.current = status.durationMillis;
-        setState((s) => ({ ...s, isLoading: false, isPlaying: true, durationMs: status.durationMillis }));
-      } else {
-        setState((s) => ({ ...s, isLoading: false, isPlaying: true, durationMs: 0 }));
+      if (durationRef.current === 0) {
+        const status = await sound.getStatusAsync();
+        if (status.isLoaded && status.durationMillis) durationRef.current = status.durationMillis;
       }
+      setState((s) => ({ ...s, isLoading: false, isPlaying: false, durationMs: durationRef.current }));
       sound.setOnPlaybackStatusUpdate((st) => {
         if (!st.isLoaded) return;
         if (st.durationMillis) durationRef.current = st.durationMillis;
         if (st.positionMillis != null) positionRef.current = st.positionMillis;
         if (st.didJustFinish && !st.isLooping) {
           unload();
+        }
+        if (!playRequested) {
+          playRequested = true;
+          sound.playAsync().then(() => {
+            setState((s) => ({ ...s, isPlaying: true, durationMs: durationRef.current }));
+          }).catch(() => {
+            setState((s) => ({ ...s, error: "Impossible de lancer la lecture" }));
+          });
         }
       });
       intervalRef.current = setInterval(() => {
@@ -104,6 +114,13 @@ export function useQuranAudio(_ayahs?: AyahText[]) {
           return { ...s, progress: d > 0 ? p / d : 0, durationMs: d };
         });
       }, 500);
+      // Start playback once loaded (if status callback fires late, start after short delay)
+      const status = await sound.getStatusAsync();
+      if (status.isLoaded && !playRequested) {
+        playRequested = true;
+        await sound.playAsync();
+        setState((s) => ({ ...s, isPlaying: true, durationMs: status.durationMillis ?? durationRef.current }));
+      }
     } catch (e) {
       setState((s) => ({
         ...s,
@@ -124,26 +141,34 @@ export function useQuranAudio(_ayahs?: AyahText[]) {
       currentAyah: globalAyahNumber,
       mode: "ayah",
     }));
+    let playRequested = false;
     try {
       const url = getAyahAudioUrl(globalAyahNumber);
+      // iOS: create with shouldPlay: false so AVPlayerItem can load before play
       const { sound } = await Audio.Sound.createAsync(
         { uri: url },
-        { shouldPlay: true }
+        { shouldPlay: false }
       );
       soundRef.current = sound;
-      const status = await sound.getStatusAsync();
-      if (status.isLoaded && status.durationMillis) {
-        durationRef.current = status.durationMillis;
-        setState((s) => ({ ...s, isLoading: false, isPlaying: true, durationMs: status.durationMillis }));
-      } else {
-        setState((s) => ({ ...s, isLoading: false, isPlaying: true, durationMs: 0 }));
+      if (durationRef.current === 0) {
+        const status = await sound.getStatusAsync();
+        if (status.isLoaded && status.durationMillis) durationRef.current = status.durationMillis;
       }
+      setState((s) => ({ ...s, isLoading: false, isPlaying: false, durationMs: durationRef.current }));
       sound.setOnPlaybackStatusUpdate((st) => {
         if (!st.isLoaded) return;
         if (st.durationMillis) durationRef.current = st.durationMillis;
         if (st.positionMillis != null) positionRef.current = st.positionMillis;
         if (st.didJustFinish && !st.isLooping) {
           unload();
+        }
+        if (!playRequested) {
+          playRequested = true;
+          sound.playAsync().then(() => {
+            setState((s) => ({ ...s, isPlaying: true, durationMs: durationRef.current }));
+          }).catch(() => {
+            setState((s) => ({ ...s, error: "Impossible de lancer la lecture" }));
+          });
         }
       });
       intervalRef.current = setInterval(() => {
@@ -153,6 +178,12 @@ export function useQuranAudio(_ayahs?: AyahText[]) {
           return { ...s, progress: d > 0 ? p / d : 0, durationMs: d };
         });
       }, 500);
+      const status = await sound.getStatusAsync();
+      if (status.isLoaded && !playRequested) {
+        playRequested = true;
+        await sound.playAsync();
+        setState((s) => ({ ...s, isPlaying: true, durationMs: status.durationMillis ?? durationRef.current }));
+      }
     } catch (e) {
       setState((s) => ({
         ...s,

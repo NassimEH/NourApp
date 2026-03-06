@@ -18,6 +18,10 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { toHijri } from "hijri-converter";
 
 import icons from "@/constants/icons";
+import {
+  isVendredi,
+  getHadithVendrediDuJour,
+} from "@/constants/hadithsVendredi";
 
 const HIJRI_MONTHS = [
   "Muharram", "Safar", "Rabi al-Awwal", "Rabi al-Thani",
@@ -141,6 +145,8 @@ const HomeListHeader = React.memo(function HomeListHeader({
   const [carouselIndex, setCarouselIndex] = useState(0);
   const [featuredCarouselIndex, setFeaturedCarouselIndex] = useState(0);
   const screenWidth = Dimensions.get("window").width;
+  const vendredi = isVendredi();
+  const hadithVendredi = getHadithVendrediDuJour();
   const slideWidth = screenWidth;
 
   const featuredData =
@@ -152,7 +158,12 @@ const HomeListHeader = React.memo(function HomeListHeader({
   return (
     <View className="px-5">
       <View className="flex flex-row items-center justify-between mt-5">
-        <Text style={styles.pageTitle}>Accueil</Text>
+        <View style={styles.headerTitleRow}>
+          <Text style={styles.pageTitle}>Accueil</Text>
+          {vendredi && (
+            <Text style={styles.bonVendredi}>Bon vendredi</Text>
+          )}
+        </View>
         <HeaderAvatarBell avatarUri={user?.avatar} />
       </View>
       <View className="flex flex-col items-start mt-1.5">
@@ -340,6 +351,14 @@ const HomeListHeader = React.memo(function HomeListHeader({
         </View>
       </View>
 
+      {vendredi && hadithVendredi && (
+        <View style={styles.hadithVendrediBlock}>
+          <Text style={styles.hadithVendrediLabel}>Hadith — La prière du vendredi</Text>
+          <Text style={styles.hadithVendrediText}>{hadithVendredi.text}</Text>
+          <Text style={styles.hadithVendrediSource}>{hadithVendredi.source}</Text>
+        </View>
+      )}
+
       <View className="my-5">
         <View className="flex flex-row items-center justify-between">
           <Text className="text-xl font-rubik-bold text-black-300">
@@ -519,11 +538,49 @@ const styles = StyleSheet.create({
   background: {
     flex: 1,
   },
+  headerTitleRow: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
   pageTitle: {
     fontSize: 28,
     fontFamily: "PlusJakartaSans-Bold",
     color: "#191D31",
     marginBottom: 0,
+  },
+  bonVendredi: {
+    fontSize: 14,
+    fontFamily: "PlusJakartaSans-SemiBold",
+    color: "#3d6b47",
+    marginLeft: 10,
+  },
+  hadithVendrediBlock: {
+    marginTop: 20,
+    paddingTop: 14,
+    borderTopWidth: 1,
+    borderTopColor: "rgba(0,0,0,0.06)",
+  },
+  hadithVendrediLabel: {
+    fontSize: 11,
+    fontFamily: "PlusJakartaSans-SemiBold",
+    color: "rgba(61, 107, 71, 0.9)",
+    textTransform: "uppercase",
+    letterSpacing: 0.5,
+    marginBottom: 8,
+  },
+  hadithVendrediText: {
+    fontSize: 13,
+    fontFamily: "PlusJakartaSans-Medium",
+    color: "#191D31",
+    lineHeight: 20,
+    marginBottom: 6,
+  },
+  hadithVendrediSource: {
+    fontSize: 12,
+    fontFamily: "PlusJakartaSans-Regular",
+    color: "#5b5d5e",
+    lineHeight: 18,
+    fontStyle: "italic",
   },
   sectionDivider: {
     height: 1,

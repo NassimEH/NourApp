@@ -20,7 +20,8 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { router } from "expo-router";
 import Feather from "@expo/vector-icons/Feather";
 
-import { logout, uploadAvatarPhoto, updateUserAvatar } from "@/lib/appwrite";
+import { logout } from "@/lib/appwrite";
+import { getProfileAvatarUri, setProfileAvatarUri } from "@/lib/profile-avatar";
 import { useGlobalContext } from "@/lib/global-provider";
 import { useAppPreferences } from "@/lib/app-preferences";
 import { useTabBarPreference } from "@/lib/tab-bar-preference";
@@ -89,8 +90,13 @@ const SettingsItem = ({
 );
 
 /** Mon espace : une icône par entrée */
-const PROFIL_SECTION_PRINCIPALE: { title: string; iconName: FeatherIconName; href?: "/qibla" }[] = [
+const PROFIL_SECTION_PRINCIPALE: {
+  title: string;
+  iconName: FeatherIconName;
+  href?: "/qibla" | "/profile/favorites";
+}[] = [
   { title: "Horaires de prière", iconName: "calendar", href: "/qibla" },
+  { title: "Favoris", iconName: "heart", href: "/profile/favorites" },
   { title: "Sadaqa & dons", iconName: "credit-card" },
 ];
 
@@ -153,6 +159,13 @@ const PermissionRow = ({
 export default function ProfileScreen() {
   const { user, refetch } = useGlobalContext();
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
+  const [localAvatarUri, setLocalAvatarUri] = useState<string | null>(null);
+
+  useFocusEffect(
+    useCallback(() => {
+      getProfileAvatarUri().then(setLocalAvatarUri);
+    }, [])
+  );
   const [locationGranted, setLocationGranted] = useState(false);
   const [notificationsEnabled, setNotificationsEnabled] = useState(false);
   const { tabBarVariant } = useTabBarPreference();
@@ -182,6 +195,7 @@ export default function ProfileScreen() {
   useFocusEffect(
     useCallback(() => {
       refreshLocationPermission();
+      getProfileAvatarUri().then(setLocalAvatarUri);
     }, [])
   );
 
@@ -231,19 +245,11 @@ export default function ProfileScreen() {
       if (result.canceled || !result.assets?.[0]?.uri) return;
 
       setUploadingPhoto(true);
-      const avatarUrl = await uploadAvatarPhoto(result.assets[0].uri);
-      if (!avatarUrl) {
-        Alert.alert(
-          "Erreur",
-          "Impossible d'envoyer la photo. Vérifiez la configuration du stockage (bucket Appwrite)."
-        );
-        return;
-      }
-      const updated = await updateUserAvatar(avatarUrl);
-      if (updated) {
-        await refetch();
+      const savedUri = await setProfileAvatarUri(result.assets[0].uri);
+      if (savedUri) {
+        setLocalAvatarUri(savedUri);
       } else {
-        Alert.alert("Erreur", "La mise à jour du profil a échoué.");
+        Alert.alert("Erreur", "Impossible d'enregistrer la photo.");
       }
     } catch (e) {
       console.error(e);
@@ -282,9 +288,9 @@ export default function ProfileScreen() {
           <View style={styles.avatarBlock}>
             <View style={styles.avatarRingWrapper}>
               <View style={styles.avatarPlaceholderRing}>
-                {user?.avatar ? (
+                {(localAvatarUri ?? user?.avatar) ? (
                   <Image
-                    source={{ uri: user.avatar }}
+                    source={{ uri: localAvatarUri ?? user?.avatar }}
                     style={styles.avatar}
                   />
                 ) : null}
@@ -318,8 +324,13 @@ export default function ProfileScreen() {
                 iconName={item.iconName}
                 title={item.title}
                 onPress={
-                  item.href === "/qibla"
-                    ? () => router.push("/(root)/(tabs)/qibla")
+                  item.href
+                    ? () =>
+                        router.push(
+                          item.href === "/qibla"
+                            ? "/(root)/(tabs)/qibla"
+                            : "/(root)/(tabs)/profile/favorites"
+                        )
                     : undefined
                 }
               />
