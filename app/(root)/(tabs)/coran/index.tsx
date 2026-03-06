@@ -41,11 +41,12 @@ interface LibraryCardItem {
   image?: string | null;
 }
 
-/** Coran : grande carte à gauche, deux petites à droite */
-const CORAN_HERO_ITEMS: { left: LibraryCardItem; topRight: LibraryCardItem; bottomRight: LibraryCardItem } = {
-  left: { $id: "sourates", name: "Sourates", price: "114 sourates" },
-  topRight: { $id: "tafsir", name: "Tafsir", price: "Exégèse des versets" },
-  bottomRight: { $id: "recitateurs", name: "Récitateurs", price: "Écoute en audio" },
+const quranImage = require("@/assets/images/islamic-new-year-quran-book-with-dates-photo.jpg");
+
+/** Coran : grande carte Sourates à gauche, petite Récitateurs à droite */
+const CORAN_HERO_ITEMS: { sourates: LibraryCardItem; recitateurs: LibraryCardItem } = {
+  sourates: { $id: "sourates", name: "Sourates", price: "114 sourates", image: null },
+  recitateurs: { $id: "recitateurs", name: "Récitateurs", price: "Écoute en audio" },
 };
 
 /** Invocations : deux petites à gauche, une grande à droite (inverse de Coran) */
@@ -78,36 +79,34 @@ function pushLibraryRoute(route: LibraryRoute) {
   router.push(`/(root)/(tabs)/coran/${route}` as const);
 }
 
+const SOURATES_CARD_WIDTH = contentWidth * 0.65;
+const RECITATEURS_CARD_WIDTH = contentWidth - SOURATES_CARD_WIDTH - CORAN_GAP;
+
 function CoranHeroBlock() {
-  const { left, topRight, bottomRight } = CORAN_HERO_ITEMS;
+  const { sourates, recitateurs } = CORAN_HERO_ITEMS;
+  const souratesItem = {
+    ...sourates,
+    image: quranImage,
+  } as Parameters<typeof FeaturedCard>[0]["item"];
   return (
     <View style={styles.heroBlock}>
-      <View style={styles.heroLeft}>
+      <View style={styles.souratesCardWrap}>
         <FeaturedCard
-          item={left as Parameters<typeof FeaturedCard>[0]["item"]}
-          onPress={() => pushLibraryRoute(left.$id)}
-          actionLabel="Ouvrir"
-          cardWidth={coranColWidth}
+          item={souratesItem}
+          onPress={() => pushLibraryRoute(sourates.$id)}
+          actionLabel="Lire"
+          cardWidth={SOURATES_CARD_WIDTH}
           cardHeight={BLOCK_HEIGHT}
           noMargin
         />
       </View>
-      <View style={styles.heroRight}>
+      <View style={styles.recitateurCardWrap}>
         <FeaturedCard
-          item={topRight as Parameters<typeof FeaturedCard>[0]["item"]}
-          onPress={() => pushLibraryRoute(topRight.$id)}
-          actionLabel="Ouvrir"
-          cardWidth={coranColWidth}
-          cardHeight={smallCardHeight}
-          noMargin
-        />
-        <View style={styles.heroGap} />
-        <FeaturedCard
-          item={bottomRight as Parameters<typeof FeaturedCard>[0]["item"]}
-          onPress={() => pushLibraryRoute(bottomRight.$id)}
-          actionLabel="Ouvrir"
-          cardWidth={coranColWidth}
-          cardHeight={smallCardHeight}
+          item={recitateurs as Parameters<typeof FeaturedCard>[0]["item"]}
+          onPress={() => pushLibraryRoute(recitateurs.$id)}
+          actionLabel="Écouter"
+          cardWidth={RECITATEURS_CARD_WIDTH}
+          cardHeight={BLOCK_HEIGHT}
           noMargin
         />
       </View>
@@ -295,6 +294,13 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     height: BLOCK_HEIGHT,
     marginBottom: 4,
+  },
+  souratesCardWrap: {
+    width: SOURATES_CARD_WIDTH,
+    marginRight: CORAN_GAP,
+  },
+  recitateurCardWrap: {
+    width: RECITATEURS_CARD_WIDTH,
   },
   heroLeft: {
     width: coranColWidth,

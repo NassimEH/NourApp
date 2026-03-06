@@ -73,3 +73,21 @@ export const FR_TRANSLATION_EDITION = "fr.hamidullah";
 /** Récitateur audio par défaut (verset par verset) */
 export const DEFAULT_AUDIO_RECITER = "ar.abdulbasitmurattal";
 export const AUDIO_BITRATE = "128";
+
+/** Liste des récitateurs disponibles */
+export interface Reciter {
+  id: string;
+  name: string;
+  style: string;
+}
+
+export const AVAILABLE_RECITERS: Reciter[] = [
+  { id: "ar.abdulbasitmurattal", name: "Abdul Basit", style: "Murattal" },
+  { id: "ar.alafasy", name: "Mishary Alafasy", style: "Populaire" },
+  { id: "ar.husary", name: "Mahmoud Khalil Al-Husary", style: "Classique" },
+  { id: "ar.minshawi", name: "Mohamed Siddiq Al-Minshawi", style: "Mujawwad" },
+  { id: "ar.abdurrahmaansudais", name: "Abdurrahman As-Sudais", style: "Imam Mecque" },
+  { id: "ar.saaborig", name: "Saad Al-Ghamdi", style: "Populaire" },
+  { id: "ar.ahmedajamy", name: "Ahmed Al-Ajamy", style: "Doux" },
+  { id: "ar.maaborig", name: "Maher Al-Muaiqly", style: "Imam Mecque" },
+];

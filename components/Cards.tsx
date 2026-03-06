@@ -53,7 +53,7 @@ export const ReadingCard = ({ item, onPress }: ReadingCardProps) => {
 };
 
 interface Props {
-  item: Models.Document & { image?: string | null; name?: string; price?: number | string };
+  item: Models.Document & { image?: string | number | null; name?: string; price?: number | string };
   onPress?: () => void;
   /** Libellé du bouton d’action (ex: "Lire" pour la section lecture) */
   actionLabel?: string;
@@ -75,7 +75,12 @@ export const FeaturedCard = ({
   noMargin,
 }: Props) => {
   const router = useRouter();
-  const imageSource = item.image ? { uri: item.image } : defaultImage;
+  const imageSource =
+    typeof item.image === "number"
+      ? item.image
+      : item.image
+        ? { uri: item.image }
+        : defaultImage;
   const title = item.name ?? "Bien immobilier";
   const price = item.price != null ? (typeof item.price === "number" ? `$${item.price}` : String(item.price)) : "—";
 
