@@ -1,5 +1,4 @@
 import {
-  ImageBackground,
   FlatList,
   StyleSheet,
   Text,
@@ -8,36 +7,38 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router } from "expo-router";
-import Feather from "@expo/vector-icons/Feather";
+import { AppIcon } from "@/components/AppIcon";
 import { useFocusEffect } from "expo-router";
 import { useCallback } from "react";
 
 import { useDuaFavorites } from "@/lib/dua";
+import { ScreenBackground } from "@/components/ScreenBackground";
+import { SCREEN_EDGE_PADDING } from "@/constants/screen-layout";
+import { ScreenPageHeader } from "@/components/ScreenPageHeader";
+import { useTranslation } from "@/lib/i18n";
 
-const homeBackground = require("@/assets/images/home-background.png");
-const H_PADDING = 24;
+const H_PADDING = SCREEN_EDGE_PADDING;
 const ICON_COLOR = "#191D31";
 const TEXT_MUTED = "rgba(0,0,0,0.5)";
 
 export default function FavoritesScreen() {
+  const { t } = useTranslation();
   const { favorites, refetch } = useDuaFavorites();
 
   useFocusEffect(useCallback(() => { refetch(); }, [refetch]));
 
   return (
-    <ImageBackground source={homeBackground} style={styles.background} resizeMode="cover">
+    <ScreenBackground style={styles.background}>
       <SafeAreaView style={styles.safeArea} edges={["top", "left", "right"]}>
-        <View style={styles.header}>
-          <TouchableOpacity onPress={() => router.back()} style={styles.backBtn} activeOpacity={0.7}>
-            <Feather name="chevron-left" size={26} color={ICON_COLOR} />
-          </TouchableOpacity>
-          <Text style={styles.title}>Favoris</Text>
-          <View style={styles.placeholder} />
-        </View>
+        <ScreenPageHeader
+          title={t("screens.favoritesTitle")}
+          subtitle={t("screens.favoritesSubtitle")}
+          onBack={() => router.back()}
+        />
 
         {favorites.length === 0 ? (
           <View style={styles.empty}>
-            <Feather name="heart" size={48} color={TEXT_MUTED} />
+            <AppIcon name="heart" size={48} color={TEXT_MUTED} />
             <Text style={styles.emptyText}>
               Aucune invocation en favori. Ajoutez-en depuis la section Invocations.
             </Text>
@@ -58,7 +59,7 @@ export default function FavoritesScreen() {
                 }
                 activeOpacity={0.7}
               >
-                <Feather name="book-open" size={22} color={ICON_COLOR} />
+                <AppIcon name="book-open" size={22} color={ICON_COLOR} />
                 <View style={styles.rowText}>
                   <Text style={styles.rowTitle} numberOfLines={1}>
                     {item.title}
@@ -67,13 +68,13 @@ export default function FavoritesScreen() {
                     {item.translation || item.arabic || ""}
                   </Text>
                 </View>
-                <Feather name="chevron-right" size={20} color={ICON_COLOR} />
+                <AppIcon name="chevron-right" size={20} color={ICON_COLOR} />
               </TouchableOpacity>
             )}
           />
         )}
       </SafeAreaView>
-    </ImageBackground>
+    </ScreenBackground>
   );
 }
 

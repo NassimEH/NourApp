@@ -1,6 +1,5 @@
 import {
   Dimensions,
-  ImageBackground,
   ScrollView,
   StyleSheet,
   Text,
@@ -11,10 +10,16 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { router } from "expo-router";
 
 import { FeaturedCard } from "@/components/Cards";
+import { ScreenBackground } from "@/components/ScreenBackground";
+import {
+  SCREEN_EDGE_PADDING,
+  screenPageHeaderSpacing,
+  screenScrollContent,
+} from "@/constants/screen-layout";
+import { ScreenPageHeader } from "@/components/ScreenPageHeader";
+import { useTranslation } from "@/lib/i18n";
 
-const homeBackground = require("@/assets/images/home-background.png");
-
-const H_PADDING = 20;
+const H_PADDING = SCREEN_EDGE_PADDING;
 const CORAN_GAP = 8;
 
 type LibraryRoute =
@@ -192,13 +197,16 @@ function HadithsHeroBlock() {
 }
 
 export default function BibliothequeScreen() {
+  const { t } = useTranslation();
+
   return (
-    <ImageBackground source={homeBackground} style={styles.background} resizeMode="cover">
+    <ScreenBackground style={styles.background}>
       <SafeAreaView style={styles.safeArea} edges={["top"]}>
-        <View style={styles.header}>
-          <Text style={styles.pageTitle}>Bibliothèque</Text>
-          <Text style={styles.tagline}>Cœur spirituel de l'app</Text>
-        </View>
+        <ScreenPageHeader
+          title={t("screens.libraryTitle")}
+          subtitle={t("screens.librarySubtitle")}
+          style={screenPageHeaderSpacing}
+        />
 
         <ScrollView
           style={styles.scroll}
@@ -234,33 +242,16 @@ export default function BibliothequeScreen() {
           </View>
         </ScrollView>
       </SafeAreaView>
-    </ImageBackground>
+    </ScreenBackground>
   );
 }
 
 const styles = StyleSheet.create({
   background: { flex: 1 },
   safeArea: { flex: 1, backgroundColor: "transparent" },
-  header: {
-    paddingHorizontal: H_PADDING,
-    paddingTop: 24,
-    paddingBottom: 16,
-  },
-  pageTitle: {
-    fontSize: 28,
-    fontFamily: "PlusJakartaSans-Bold",
-    color: "#191D31",
-  },
-  tagline: {
-    fontSize: 16,
-    fontFamily: "PlusJakartaSans-Medium",
-    color: "rgba(0,0,0,0.6)",
-    marginTop: 6,
-  },
   scroll: { flex: 1 },
   scrollContent: {
-    paddingHorizontal: H_PADDING,
-    paddingBottom: 120,
+    ...screenScrollContent,
     paddingTop: 4,
   },
   section: {

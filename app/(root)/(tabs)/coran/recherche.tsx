@@ -1,40 +1,40 @@
-import { useState } from "react";
+﻿import { useState } from "react";
 import {
-  ImageBackground,
   ScrollView,
   StyleSheet,
   Text,
   TextInput,
-  TouchableOpacity,
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router } from "expo-router";
-import Feather from "@expo/vector-icons/Feather";
+import { AppIcon } from "@/components/AppIcon";
+import { ScreenPageHeader } from "@/components/ScreenPageHeader";
+import { ScreenBackground } from "@/components/ScreenBackground";
+import { useTranslation } from "@/lib/i18n";
 
-const homeBackground = require("@/assets/images/home-background.png");
 const ICON_COLOR = "#191D31";
 
 export default function RechercheCoranScreen() {
   const [query, setQuery] = useState("");
+  const { t, rtlViewStyle } = useTranslation();
 
   return (
-    <ImageBackground source={homeBackground} style={styles.background} resizeMode="cover">
+    <ScreenBackground style={styles.background}>
       <SafeAreaView style={styles.safeArea} edges={["top", "left", "right"]}>
-        <View style={styles.header}>
-          <Text style={styles.title}>Recherche Coran</Text>
-          <TouchableOpacity onPress={() => router.back()} style={styles.backButton} activeOpacity={0.7}>
-            <Feather name="chevron-left" size={28} color={ICON_COLOR} />
-          </TouchableOpacity>
-        </View>
+        <ScreenPageHeader
+          title={t("screens.searchTitle")}
+          subtitle={t("screens.searchSubtitle")}
+          onBack={() => router.back()}
+        />
         <ScrollView
-          style={styles.scroll}
+          style={[styles.scroll, rtlViewStyle]}
           contentContainerStyle={styles.content}
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
         >
           <View style={styles.searchWrap}>
-            <Feather name="search" size={20} color="rgba(0,0,0,0.45)" />
+            <AppIcon name="search" size={20} color="rgba(0,0,0,0.45)" />
             <TextInput
               style={styles.searchInput}
               value={query}
@@ -49,28 +49,15 @@ export default function RechercheCoranScreen() {
           </Text>
         </ScrollView>
       </SafeAreaView>
-    </ImageBackground>
+    </ScreenBackground>
   );
 }
 
 const styles = StyleSheet.create({
   background: { flex: 1 },
   safeArea: { flex: 1, backgroundColor: "transparent" },
-  header: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingHorizontal: 20,
-    paddingVertical: 12,
-  },
-  backButton: { paddingVertical: 8, paddingLeft: 8 },
-  title: {
-    fontSize: 20,
-    fontFamily: "PlusJakartaSans-Bold",
-    color: ICON_COLOR,
-  },
   scroll: { flex: 1 },
-  content: { paddingHorizontal: 28, paddingTop: 24, paddingBottom: 40 },
+  content: { paddingHorizontal: 28, paddingTop: 8, paddingBottom: 40 },
   searchWrap: {
     flexDirection: "row",
     alignItems: "center",

@@ -1,77 +1,86 @@
-import {
-  ImageBackground,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
-} from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
-import { router } from "expo-router";
-import Feather from "@expo/vector-icons/Feather";
+import { StyleSheet, Text, View } from "react-native";
 
-import { useAppPreferences, ICON_STYLE_LABELS, type IconStyleMode } from "@/lib/app-preferences";
-
-const ICON_COLOR = "#191D31";
+import { useAppPreferences, type IconStyleMode } from "@/lib/app-preferences";
+import { useAppTheme } from "@/lib/app-theme";
+import { useTranslation, getIconStyleLabelI18n } from "@/lib/i18n";
+import { AppIcon } from "@/components/AppIcon";
 import { PreferenceOptionRow } from "@/components/PreferenceOptionRow";
-
-const homeBackground = require("@/assets/images/home-background.png");
+import {
+  PreferenceScreenLayout,
+  PreferenceOptionDivider,
+} from "@/components/PreferenceScreenLayout";
 
 const OPTIONS: IconStyleMode[] = ["outline", "filled"];
 
+const PREVIEW_ICONS = [
+  "home",
+  "book-open",
+  "heart",
+  "search",
+  "user",
+] as const;
+
 export default function IconStyleScreen() {
   const { iconStyle, setIconStyle } = useAppPreferences();
+  const colors = useAppTheme();
+  const { t, locale, rtlTextStyle } = useTranslation();
 
   return (
-    <ImageBackground source={homeBackground} style={styles.background} resizeMode="cover">
-      <SafeAreaView style={styles.safeArea} edges={["top", "left", "right"]}>
-        <View style={styles.header}>
-          <Text style={styles.title}>Style des icônes</Text>
-          <TouchableOpacity onPress={() => router.back()} style={styles.backButton} activeOpacity={0.7}>
-            <Feather name="chevron-left" size={28} color={ICON_COLOR} />
-          </TouchableOpacity>
-        </View>
-        <ScrollView
-          style={styles.scroll}
-          contentContainerStyle={styles.content}
-          showsVerticalScrollIndicator={false}
+    <PreferenceScreenLayout
+      title={t("preferences.iconStyleTitle")}
+      subtitle={t("preferences.iconStyleSubtitle")}
+    >
+      <View style={styles.previewBlock}>
+        <Text style={[styles.previewLabel, { color: colors.textMuted }, rtlTextStyle]}>
+          {t("preferences.languagePreviewLabel")} — {getIconStyleLabelI18n(locale, iconStyle)}
+        </Text>
+        <View
+          style={[
+            styles.previewRow,
+            { backgroundColor: colors.card, borderColor: colors.border },
+          ]}
         >
-          {OPTIONS.map((opt, index) => (
-            <View key={opt} style={[styles.optionWrap, index < OPTIONS.length - 1 && styles.optionBorder]}>
-              <PreferenceOptionRow
-                label={ICON_STYLE_LABELS[opt]}
-                selected={iconStyle === opt}
-                onPress={() => setIconStyle(opt)}
-              />
-            </View>
+          {PREVIEW_ICONS.map((name) => (
+            <AppIcon
+              key={name}
+              name={name}
+              size={28}
+              color={colors.accent}
+            />
           ))}
-        </ScrollView>
-      </SafeAreaView>
-    </ImageBackground>
+        </View>
+      </View>
+
+      {OPTIONS.map((opt, index) => (
+        <View key={opt}>
+          <PreferenceOptionRow
+            label={getIconStyleLabelI18n(locale, opt)}
+            selected={iconStyle === opt}
+            onPress={() => setIconStyle(opt)}
+          />
+          {index < OPTIONS.length - 1 ? <PreferenceOptionDivider /> : null}
+        </View>
+      ))}
+    </PreferenceScreenLayout>
   );
 }
 
 const styles = StyleSheet.create({
-  background: { flex: 1 },
-  safeArea: { flex: 1, backgroundColor: "transparent" },
-  header: {
+  previewBlock: {
+    marginBottom: 20,
+  },
+  previewLabel: {
+    fontSize: 14,
+    fontFamily: "PlusJakartaSans-Medium",
+    marginBottom: 10,
+  },
+  previewRow: {
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "space-between",
-    paddingHorizontal: 20,
-    paddingVertical: 12,
-  },
-  backButton: { paddingVertical: 8, paddingLeft: 8 },
-  title: {
-    fontSize: 20,
-    fontFamily: "PlusJakartaSans-Bold",
-    color: "#191D31",
-  },
-  scroll: { flex: 1 },
-  content: { paddingHorizontal: 28, paddingTop: 24, paddingBottom: 40 },
-  optionWrap: {},
-  optionBorder: {
-    borderBottomWidth: 1,
-    borderBottomColor: "rgba(0,0,0,0.06)",
+    justifyContent: "space-around",
+    paddingVertical: 20,
+    paddingHorizontal: 12,
+    borderRadius: 16,
+    borderWidth: 1,
   },
 });

@@ -1,6 +1,5 @@
-import { useState } from "react";
+﻿import { useState } from "react";
 import {
-  ImageBackground,
   Modal,
   StyleSheet,
   Text,
@@ -9,53 +8,62 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router } from "expo-router";
-import Feather from "@expo/vector-icons/Feather";
-
-const homeBackground = require("@/assets/images/home-background.png");
-const ICON_COLOR = "#191D31";
+import { AppIcon } from "@/components/AppIcon";
+import { ScreenBackground } from "@/components/ScreenBackground";
+import { ScreenPageHeader } from "@/components/ScreenPageHeader";
+import { useAppTheme } from "@/lib/app-theme";
+import { useTranslation } from "@/lib/i18n";
 
 export default function PlayerScreen() {
   const [recitateurSheetVisible, setRecitateurSheetVisible] = useState(false);
+  const colors = useAppTheme();
+  const { t } = useTranslation();
 
   return (
-    <ImageBackground source={homeBackground} style={styles.background} resizeMode="cover">
+    <ScreenBackground style={styles.background}>
       <SafeAreaView style={styles.safeArea} edges={["top", "left", "right"]}>
-        <View style={styles.header}>
-          <Text style={styles.title}>Lecture immersive</Text>
-          <TouchableOpacity onPress={() => router.back()} style={styles.backButton} activeOpacity={0.7}>
-            <Feather name="chevron-left" size={28} color={ICON_COLOR} />
-          </TouchableOpacity>
-        </View>
+        <ScreenPageHeader
+          title={t("screens.playerTitle")}
+          subtitle={t("screens.playerSubtitle")}
+          onBack={() => router.back()}
+        />
 
         <View style={styles.playerArea}>
           <View style={styles.verseCard}>
-            <Text style={styles.verseRef}>Al-Fatiha, 1</Text>
-            <Text style={styles.verseText}>
+            <Text style={[styles.verseRef, { color: colors.textMuted }]}>
+              Al-Fatiha, 1
+            </Text>
+            <Text style={[styles.verseText, { color: colors.text }]}>
               بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ
             </Text>
-            <Text style={styles.verseTranslation}>
+            <Text style={[styles.verseTranslation, { color: colors.textMuted }]}>
               Au nom d'Allah, le Tout Miséricordieux, le Très Miséricordieux.
             </Text>
           </View>
           <View style={styles.controls}>
             <TouchableOpacity style={styles.controlBtn} activeOpacity={0.8}>
-              <Feather name="skip-back" size={28} color={ICON_COLOR} />
+              <AppIcon name="skip-back" size={28} color={colors.icon} />
             </TouchableOpacity>
-            <TouchableOpacity style={styles.playBtn} activeOpacity={0.8}>
-              <Feather name="play" size={36} color="#fff" />
+            <TouchableOpacity
+              style={[styles.playBtn, { backgroundColor: colors.accent }]}
+              activeOpacity={0.8}
+            >
+              <AppIcon name="play" size={36} color="#fff" />
             </TouchableOpacity>
             <TouchableOpacity style={styles.controlBtn} activeOpacity={0.8}>
-              <Feather name="skip-forward" size={28} color={ICON_COLOR} />
+              <AppIcon name="skip-forward" size={28} color={colors.icon} />
             </TouchableOpacity>
           </View>
           <TouchableOpacity
-            style={styles.recitateurCta}
+            style={[styles.recitateurCta, { borderColor: colors.border }]}
             onPress={() => setRecitateurSheetVisible(true)}
             activeOpacity={0.8}
           >
-            <Feather name="mic" size={20} color={ICON_COLOR} />
-            <Text style={styles.recitateurCtaLabel}>Changer de récitateur</Text>
-            <Feather name="chevron-up" size={20} color={ICON_COLOR} />
+            <AppIcon name="mic" size={20} color={colors.icon} />
+            <Text style={[styles.recitateurCtaLabel, { color: colors.text }]}>
+              Changer de récitateur
+            </Text>
+            <AppIcon name="chevron-up" size={20} color={colors.icon} />
           </TouchableOpacity>
         </View>
       </SafeAreaView>
@@ -73,8 +81,10 @@ export default function PlayerScreen() {
         >
           <View style={styles.sheet} onStartShouldSetResponder={() => true}>
             <View style={styles.sheetHandle} />
-            <Text style={styles.sheetTitle}>Choisir un récitateur</Text>
-            <Text style={styles.sheetHint}>
+            <Text style={[styles.sheetTitle, { color: colors.text }]}>
+              Choisir un récitateur
+            </Text>
+            <Text style={[styles.sheetHint, { color: colors.textMuted }]}>
               Liste des récitateurs disponibles. Le bottom sheet sera enrichi avec la liste complète.
             </Text>
             <TouchableOpacity
@@ -82,94 +92,76 @@ export default function PlayerScreen() {
               onPress={() => setRecitateurSheetVisible(false)}
               activeOpacity={0.8}
             >
-              <Text style={styles.sheetCloseLabel}>Fermer</Text>
+              <Text style={[styles.sheetCloseText, { color: colors.accent }]}>
+                Fermer
+              </Text>
             </TouchableOpacity>
           </View>
         </TouchableOpacity>
       </Modal>
-    </ImageBackground>
+    </ScreenBackground>
   );
 }
 
 const styles = StyleSheet.create({
   background: { flex: 1 },
   safeArea: { flex: 1, backgroundColor: "transparent" },
-  header: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingHorizontal: 20,
-    paddingVertical: 12,
-  },
-  backButton: { paddingVertical: 8, paddingLeft: 8 },
-  title: {
-    fontSize: 20,
-    fontFamily: "PlusJakartaSans-Bold",
-    color: ICON_COLOR,
-  },
   playerArea: {
     flex: 1,
     paddingHorizontal: 28,
+    paddingTop: 8,
+    paddingBottom: 120,
     justifyContent: "center",
-    alignItems: "center",
   },
   verseCard: {
-    backgroundColor: "rgba(255,255,255,0.85)",
-    borderRadius: 16,
-    padding: 24,
-    marginBottom: 32,
-    borderWidth: 1,
-    borderColor: "rgba(0,0,0,0.06)",
-    width: "100%",
+    paddingVertical: 24,
+    gap: 16,
   },
   verseRef: {
-    fontSize: 13,
-    fontFamily: "PlusJakartaSans-SemiBold",
-    color: "#3d6b47",
-    marginBottom: 12,
+    fontSize: 14,
+    fontFamily: "PlusJakartaSans-Medium",
   },
   verseText: {
-    fontSize: 24,
-    fontFamily: "PlusJakartaSans-Medium",
-    color: ICON_COLOR,
-    textAlign: "center",
-    marginBottom: 12,
+    fontSize: 28,
+    fontFamily: "PlusJakartaSans-Regular",
+    textAlign: "right",
+    writingDirection: "rtl",
+    lineHeight: 44,
   },
   verseTranslation: {
-    fontSize: 15,
+    fontSize: 16,
     fontFamily: "PlusJakartaSans-Regular",
-    color: "rgba(0,0,0,0.7)",
-    textAlign: "center",
+    lineHeight: 24,
     fontStyle: "italic",
   },
   controls: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 24,
-    marginBottom: 24,
+    justifyContent: "center",
+    gap: 32,
+    marginTop: 32,
   },
-  controlBtn: {
-    padding: 12,
-  },
+  controlBtn: { padding: 8 },
   playBtn: {
     width: 72,
     height: 72,
     borderRadius: 36,
-    backgroundColor: "#3d6b47",
     alignItems: "center",
     justifyContent: "center",
   },
   recitateurCta: {
     flexDirection: "row",
     alignItems: "center",
+    justifyContent: "center",
     gap: 8,
-    paddingVertical: 12,
-    paddingHorizontal: 16,
+    marginTop: 40,
+    paddingVertical: 14,
+    borderWidth: 1,
+    borderRadius: 14,
   },
   recitateurCtaLabel: {
-    fontSize: 15,
+    fontSize: 16,
     fontFamily: "PlusJakartaSans-Medium",
-    color: ICON_COLOR,
   },
   sheetOverlay: {
     flex: 1,
@@ -180,40 +172,31 @@ const styles = StyleSheet.create({
     backgroundColor: "#fff",
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
-    paddingHorizontal: 28,
-    paddingTop: 12,
+    padding: 24,
     paddingBottom: 40,
   },
   sheetHandle: {
     width: 40,
     height: 4,
-    backgroundColor: "rgba(0,0,0,0.2)",
     borderRadius: 2,
+    backgroundColor: "rgba(0,0,0,0.15)",
     alignSelf: "center",
-    marginBottom: 20,
+    marginBottom: 16,
   },
   sheetTitle: {
-    fontSize: 18,
+    fontSize: 20,
     fontFamily: "PlusJakartaSans-Bold",
-    color: ICON_COLOR,
     marginBottom: 8,
   },
   sheetHint: {
-    fontSize: 14,
+    fontSize: 15,
     fontFamily: "PlusJakartaSans-Regular",
-    color: "rgba(0,0,0,0.6)",
-    marginBottom: 24,
-    lineHeight: 20,
+    lineHeight: 22,
+    marginBottom: 20,
   },
-  sheetClose: {
-    backgroundColor: "#3d6b47",
-    borderRadius: 12,
-    paddingVertical: 14,
-    alignItems: "center",
-  },
-  sheetCloseLabel: {
+  sheetClose: { alignSelf: "center", paddingVertical: 12 },
+  sheetCloseText: {
     fontSize: 16,
     fontFamily: "PlusJakartaSans-SemiBold",
-    color: "#fff",
   },
 });

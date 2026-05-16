@@ -1,6 +1,5 @@
 import {
   ActivityIndicator,
-  ImageBackground,
   PanResponder,
   StyleSheet,
   Text,
@@ -9,30 +8,33 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router, useLocalSearchParams } from "expo-router";
-import Feather from "@expo/vector-icons/Feather";
+import { AppIcon } from "@/components/AppIcon";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { useSura } from "@/lib/quran/hooks/useSura";
 import { useLastRead } from "@/lib/quran/hooks/useLastRead";
 import { useQuranAudioContext } from "@/lib/quran/QuranAudioContext";
-import { useAppPreferences } from "@/lib/app-preferences";
+import { ScreenBackground } from "@/components/ScreenBackground";
+import { ScreenPageHeader } from "@/components/ScreenPageHeader";
+import { useAppTypography } from "@/lib/app-typography";
+import { useTranslation } from "@/lib/i18n";
+import { useAppTheme } from "@/lib/app-theme";
+import { SCREEN_EDGE_PADDING } from "@/constants/screen-layout";
 
-const homeBackground = require("@/assets/images/home-background.png");
-const H_PADDING = 24;
+const H_PADDING = SCREEN_EDGE_PADDING;
 const ICON_SIZE = 22;
 const ICON_COLOR = "#191D31";
 const ACCENT = "#3d6b47";
 const TEXT_MUTED = "rgba(0,0,0,0.5)";
-
-const ARABIC_SIZE_MAP = { small: 22, medium: 26, large: 30 } as const;
-const TRANS_SIZE_MAP = { small: 14, medium: 15, large: 17 } as const;
 
 export default function QuranReaderScreen() {
   const { number, autoplay } = useLocalSearchParams<{ number: string; autoplay?: string }>();
   const suraNumber = number ? parseInt(number, 10) : null;
   const { data, loading, error, refetch } = useSura(suraNumber);
   const { lastRead, setLastReadState } = useLastRead();
-  const { textSize } = useAppPreferences();
+  const typography = useAppTypography();
+  const colors = useAppTheme();
+  const { t } = useTranslation();
   const audio = useQuranAudioContext();
 
   const [showTranslation, setShowTranslation] = useState(true);
@@ -40,13 +42,36 @@ export default function QuranReaderScreen() {
   const autoplayRequested = autoplay === "1";
   const autoplayDoneRef = useRef(false);
 
-  const arabicSize = ARABIC_SIZE_MAP[textSize];
-  const transSize = TRANS_SIZE_MAP[textSize];
+  const arabicSize = typography.arabic;
+  const transSize = typography.translation;
 
   const ayahs = data?.arabic?.ayahs ?? [];
   const total = ayahs.length;
   const ayah = total > 0 ? ayahs[currentIndex] : null;
-  const trans = ayah && data?.translation ? data.translation.find((t) => t.number === ayah.number) : null;
+  const trans =
+    ayah && data?.translation
+      ? data.translation.find((tr) => tr.number === ayah.number)
+      : null;
+
+  const suraTitle =
+    data?.arabic?.name ?? `${t("tabs.library")} ${suraNumber}`;
+  const suraSubtitle = useMemo(() => {
+    const parts: string[] = [];
+    const enName =
+      data?.arabic?.englishNameTranslation || data?.arabic?.englishName;
+    if (enName) parts.push(enName);
+    if (total > 0) {
+      parts.push(
+        t("screens.quranReaderVerse", {
+          current: currentIndex + 1,
+          total,
+        })
+      );
+    } else {
+      parts.push(t("screens.quranReaderSubtitle"));
+    }
+    return parts.join(" · ");
+  }, [data?.arabic, total, currentIndex, t]);
 
   useEffect(() => {
     if (data && lastRead?.suraNumber === suraNumber && typeof lastRead.scrollOffsetY === "number") {
@@ -119,41 +144,35 @@ export default function QuranReaderScreen() {
   }
 
   return (
-    <ImageBackground source={homeBackground} style={styles.background} resizeMode="cover">
+    <ScreenBackground style={styles.background}>
       <SafeAreaView style={styles.safeArea} edges={["top", "left", "right"]}>
-        {/* Header épuré */}
-        <View style={styles.header}>
-          <TouchableOpacity onPress={() => router.back()} style={styles.headerSide} activeOpacity={0.7}>
-            <Feather name="chevron-left" size={26} color={ICON_COLOR} />
-          </TouchableOpacity>
-          <View style={styles.headerCenter}>
-            <Text style={styles.suraName} numberOfLines={1}>
-              {data?.arabic?.name ?? `Sourate ${suraNumber}`}
-            </Text>
-            {(data?.arabic?.englishNameTranslation || data?.arabic?.englishName) && (
-              <Text style={styles.suraNameFr} numberOfLines={1}>
-                {data.arabic.englishNameTranslation || data.arabic.englishName}
-              </Text>
-            )}
-            {total > 0 && (
-              <Text style={styles.verseCounter}>
-                {currentIndex + 1} / {total}
-              </Text>
-            )}
-          </View>
-          <View style={styles.headerRight}>
-            <TouchableOpacity onPress={playCurrentAyah} style={styles.iconBtn} activeOpacity={0.7}>
-              <Feather name="volume-2" size={ICON_SIZE} color={ICON_COLOR} />
-            </TouchableOpacity>
-            <TouchableOpacity
-              onPress={() => setShowTranslation((v) => !v)}
-              style={styles.iconBtn}
-              activeOpacity={0.7}
-            >
-              <Feather name="book" size={ICON_SIZE} color={showTranslation ? ACCENT : ICON_COLOR} />
-            </TouchableOpacity>
-          </View>
-        </View>
+        <ScreenPageHeader
+          title={suraTitle}
+          subtitle={suraSubtitle}
+          onBack={() => router.back()}
+          headerActions={
+            <>
+              <TouchableOpacity
+                onPress={playCurrentAyah}
+                style={styles.iconBtn}
+                activeOpacity={0.7}
+              >
+                <AppIcon name="volume-2" size={ICON_SIZE} color={colors.icon} />
+              </TouchableOpacity>
+              <TouchableOpacity
+                onPress={() => setShowTranslation((v) => !v)}
+                style={styles.iconBtn}
+                activeOpacity={0.7}
+              >
+                <AppIcon
+                  name="book"
+                  size={ICON_SIZE}
+                  color={showTranslation ? colors.accent : colors.icon}
+                />
+              </TouchableOpacity>
+            </>
+          }
+        />
 
         {loading && !data ? (
           <View style={styles.loadingWrap}>
@@ -172,7 +191,13 @@ export default function QuranReaderScreen() {
             {/* Zone centrale : un verset (swipe gauche = suivant, droite = précédent) */}
             <View style={styles.verseArea} {...panResponder.panHandlers}>
               <Text
-                style={[styles.arabicVerse, { fontSize: arabicSize, lineHeight: arabicSize * 1.6 }]}
+                style={[
+                  styles.arabicVerse,
+                  {
+                    fontSize: arabicSize,
+                    lineHeight: arabicSize * typography.lineHeightArabic,
+                  },
+                ]}
                 selectable
               >
                 {ayah.text}
@@ -192,7 +217,7 @@ export default function QuranReaderScreen() {
                 style={[styles.navArrow, currentIndex === 0 && styles.navArrowDisabled]}
                 activeOpacity={0.7}
               >
-                <Feather
+                <AppIcon
                   name="chevron-left"
                   size={28}
                   color={currentIndex === 0 ? TEXT_MUTED : ICON_COLOR}
@@ -203,7 +228,7 @@ export default function QuranReaderScreen() {
                 style={styles.playSuraBtn}
                 activeOpacity={0.7}
               >
-                <Feather name="play-circle" size={24} color={ACCENT} />
+                <AppIcon name="play-circle" size={24} color={ACCENT} />
                 <Text style={styles.playSuraLabel}>Écouter la sourate</Text>
               </TouchableOpacity>
               <TouchableOpacity
@@ -212,7 +237,7 @@ export default function QuranReaderScreen() {
                 style={[styles.navArrow, currentIndex >= total - 1 && styles.navArrowDisabled]}
                 activeOpacity={0.7}
               >
-                <Feather
+                <AppIcon
                   name="chevron-right"
                   size={28}
                   color={currentIndex >= total - 1 ? TEXT_MUTED : ICON_COLOR}
@@ -223,7 +248,7 @@ export default function QuranReaderScreen() {
           </>
         ) : null}
       </SafeAreaView>
-    </ImageBackground>
+    </ScreenBackground>
   );
 }
 

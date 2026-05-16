@@ -1,5 +1,4 @@
 import {
-  ImageBackground,
   FlatList,
   StyleSheet,
   Text,
@@ -8,32 +7,34 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router } from "expo-router";
-import Feather from "@expo/vector-icons/Feather";
+import { AppIcon } from "@/components/AppIcon";
 
 import { JUZ_TO_FIRST_SURA } from "@/lib/quran/juzMapping";
+import { ScreenBackground } from "@/components/ScreenBackground";
+import { SCREEN_EDGE_PADDING } from "@/constants/screen-layout";
+import { ScreenPageHeader } from "@/components/ScreenPageHeader";
+import { useTranslation } from "@/lib/i18n";
 
-const homeBackground = require("@/assets/images/home-background.png");
-const H_PADDING = 24;
+const H_PADDING = SCREEN_EDGE_PADDING;
 const ICON_COLOR = "#191D31";
-const ACCENT = "#3d6b47";
 const TEXT_MUTED = "rgba(0,0,0,0.5)";
 
 const JUZ_ITEMS = Array.from({ length: 30 }, (_, i) => i + 1);
 
 const JUZ_EXPLANATION =
-  "Le Coran est divisÃ© en 30 juz (parties) pour faciliter la lecture sur un mois. Chaque juz regroupe plusieurs sourates ; en touchant un juz, vous accÃ©dez au dÃ©but de cette partie.";
+  "Le Coran est divisé en 30 juz (parties) pour faciliter la lecture sur un mois. Chaque juz regroupe plusieurs sourates ; en touchant un juz, vous accédez au début de cette partie.";
 
 export default function JuzScreen() {
+  const { t } = useTranslation();
+
   return (
-    <ImageBackground source={homeBackground} style={styles.background} resizeMode="cover">
+    <ScreenBackground style={styles.background}>
       <SafeAreaView style={styles.safeArea} edges={["top", "left", "right"]}>
-        <View style={styles.header}>
-          <TouchableOpacity onPress={() => router.back()} style={styles.backButton} activeOpacity={0.7}>
-            <Feather name="chevron-left" size={26} color={ICON_COLOR} />
-          </TouchableOpacity>
-          <Text style={styles.title}>Par Juz</Text>
-          <View style={styles.placeholder} />
-        </View>
+        <ScreenPageHeader
+          title={t("screens.juzTitle")}
+          subtitle={t("screens.juzSubtitle")}
+          onBack={() => router.back()}
+        />
 
         <View style={styles.explanationBlock}>
           <Text style={styles.explanationText}>{JUZ_EXPLANATION}</Text>
@@ -55,36 +56,22 @@ export default function JuzScreen() {
               >
                 <Text style={styles.juzNumber}>{item}</Text>
                 <Text style={styles.juzLabel}>Juz {item}</Text>
-                <Feather name="chevron-right" size={20} color={ICON_COLOR} style={styles.juzChevron} />
+                <AppIcon name="chevron-right" size={20} color={ICON_COLOR} style={styles.juzChevron} />
               </TouchableOpacity>
             );
           }}
         />
       </SafeAreaView>
-    </ImageBackground>
+    </ScreenBackground>
   );
 }
 
 const styles = StyleSheet.create({
   background: { flex: 1 },
   safeArea: { flex: 1, backgroundColor: "transparent" },
-  header: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingHorizontal: H_PADDING,
-    paddingVertical: 12,
-  },
-  backButton: { padding: 8 },
-  title: {
-    fontSize: 20,
-    fontFamily: "PlusJakartaSans-Bold",
-    color: ICON_COLOR,
-  },
-  placeholder: { width: 44 },
   explanationBlock: {
     paddingHorizontal: H_PADDING,
-    paddingTop: 8,
+    paddingTop: 0,
     paddingBottom: 20,
     borderBottomWidth: 1,
     borderBottomColor: "rgba(0,0,0,0.08)",
@@ -96,7 +83,7 @@ const styles = StyleSheet.create({
     lineHeight: 22,
   },
   row: { gap: 12, marginBottom: 12, paddingHorizontal: H_PADDING },
-  listContent: { paddingBottom: 120 },
+  listContent: { paddingBottom: 120, paddingTop: 8 },
   juzCard: {
     flex: 1,
     flexDirection: "row",

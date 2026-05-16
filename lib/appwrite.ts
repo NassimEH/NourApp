@@ -12,6 +12,8 @@ import * as FileSystem from "expo-file-system";
 import * as Linking from "expo-linking";
 import { openAuthSessionAsync } from "expo-web-browser";
 
+import { resolveAuthErrorKey, type AuthErrorKey } from "./auth-errors";
+
 export const config = {
   platform: "com.jsm.restate",
   endpoint: process.env.EXPO_PUBLIC_APPWRITE_ENDPOINT,
@@ -37,7 +39,11 @@ export const account = new Account(client);
 export const databases = new Databases(client);
 export const storage = new Storage(client);
 
-export async function login() {
+export type AuthResult =
+  | { ok: true }
+  | { ok: false; errorKey: AuthErrorKey };
+
+export async function loginWithGoogle() {
   try {
     const redirectUri = Linking.createURL("/");
 
@@ -62,10 +68,47 @@ export async function login() {
     const session = await account.createSession(userId, secret);
     if (!session) throw new Error("Failed to create session");
 
-    return true;
+    return { ok: true as const };
   } catch (error) {
     console.error(error);
-    return false;
+    return { ok: false as const, errorKey: resolveAuthErrorKey(error) };
+  }
+}
+
+/** @deprecated Utiliser loginWithGoogle */
+export async function login() {
+  const result = await loginWithGoogle();
+  return result.ok;
+}
+
+export async function loginWithEmailPassword(
+  email: string,
+  password: string
+): Promise<AuthResult> {
+  try {
+    await account.createEmailPasswordSession(email.trim(), password);
+    return { ok: true };
+  } catch (error) {
+    console.error("loginWithEmailPassword", error);
+    return { ok: false, errorKey: resolveAuthErrorKey(error) };
+  }
+}
+
+export async function registerWithEmail(params: {
+  name: string;
+  email: string;
+  password: string;
+}): Promise<AuthResult> {
+  try {
+    const userId = ID.unique();
+    const name = params.name.trim();
+    const email = params.email.trim();
+    await account.create(userId, email, params.password, name);
+    await account.createEmailPasswordSession(email, params.password);
+    return { ok: true };
+  } catch (error) {
+    console.error("registerWithEmail", error);
+    return { ok: false, errorKey: resolveAuthErrorKey(error) };
   }
 }
 

@@ -1,5 +1,4 @@
 import {
-  ImageBackground,
   FlatList,
   StyleSheet,
   Text,
@@ -9,7 +8,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router } from "expo-router";
-import Feather from "@expo/vector-icons/Feather";
+import { AppIcon } from "@/components/AppIcon";
 import { useMemo, useState } from "react";
 
 import { useSuraList } from "@/lib/quran/hooks/useSuraList";
@@ -17,9 +16,13 @@ import { useRandomAyah } from "@/lib/quran/hooks/useRandomAyah";
 import type { SuraMeta } from "@/lib/quran/types";
 import { SuraRow } from "@/components/quran/SuraRow";
 import { SuraListSkeleton } from "@/components/quran/SuraListSkeleton";
+import { ScreenBackground } from "@/components/ScreenBackground";
+import { SCREEN_EDGE_PADDING } from "@/constants/screen-layout";
+import { ScreenPageHeader } from "@/components/ScreenPageHeader";
+import { useAppTheme } from "@/lib/app-theme";
+import { useTranslation } from "@/lib/i18n";
 
-const homeBackground = require("@/assets/images/home-background.png");
-const H_PADDING = 20;
+const H_PADDING = SCREEN_EDGE_PADDING;
 const ICON_COLOR = "#191D31";
 const ACCENT = "#3d6b47";
 const TEXT_MUTED = "rgba(0,0,0,0.5)";
@@ -40,6 +43,8 @@ export default function SouratesScreen() {
   const { ayah: randomAyah } = useRandomAyah();
   const [search, setSearch] = useState("");
   const [verseOfDayInArabic, setVerseOfDayInArabic] = useState(false);
+  const colors = useAppTheme();
+  const { t } = useTranslation();
 
   const filtered = useMemo(() => filterSuras(list, search), [list, search]);
 
@@ -48,22 +53,23 @@ export default function SouratesScreen() {
   };
 
   return (
-    <ImageBackground source={homeBackground} style={styles.background} resizeMode="cover">
+    <ScreenBackground style={styles.background}>
       <SafeAreaView style={styles.safeArea} edges={["top", "left", "right"]}>
-        <View style={styles.header}>
-          <TouchableOpacity onPress={() => router.back()} style={styles.backButton} activeOpacity={0.7}>
-            <Feather name="chevron-left" size={28} color={ICON_COLOR} />
-          </TouchableOpacity>
-          <Text style={styles.title}>Sourates</Text>
-          <TouchableOpacity
-            onPress={() => router.push("/(root)/(tabs)/coran/juz")}
-            style={styles.juzLink}
-            activeOpacity={0.7}
-          >
-            <Feather name="layers" size={22} color={ACCENT} />
-            <Text style={styles.juzLinkText}>Juz</Text>
-          </TouchableOpacity>
-        </View>
+        <ScreenPageHeader
+          title={t("screens.souratesTitle")}
+          subtitle={t("screens.souratesSubtitle")}
+          onBack={() => router.back()}
+          headerActions={
+            <TouchableOpacity
+              onPress={() => router.push("/(root)/(tabs)/coran/juz")}
+              style={styles.juzLink}
+              activeOpacity={0.7}
+            >
+              <AppIcon name="layers" size={22} color={colors.accent} />
+              <Text style={[styles.juzLinkText, { color: colors.accent }]}>Juz</Text>
+            </TouchableOpacity>
+          }
+        />
 
         {loading && list.length === 0 ? (
           <SuraListSkeleton />
@@ -71,24 +77,24 @@ export default function SouratesScreen() {
           <View style={styles.errorBlock}>
             <Text style={styles.errorText}>{error}</Text>
             <TouchableOpacity style={styles.retryButton} onPress={() => refetch()} activeOpacity={0.8}>
-              <Feather name="refresh-cw" size={20} color="#fff" />
-              <Text style={styles.retryText}>RÃ©essayer</Text>
+              <AppIcon name="refresh-cw" size={20} color="#fff" />
+              <Text style={styles.retryText}>Réessayer</Text>
             </TouchableOpacity>
           </View>
         ) : (
           <>
             <View style={styles.searchWrap}>
-              <Feather name="search" size={18} color={TEXT_MUTED} style={styles.searchIcon} />
+              <AppIcon name="search" size={18} color={TEXT_MUTED} style={styles.searchIcon} />
               <TextInput
                 style={styles.searchInput}
-                placeholder="Rechercherâ€¦"
+                placeholder="Rechercher…"
                 placeholderTextColor={TEXT_MUTED}
                 value={search}
                 onChangeText={setSearch}
               />
               {search.length > 0 && (
                 <TouchableOpacity onPress={() => setSearch("")} hitSlop={12}>
-                  <Feather name="x" size={18} color={TEXT_MUTED} />
+                  <AppIcon name="x" size={18} color={TEXT_MUTED} />
                 </TouchableOpacity>
               )}
             </View>
@@ -123,7 +129,7 @@ export default function SouratesScreen() {
                       activeOpacity={0.7}
                     >
                       <Text style={styles.verseOfDayToggleText}>
-                        {verseOfDayInArabic ? "Voir en franÃ§ais" : "Voir en arabe"}
+                        {verseOfDayInArabic ? "Voir en français" : "Voir en arabe"}
                       </Text>
                     </TouchableOpacity>
                   </View>
@@ -136,14 +142,14 @@ export default function SouratesScreen() {
               showsVerticalScrollIndicator={false}
               ListEmptyComponent={
                 <View style={styles.empty}>
-                  <Text style={styles.emptyText}>Aucune sourate trouvÃ©e</Text>
+                  <Text style={styles.emptyText}>Aucune sourate trouvée</Text>
                 </View>
               }
             />
           </>
         )}
       </SafeAreaView>
-    </ImageBackground>
+    </ScreenBackground>
   );
 }
 

@@ -1,6 +1,5 @@
 import {
   ActivityIndicator,
-  ImageBackground,
   ScrollView,
   StyleSheet,
   Text,
@@ -12,34 +11,35 @@ import {
 import * as Clipboard from "expo-clipboard";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router, useLocalSearchParams } from "expo-router";
-import Feather from "@expo/vector-icons/Feather";
+import { AppIcon } from "@/components/AppIcon";
 import { useCallback } from "react";
 
 import { useDuaDetail, useDuaFavorites, useDuaLanguage } from "@/lib/dua";
 import type { DuaDetail } from "@/lib/dua/types";
-import { useAppPreferences } from "@/lib/app-preferences";
+import { ScreenBackground } from "@/components/ScreenBackground";
+import { ScreenPageHeader } from "@/components/ScreenPageHeader";
+import { useAppTypography } from "@/lib/app-typography";
+import { useTranslation } from "@/lib/i18n";
+import { SCREEN_EDGE_PADDING } from "@/constants/screen-layout";
 
-const homeBackground = require("@/assets/images/home-background.png");
-const H_PADDING = 24;
+const H_PADDING = SCREEN_EDGE_PADDING;
 const ICON_COLOR = "#191D31";
 const ACCENT = "#3d6b47";
 const TEXT_MUTED = "rgba(0,0,0,0.5)";
 
-const SIZE_MAP = { small: 18, medium: 22, large: 26 } as const;
-const TRANS_SIZE_MAP = { small: 14, medium: 16, large: 18 } as const;
-
 export default function InvocationDetailScreen() {
+  const { t } = useTranslation();
   const { slug, id } = useLocalSearchParams<{ slug: string; id: string }>();
   const slugDecoded = slug ? decodeURIComponent(slug) : null;
   const idNum = id ? parseInt(id, 10) : null;
   const { language, setLanguage } = useDuaLanguage();
   const { detail, loading, error, refetch } = useDuaDetail(slugDecoded, idNum ?? null, language);
-  const { textSize } = useAppPreferences();
+  const typography = useAppTypography();
   const { isFavorite, toggleFavorite } = useDuaFavorites();
 
   const isFav = slugDecoded != null && idNum != null && isFavorite(slugDecoded, idNum);
-  const arabicSize = SIZE_MAP[textSize];
-  const transSize = TRANS_SIZE_MAP[textSize];
+  const arabicSize = typography.arabic;
+  const transSize = typography.translation;
 
   const handleShare = useCallback(() => {
     if (!detail) return;
@@ -79,39 +79,39 @@ export default function InvocationDetailScreen() {
   }
 
   return (
-    <ImageBackground source={homeBackground} style={styles.background} resizeMode="cover">
+    <ScreenBackground style={styles.background}>
       <SafeAreaView style={styles.safeArea} edges={["top", "left", "right"]}>
-        <View style={styles.header}>
-          <TouchableOpacity onPress={() => router.back()} style={styles.backBtn} activeOpacity={0.7}>
-            <Feather name="chevron-left" size={26} color={ICON_COLOR} />
-          </TouchableOpacity>
-          <Text style={styles.title} numberOfLines={1}>
-            {detail?.title ?? "Invocation"}
-          </Text>
-          <View style={styles.headerRight}>
-            <TouchableOpacity
-              style={styles.langBtn}
-              onPress={() => setLanguage(language === "fr" ? "en" : "fr")}
-              activeOpacity={0.7}
-            >
-              <Text style={styles.langBtnText}>{language === "fr" ? "English" : "Français"}</Text>
-            </TouchableOpacity>
-            <TouchableOpacity onPress={handleFavorite} style={styles.iconBtn} activeOpacity={0.7}>
-              <Feather
-                name="heart"
-                size={22}
-                color={isFav ? ACCENT : ICON_COLOR}
-                fill={isFav ? ACCENT : "transparent"}
-              />
-            </TouchableOpacity>
-            <TouchableOpacity onPress={handleShare} style={styles.iconBtn} activeOpacity={0.7}>
-              <Feather name="share-2" size={22} color={ICON_COLOR} />
-            </TouchableOpacity>
-            <TouchableOpacity onPress={handleCopy} style={styles.iconBtn} activeOpacity={0.7}>
-              <Feather name="copy" size={22} color={ICON_COLOR} />
-            </TouchableOpacity>
-          </View>
-        </View>
+        <ScreenPageHeader
+          title={detail?.title ?? t("screens.invocationsTitle")}
+          subtitle={t("screens.duaDetailSubtitle")}
+          onBack={() => router.back()}
+          headerActions={
+            <>
+              <TouchableOpacity
+                style={styles.langBtn}
+                onPress={() => setLanguage(language === "fr" ? "en" : "fr")}
+                activeOpacity={0.7}
+              >
+                <Text style={styles.langBtnText}>
+                  {language === "fr" ? "English" : "Français"}
+                </Text>
+              </TouchableOpacity>
+              <TouchableOpacity onPress={handleFavorite} style={styles.iconBtn} activeOpacity={0.7}>
+                <AppIcon
+                  name="heart"
+                  size={22}
+                  color={isFav ? ACCENT : ICON_COLOR}
+                />
+              </TouchableOpacity>
+              <TouchableOpacity onPress={handleShare} style={styles.iconBtn} activeOpacity={0.7}>
+                <AppIcon name="share-2" size={22} color={ICON_COLOR} />
+              </TouchableOpacity>
+              <TouchableOpacity onPress={handleCopy} style={styles.iconBtn} activeOpacity={0.7}>
+                <AppIcon name="copy" size={22} color={ICON_COLOR} />
+              </TouchableOpacity>
+            </>
+          }
+        />
 
         {loading && !detail ? (
           <View style={styles.loadingWrap}>
@@ -135,7 +135,13 @@ export default function InvocationDetailScreen() {
               <View style={styles.block}>
                 <Text style={styles.blockLabel}>Arabe</Text>
                 <Text
-                  style={[styles.arabicText, { fontSize: arabicSize, lineHeight: arabicSize * 1.6 }]}
+                  style={[
+                    styles.arabicText,
+                    {
+                      fontSize: arabicSize,
+                      lineHeight: arabicSize * typography.lineHeightArabic,
+                    },
+                  ]}
                   selectable
                 >
                   {detail.arabic}
@@ -198,7 +204,7 @@ export default function InvocationDetailScreen() {
           </ScrollView>
         ) : null}
       </SafeAreaView>
-    </ImageBackground>
+    </ScreenBackground>
   );
 }
 

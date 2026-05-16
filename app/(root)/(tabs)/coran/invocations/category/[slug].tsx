@@ -1,5 +1,4 @@
 import {
-  ImageBackground,
   FlatList,
   StyleSheet,
   Text,
@@ -9,15 +8,19 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router, useLocalSearchParams } from "expo-router";
-import Feather from "@expo/vector-icons/Feather";
+import { AppIcon } from "@/components/AppIcon";
 import { useMemo, useState } from "react";
 
 import { useCategoryDuas, useDuaLanguage, getCategoryDisplayNameBySlug } from "@/lib/dua";
 import { DuaListSkeleton } from "@/components/dua/DuaListSkeleton";
 import type { DuaItem } from "@/lib/dua/types";
+import { ScreenBackground } from "@/components/ScreenBackground";
+import { ScreenPageHeader } from "@/components/ScreenPageHeader";
+import { useTranslation } from "@/lib/i18n";
 
-const homeBackground = require("@/assets/images/home-background.png");
-const H_PADDING = 24;
+import { SCREEN_EDGE_PADDING } from "@/constants/screen-layout";
+
+const H_PADDING = SCREEN_EDGE_PADDING;
 const ICON_COLOR = "#191D31";
 const ACCENT = "#3d6b47";
 const TEXT_MUTED = "rgba(0,0,0,0.5)";
@@ -34,6 +37,7 @@ function filterDuas(list: DuaItem[], query: string) {
 }
 
 export default function InvocationsCategoryScreen() {
+  const { t } = useTranslation();
   const { slug } = useLocalSearchParams<{ slug: string }>();
   const decodedSlug = slug ? decodeURIComponent(slug) : null;
   const { language, setLanguage } = useDuaLanguage();
@@ -48,23 +52,24 @@ export default function InvocationsCategoryScreen() {
       : "Invocations";
 
   return (
-    <ImageBackground source={homeBackground} style={styles.background} resizeMode="cover">
+    <ScreenBackground style={styles.background}>
       <SafeAreaView style={styles.safeArea} edges={["top", "left", "right"]}>
-        <View style={styles.header}>
-          <TouchableOpacity onPress={() => router.back()} style={styles.backBtn} activeOpacity={0.7}>
-            <Feather name="chevron-left" size={26} color={ICON_COLOR} />
-          </TouchableOpacity>
-          <Text style={styles.title} numberOfLines={1}>
-            {categoryName}
-          </Text>
-          <TouchableOpacity
-            style={styles.langBtn}
-            onPress={() => setLanguage(language === "fr" ? "en" : "fr")}
-            activeOpacity={0.7}
-          >
-            <Text style={styles.langBtnText}>{language === "fr" ? "English" : "Français"}</Text>
-          </TouchableOpacity>
-        </View>
+        <ScreenPageHeader
+          title={categoryName}
+          subtitle={t("screens.invocationCategorySubtitle")}
+          onBack={() => router.back()}
+          headerActions={
+            <TouchableOpacity
+              style={styles.langBtn}
+              onPress={() => setLanguage(language === "fr" ? "en" : "fr")}
+              activeOpacity={0.7}
+            >
+              <Text style={styles.langBtnText}>
+                {language === "fr" ? "English" : "Français"}
+              </Text>
+            </TouchableOpacity>
+          }
+        />
 
         {loading && duas.length === 0 ? (
           <DuaListSkeleton />
@@ -72,14 +77,14 @@ export default function InvocationsCategoryScreen() {
           <View style={styles.errorWrap}>
             <Text style={styles.errorText}>{error}</Text>
             <TouchableOpacity onPress={() => refetch()} style={styles.retryBtn} activeOpacity={0.8}>
-              <Feather name="refresh-cw" size={20} color="#fff" />
+              <AppIcon name="refresh-cw" size={20} color="#fff" />
               <Text style={styles.retryText}>Réessayer</Text>
             </TouchableOpacity>
           </View>
         ) : (
           <>
             <View style={styles.searchWrap}>
-              <Feather name="search" size={18} color={TEXT_MUTED} style={styles.searchIcon} />
+              <AppIcon name="search" size={18} color={TEXT_MUTED} style={styles.searchIcon} />
               <TextInput
                 style={styles.searchInput}
                 placeholder="Rechercher…"
@@ -89,7 +94,7 @@ export default function InvocationsCategoryScreen() {
               />
               {search.length > 0 && (
                 <TouchableOpacity onPress={() => setSearch("")} hitSlop={12}>
-                  <Feather name="x" size={18} color={TEXT_MUTED} />
+                  <AppIcon name="x" size={18} color={TEXT_MUTED} />
                 </TouchableOpacity>
               )}
             </View>
@@ -115,7 +120,7 @@ export default function InvocationsCategoryScreen() {
                   }
                   activeOpacity={0.7}
                 >
-                  <Feather name="book-open" size={22} color={ICON_COLOR} />
+                  <AppIcon name="book-open" size={22} color={ICON_COLOR} />
                   <View style={styles.rowText}>
                     <Text style={styles.rowTitle} numberOfLines={1}>
                       {item.title}
@@ -124,14 +129,14 @@ export default function InvocationsCategoryScreen() {
                       {item.translation || item.arabic || item.latin || categoryName}
                     </Text>
                   </View>
-                  <Feather name="chevron-right" size={20} color={ICON_COLOR} />
+                  <AppIcon name="chevron-right" size={20} color={ICON_COLOR} />
                 </TouchableOpacity>
               )}
             />
           </>
         )}
       </SafeAreaView>
-    </ImageBackground>
+    </ScreenBackground>
   );
 }
 

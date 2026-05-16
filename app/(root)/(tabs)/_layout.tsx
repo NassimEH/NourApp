@@ -1,11 +1,19 @@
-import { BlurView } from "expo-blur";
+﻿import { BlurView } from "expo-blur";
 import { Tabs } from "expo-router";
 import { Platform, StyleSheet } from "react-native";
-import Feather from "@expo/vector-icons/Feather";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { AppIcon } from "@/components/AppIcon";
 
 import BottomBar from "@/components/BottomBar";
 import { useTabBarPreference } from "@/lib/tab-bar-preference";
 import { QuranAudioProvider } from "@/lib/quran/QuranAudioContext";
+import { useAppTheme } from "@/lib/app-theme";
+import { useTranslation } from "@/lib/i18n";
+
+/** Zone icône + libellé (hors safe area) — proche du standard iOS, sans excès de hauteur */
+const NATIVE_TAB_CONTENT_HEIGHT = 46;
+const NATIVE_TAB_TOP_PADDING = 6;
+const NATIVE_TAB_ICON_SIZE = 23;
 
 const TAB_ICONS: Record<string, "home" | "sunrise" | "book-open" | "award" | "search" | "user"> = {
   index: "home",
@@ -16,43 +24,78 @@ const TAB_ICONS: Record<string, "home" | "sunrise" | "book-open" | "award" | "se
   profile: "user",
 };
 
-const TAB_LABELS: Record<string, string> = {
-  index: "Accueil",
-  qibla: "Mes prières",
-  coran: "Bibliothèque",
-  apprendre: "Apprendre",
-  explore: "Explore",
-  profile: "Profil",
+const TAB_LABEL_KEYS: Record<string, string> = {
+  index: "tabs.home",
+  qibla: "tabs.prayers",
+  coran: "tabs.library",
+  apprendre: "tabs.learn",
+  explore: "tabs.explore",
+  profile: "tabs.profile",
 };
 
 export default function TabsLayout() {
   const { tabBarVariant } = useTabBarPreference();
+  const colors = useAppTheme();
+  const insets = useSafeAreaInsets();
+  const { t } = useTranslation();
   const useNativeTabBar = tabBarVariant === "native";
+
+  const nativeTabBottomInset =
+    insets.bottom > 0 ? insets.bottom : Platform.OS === "ios" ? 8 : 12;
+  const nativeTabBarHeight =
+    NATIVE_TAB_TOP_PADDING + NATIVE_TAB_CONTENT_HEIGHT + nativeTabBottomInset;
 
   const screenOptions = useNativeTabBar
     ? {
         headerShown: false,
-        sceneContainerStyle: { backgroundColor: "transparent" },
+        sceneContainerStyle: {
+          backgroundColor: colors.usesBackgroundImage
+            ? "transparent"
+            : colors.background,
+        },
         tabBarStyle: {
           position: "absolute" as const,
-          borderTopWidth: 0,
+          borderTopWidth: StyleSheet.hairlineWidth,
+          borderTopColor: colors.border,
           elevation: 0,
           shadowOpacity: 0,
+          height: nativeTabBarHeight,
+          paddingTop: NATIVE_TAB_TOP_PADDING,
+          paddingBottom: nativeTabBottomInset,
+        },
+        tabBarItemStyle: {
+          paddingVertical: 2,
+          justifyContent: "center" as const,
+        },
+        tabBarIconStyle: {
+          marginBottom: 0,
+        },
+        tabBarLabelStyle: {
+          fontSize: 10,
+          fontWeight: "500" as const,
+          fontFamily: "PlusJakartaSans-Medium",
+          marginTop: 2,
+          marginBottom: 0,
+          letterSpacing: 0.1,
         },
         tabBarBackground: () => (
           <BlurView
-            intensity={Platform.OS === "ios" ? 80 : 100}
-            tint="light"
+            intensity={Platform.OS === "ios" ? 72 : 90}
+            tint={colors.tabBarBlurTint}
             style={StyleSheet.absoluteFill}
           />
         ),
-        tabBarActiveTintColor: "#3d6b47",
-        tabBarInactiveTintColor: "#5b5d5e",
+        tabBarActiveTintColor: colors.accent,
+        tabBarInactiveTintColor: colors.textMuted,
         tabBarShowLabel: true,
       }
     : {
         headerShown: false,
-        sceneContainerStyle: { backgroundColor: "transparent" },
+        sceneContainerStyle: {
+          backgroundColor: colors.usesBackgroundImage
+            ? "transparent"
+            : colors.background,
+        },
         tabBarStyle: {
           position: "absolute" as const,
           borderTopWidth: 0,
@@ -61,6 +104,11 @@ export default function TabsLayout() {
         },
       };
 
+  const tabTitle = (routeName: string) => {
+    const key = TAB_LABEL_KEYS[routeName];
+    return key ? t(key) : routeName;
+  };
+
   return (
     <QuranAudioProvider>
       <Tabs
@@ -68,20 +116,22 @@ export default function TabsLayout() {
       screenOptions={({ route }) => ({
         ...screenOptions,
         ...(useNativeTabBar && {
-          title: TAB_LABELS[route.name] ?? route.name,
-          tabBarIcon: ({ color, size }) => {
+          title: tabTitle(route.name),
+          tabBarIcon: ({ color }) => {
             const iconName = TAB_ICONS[route.name] ?? "home";
-            return <Feather name={iconName} size={size ?? 24} color={color} />;
+            return (
+              <AppIcon name={iconName} size={NATIVE_TAB_ICON_SIZE} color={color} />
+            );
           },
         }),
       })}
     >
-      <Tabs.Screen name="index" options={{ title: "Accueil" }} />
-      <Tabs.Screen name="qibla" options={{ title: "Mes prières" }} />
-      <Tabs.Screen name="coran" options={{ title: "Bibliothèque" }} />
-      <Tabs.Screen name="apprendre" options={{ title: "Apprendre" }} />
-      <Tabs.Screen name="explore" options={{ title: "Explore" }} />
-      <Tabs.Screen name="profile" options={{ title: "Profil" }} />
+      <Tabs.Screen name="index" options={{ title: t("tabs.home") }} />
+      <Tabs.Screen name="qibla" options={{ title: t("tabs.prayers") }} />
+      <Tabs.Screen name="coran" options={{ title: t("tabs.library") }} />
+      <Tabs.Screen name="apprendre" options={{ title: t("tabs.learn") }} />
+      <Tabs.Screen name="explore" options={{ title: t("tabs.explore") }} />
+      <Tabs.Screen name="profile" options={{ title: t("tabs.profile") }} />
       </Tabs>
     </QuranAudioProvider>
   );

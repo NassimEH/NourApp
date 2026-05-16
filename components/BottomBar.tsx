@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect, useCallback } from "react";
+﻿import React, { useState, useRef, useEffect, useCallback } from "react";
 import {
   View,
   Pressable,
@@ -16,13 +16,14 @@ import { BlurView } from "expo-blur";
 import { GlassView, isGlassEffectAPIAvailable } from "expo-glass-effect";
 import * as Haptics from "expo-haptics";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import Feather from "@expo/vector-icons/Feather";
+import { AppIcon } from "@/components/AppIcon";
 import { router } from "expo-router";
 import type { BottomTabBarProps } from "@react-navigation/bottom-tabs";
 
 import { QuranMiniPlayer } from "@/components/quran/QuranMiniPlayer";
 import { useQuranAudioContextOptional } from "@/lib/quran/QuranAudioContext";
 import { useSuraList } from "@/lib/quran/hooks/useSuraList";
+import { useAppTheme } from "@/lib/app-theme";
 import { ScrollView } from "react-native";
 import type { Reciter } from "@/lib/quran/types";
 
@@ -33,13 +34,11 @@ const TAB_ROUTES = [
   { name: "qibla" as const, label: "Mes prières", icon: "sunrise" as const, href: "/(root)/(tabs)/qibla" as const },
   { name: "coran" as const, label: "Bibliothèque", icon: "book-open" as const, href: "/(root)/(tabs)/coran" as const },
   { name: "apprendre" as const, label: "Apprendre", icon: "award" as const, href: "/(root)/(tabs)/apprendre" as const },
-  { name: "explore" as const, label: "Explore", icon: "search" as const, href: "/(root)/(tabs)/explore" as const },
+  { name: "explore" as const, label: "Écoute", icon: "search" as const, href: "/(root)/(tabs)/explore" as const },
   { name: "profile" as const, label: "Profil", icon: "user" as const, href: "/(root)/(tabs)/profile" as const },
 ];
 
 const { height: SCREEN_HEIGHT, width: SCREEN_WIDTH } = Dimensions.get("window");
-const ACCENT = "#3d6b47";
-const ICON_COLOR = "#191D31";
 const TEXT_SECONDARY = "#5b5d5e";
 
 const useGlassAvailable = () => {
@@ -71,6 +70,7 @@ function TabIconButton({
   isActive: boolean;
   onPress: () => void;
 }) {
+  const colors = useAppTheme();
   const scale = useRef(new Animated.Value(1)).current;
   const prevActive = useRef(isActive);
 
@@ -121,10 +121,13 @@ function TabIconButton({
       }}
       onPressIn={onPressIn}
       onPressOut={onPressOut}
-      style={[styles.tabIconButton, isActive && styles.tabIconButtonActive]}
+      style={[
+        styles.tabIconButton,
+        isActive && { backgroundColor: colors.accent },
+      ]}
     >
       <Animated.View style={{ transform: [{ scale }] }}>
-        <Feather name={route.icon} size={22} color={isActive ? "#fff" : ICON_COLOR} />
+        <AppIcon name={route.icon} size={22} color={isActive ? "#fff" : colors.icon} />
       </Animated.View>
     </Pressable>
   );
@@ -143,6 +146,7 @@ function ReciterSelector({
   currentReciter: string;
   onSelect: (id: string) => void;
 }) {
+  const colors = useAppTheme();
   const insets = useSafeAreaInsets();
   const glassAvailable = useGlassAvailable();
   const isIOS = Platform.OS === "ios";
@@ -158,9 +162,11 @@ function ReciterSelector({
   const renderContent = () => (
     <View style={[reciterStyles.content, { paddingBottom: insets.bottom + 20 }]}>
       <View style={reciterStyles.header}>
-        <Text style={reciterStyles.title}>Choisir un récitateur</Text>
+        <Text style={[reciterStyles.title, { color: colors.text }]}>
+          Choisir un récitateur
+        </Text>
         <TouchableOpacity onPress={onClose} style={reciterStyles.closeBtn}>
-          <Feather name="x" size={24} color={ICON_COLOR} />
+          <AppIcon name="x" size={24} color={colors.icon} />
         </TouchableOpacity>
       </View>
       <ScrollView style={reciterStyles.list} showsVerticalScrollIndicator={false}>
@@ -169,7 +175,10 @@ function ReciterSelector({
           return (
             <TouchableOpacity
               key={reciter.id}
-              style={[reciterStyles.item, isSelected && reciterStyles.itemSelected]}
+              style={[
+                reciterStyles.item,
+                isSelected && { backgroundColor: colors.accent },
+              ]}
               onPress={() => {
                 onSelect(reciter.id);
                 onClose();
@@ -177,17 +186,17 @@ function ReciterSelector({
               activeOpacity={0.7}
             >
               <View style={reciterStyles.itemIcon}>
-                <Feather
+                <AppIcon
                   name="mic"
                   size={22}
-                  color={isSelected ? "#fff" : ACCENT}
+                  color={isSelected ? "#fff" : colors.accent}
                 />
               </View>
               <View style={reciterStyles.itemInfo}>
                 <Text
                   style={[
                     reciterStyles.itemName,
-                    isSelected && reciterStyles.itemNameSelected,
+                    { color: isSelected ? "#fff" : colors.text },
                   ]}
                 >
                   {reciter.name}
@@ -195,7 +204,7 @@ function ReciterSelector({
                 <Text style={reciterStyles.itemStyle}>{reciter.style}</Text>
               </View>
               {isSelected && (
-                <Feather name="check" size={20} color="#fff" />
+                <AppIcon name="check" size={20} color="#fff" />
               )}
             </TouchableOpacity>
           );
@@ -265,7 +274,6 @@ const reciterStyles = StyleSheet.create({
   title: {
     fontSize: 20,
     fontFamily: "PlusJakartaSans-Bold",
-    color: ICON_COLOR,
   },
   closeBtn: {
     width: 40,
@@ -286,9 +294,7 @@ const reciterStyles = StyleSheet.create({
     marginBottom: 8,
     backgroundColor: "rgba(61, 107, 71, 0.08)",
   },
-  itemSelected: {
-    backgroundColor: ACCENT,
-  },
+  itemSelected: {},
   itemIcon: {
     width: 44,
     height: 44,
@@ -304,11 +310,8 @@ const reciterStyles = StyleSheet.create({
   itemName: {
     fontSize: 15,
     fontFamily: "PlusJakartaSans-SemiBold",
-    color: ICON_COLOR,
   },
-  itemNameSelected: {
-    color: "#fff",
-  },
+  itemNameSelected: {},
   itemStyle: {
     fontSize: 13,
     fontFamily: "PlusJakartaSans-Regular",
@@ -346,6 +349,7 @@ function FullScreenPlayer({
   availableReciters: Reciter[];
   onReciterChange: (id: string) => void;
 }) {
+  const colors = useAppTheme();
   const insets = useSafeAreaInsets();
   const translateY = useRef(new Animated.Value(SCREEN_HEIGHT)).current;
   const glassAvailable = useGlassAvailable();
@@ -418,7 +422,7 @@ function FullScreenPlayer({
 
       <View style={styles.fullPlayerHeader}>
         <TouchableOpacity style={styles.fullPlayerCloseBtn} onPress={onClose}>
-          <Feather name="chevron-down" size={28} color={ICON_COLOR} />
+          <AppIcon name="chevron-down" size={28} color={colors.icon} />
         </TouchableOpacity>
         <TouchableOpacity
           style={styles.fullPlayerMenuBtn}
@@ -429,7 +433,7 @@ function FullScreenPlayer({
             setReciterModalVisible(true);
           }}
         >
-          <Feather name="more-vertical" size={24} color={ICON_COLOR} />
+          <AppIcon name="more-vertical" size={24} color={colors.icon} />
         </TouchableOpacity>
       </View>
 
@@ -448,9 +452,9 @@ function FullScreenPlayer({
           style={styles.fullPlayerReciterBtn}
           onPress={() => setReciterModalVisible(true)}
         >
-          <Feather name="mic" size={14} color={ACCENT} />
+          <AppIcon name="mic" size={14} color={colors.accent} />
           <Text style={styles.fullPlayerReciterText}>{currentReciterName}</Text>
-          <Feather name="chevron-right" size={14} color={TEXT_SECONDARY} />
+          <AppIcon name="chevron-right" size={14} color={TEXT_SECONDARY} />
         </TouchableOpacity>
       </View>
 
@@ -468,7 +472,7 @@ function FullScreenPlayer({
 
       <View style={styles.fullPlayerControls}>
         <TouchableOpacity style={styles.fullPlayerSecondaryBtn}>
-          <Feather name="skip-back" size={28} color={ICON_COLOR} />
+          <AppIcon name="skip-back" size={28} color={colors.icon} />
         </TouchableOpacity>
 
         <TouchableOpacity
@@ -477,26 +481,26 @@ function FullScreenPlayer({
           disabled={isLoading}
         >
           {isLoading ? (
-            <Feather name="loader" size={32} color="#fff" />
+            <AppIcon name="loader" size={32} color="#fff" />
           ) : (
-            <Feather name={isPlaying ? "pause" : "play"} size={32} color="#fff" />
+            <AppIcon name={isPlaying ? "pause" : "play"} size={32} color="#fff" />
           )}
         </TouchableOpacity>
 
         <TouchableOpacity style={styles.fullPlayerSecondaryBtn}>
-          <Feather name="skip-forward" size={28} color={ICON_COLOR} />
+          <AppIcon name="skip-forward" size={28} color={colors.icon} />
         </TouchableOpacity>
       </View>
 
       <View style={styles.fullPlayerActions}>
         <TouchableOpacity style={styles.fullPlayerActionBtn}>
-          <Feather name="repeat" size={22} color={TEXT_SECONDARY} />
+          <AppIcon name="repeat" size={22} color={TEXT_SECONDARY} />
         </TouchableOpacity>
         <TouchableOpacity style={styles.fullPlayerActionBtn}>
-          <Feather name="heart" size={22} color={TEXT_SECONDARY} />
+          <AppIcon name="heart" size={22} color={TEXT_SECONDARY} />
         </TouchableOpacity>
         <TouchableOpacity style={styles.fullPlayerActionBtn} onPress={onUnload}>
-          <Feather name="x-circle" size={22} color={TEXT_SECONDARY} />
+          <AppIcon name="x-circle" size={22} color={TEXT_SECONDARY} />
         </TouchableOpacity>
       </View>
     </View>
@@ -537,6 +541,7 @@ function FullScreenPlayer({
 }
 
 export default function BottomBar({ state }: BottomTabBarProps) {
+  const colors = useAppTheme();
   const insets = useSafeAreaInsets();
   const glassAvailable = useGlassAvailable();
   const audio = useQuranAudioContextOptional();
@@ -770,7 +775,7 @@ const styles = StyleSheet.create({
   fullPlayerTitle: {
     fontSize: 24,
     fontFamily: "PlusJakartaSans-Bold",
-    color: ICON_COLOR,
+    color: "#191D31",
     textAlign: "center",
   },
   fullPlayerSubtitle: {
@@ -793,7 +798,7 @@ const styles = StyleSheet.create({
   fullPlayerReciterText: {
     fontSize: 13,
     fontFamily: "PlusJakartaSans-Medium",
-    color: ACCENT,
+    color: "#3d6b47",
   },
   fullPlayerProgressWrap: {
     marginBottom: 24,
@@ -806,7 +811,7 @@ const styles = StyleSheet.create({
   },
   fullPlayerProgressFill: {
     height: "100%",
-    backgroundColor: ACCENT,
+    backgroundColor: "#3d6b47",
     borderRadius: 2,
   },
   fullPlayerTimeRow: {
@@ -838,10 +843,10 @@ const styles = StyleSheet.create({
     width: 72,
     height: 72,
     borderRadius: 36,
-    backgroundColor: ACCENT,
+    backgroundColor: "#3d6b47",
     alignItems: "center",
     justifyContent: "center",
-    shadowColor: ACCENT,
+    shadowColor: "#3d6b47",
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 12,

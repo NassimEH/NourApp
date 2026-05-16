@@ -1,6 +1,5 @@
 import {
   Dimensions,
-  ImageBackground,
   StyleSheet,
   Text,
   TextInput,
@@ -9,16 +8,19 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router } from "expo-router";
-import Feather from "@expo/vector-icons/Feather";
+import { AppIcon } from "@/components/AppIcon";
 import { useMemo, useState } from "react";
 
 import { useCollections, getCollectionDisplayName } from "@/lib/hadith";
 import { FeaturedCard } from "@/components/Cards";
 import { HadithCollectionSkeleton } from "@/components/hadith/HadithCollectionSkeleton";
 import type { HadithCollection } from "@/lib/hadith/types";
+import { ScreenBackground } from "@/components/ScreenBackground";
+import { SCREEN_EDGE_PADDING } from "@/constants/screen-layout";
+import { ScreenPageHeader } from "@/components/ScreenPageHeader";
+import { useTranslation } from "@/lib/i18n";
 
-const homeBackground = require("@/assets/images/home-background.png");
-const H_PADDING = 24;
+const H_PADDING = SCREEN_EDGE_PADDING;
 const GAP = 12;
 const { width: screenWidth } = Dimensions.get("window");
 const contentWidth = screenWidth - 2 * H_PADDING;
@@ -43,6 +45,7 @@ function filterCollections(
 }
 
 export default function HadithsCollectionsScreen() {
+  const { t } = useTranslation();
   const { collections, loading, error, refetch } = useCollections();
   const [search, setSearch] = useState("");
 
@@ -55,23 +58,13 @@ export default function HadithsCollectionsScreen() {
   );
 
   return (
-    <ImageBackground
-      source={homeBackground}
-      style={styles.background}
-      resizeMode="cover"
-    >
+    <ScreenBackground style={styles.background}>
       <SafeAreaView style={styles.safeArea} edges={["top", "left", "right"]}>
-        <View style={styles.header}>
-          <TouchableOpacity
-            onPress={() => router.back()}
-            style={styles.backBtn}
-            activeOpacity={0.7}
-          >
-            <Feather name="chevron-left" size={26} color={ICON_COLOR} />
-          </TouchableOpacity>
-          <Text style={styles.title}>Hadiths</Text>
-          <View style={styles.headerRight} />
-        </View>
+        <ScreenPageHeader
+          title={t("screens.hadithsTitle")}
+          subtitle={t("screens.hadithsSubtitle")}
+          onBack={() => router.back()}
+        />
 
         {loading && collections.length === 0 ? (
           <HadithCollectionSkeleton />
@@ -83,14 +76,14 @@ export default function HadithsCollectionsScreen() {
               style={styles.retryBtn}
               activeOpacity={0.8}
             >
-              <Feather name="refresh-cw" size={20} color="#fff" />
-              <Text style={styles.retryText}>RÃ©essayer</Text>
+              <AppIcon name="refresh-cw" size={20} color="#fff" />
+              <Text style={styles.retryText}>Réessayer</Text>
             </TouchableOpacity>
           </View>
         ) : (
           <>
             <View style={styles.searchWrap}>
-              <Feather
+              <AppIcon
                 name="search"
                 size={18}
                 color={TEXT_MUTED}
@@ -98,7 +91,7 @@ export default function HadithsCollectionsScreen() {
               />
               <TextInput
                 style={styles.searchInput}
-                placeholder="Rechercher une collectionâ€¦"
+                placeholder="Rechercher une collection…"
                 placeholderTextColor={TEXT_MUTED}
                 value={search}
                 onChangeText={setSearch}
@@ -108,7 +101,7 @@ export default function HadithsCollectionsScreen() {
                   onPress={() => setSearch("")}
                   hitSlop={12}
                 >
-                  <Feather name="x" size={18} color={TEXT_MUTED} />
+                  <AppIcon name="x" size={18} color={TEXT_MUTED} />
                 </TouchableOpacity>
               )}
             </View>
@@ -117,7 +110,7 @@ export default function HadithsCollectionsScreen() {
               {filtered.length === 0 ? (
                 <View style={styles.empty}>
                   <Text style={styles.emptyText}>
-                    Aucune collection trouvÃ©e
+                    Aucune collection trouvée
                   </Text>
                 </View>
               ) : (
@@ -157,7 +150,7 @@ export default function HadithsCollectionsScreen() {
           </>
         )}
       </SafeAreaView>
-    </ImageBackground>
+    </ScreenBackground>
   );
 }
 

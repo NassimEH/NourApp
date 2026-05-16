@@ -1,10 +1,9 @@
-/**
- * Explorer — architecture visuelle style Spotify (grille compacte, sections horizontales).
+﻿/**
+ * Écoute — architecture visuelle style Spotify (grille compacte, sections horizontales).
  */
 
 import {
   Image,
-  ImageBackground,
   ScrollView,
   StyleSheet,
   Text,
@@ -15,17 +14,23 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router } from "expo-router";
-import Feather from "@expo/vector-icons/Feather";
+import { AppIcon } from "@/components/AppIcon";
 import { useMemo, useState } from "react";
 
 import { useSuraList } from "@/lib/quran/hooks/useSuraList";
 import { JUZ_TO_FIRST_SURA } from "@/lib/quran/juzMapping";
 import { useQuranAudioContext } from "@/lib/quran/QuranAudioContext";
+import { ScreenBackground } from "@/components/ScreenBackground";
+import {
+  SCREEN_EDGE_PADDING,
+  screenPageHeaderSpacing,
+  screenScrollContent,
+} from "@/constants/screen-layout";
+import { ScreenPageHeader } from "@/components/ScreenPageHeader";
+import { useTranslation } from "@/lib/i18n";
 
 const quranImage = require("@/assets/images/islamic-new-year-quran-book-with-dates-photo.jpg");
-const homeBackground = require("@/assets/images/home-background.png");
-
-const H_PADDING = 16;
+const H_PADDING = SCREEN_EDGE_PADDING;
 const GAP = 8;
 const SCROLL_PADDING_BOTTOM = 120;
 
@@ -141,7 +146,7 @@ function ReciterCardSpotify({
   return (
     <TouchableOpacity style={styles.reciterCard} onPress={onPress} activeOpacity={0.8}>
       <View style={styles.reciterAvatar}>
-        <Feather name="mic" size={32} color={ACCENT} />
+        <AppIcon name="mic" size={32} color={ACCENT} />
       </View>
       <Text style={styles.reciterName} numberOfLines={1}>
         {name}
@@ -152,6 +157,7 @@ function ReciterCardSpotify({
 }
 
 export default function ExploreScreen() {
+  const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState<TabId>("tout");
   const { list: suras, loading } = useSuraList();
   const playSura = usePlaySuraOnExplore();
@@ -166,12 +172,14 @@ export default function ExploreScreen() {
   const showInvocations = activeTab === "tout" || activeTab === "invocations";
 
   return (
-    <ImageBackground source={homeBackground} style={styles.container} resizeMode="cover">
+    <ScreenBackground style={styles.container}>
       <SafeAreaView style={styles.safeArea} edges={["top"]}>
+        <ScreenPageHeader
+          title={t("screens.exploreTitle")}
+          subtitle={t("screens.exploreSubtitle")}
+          style={screenPageHeaderSpacing}
+        />
         <View style={styles.header}>
-          <View style={styles.avatarWrap}>
-            <Text style={styles.avatarText}>N</Text>
-          </View>
           <ScrollView
             horizontal
             showsHorizontalScrollIndicator={false}
@@ -278,7 +286,7 @@ export default function ExploreScreen() {
                     activeOpacity={0.8}
                   >
                     <View style={styles.juzIconWrap}>
-                      <Feather name="book-open" size={24} color={ACCENT} />
+                      <AppIcon name="book-open" size={24} color={ACCENT} />
                     </View>
                     <Text style={styles.juzNumber}>Juz' {n}</Text>
                   </TouchableOpacity>
@@ -311,7 +319,7 @@ export default function ExploreScreen() {
                     activeOpacity={0.8}
                   >
                     <View style={styles.invocationIconWrap}>
-                      <Feather name={item.icon} size={28} color={ACCENT} />
+                      <AppIcon name={item.icon} size={28} color={ACCENT} />
                     </View>
                     <Text style={styles.invocationTitle}>{item.title}</Text>
                   </TouchableOpacity>
@@ -346,7 +354,7 @@ export default function ExploreScreen() {
           <View style={styles.bottomSpacer} />
         </ScrollView>
       </SafeAreaView>
-    </ImageBackground>
+    </ScreenBackground>
   );
 }
 
@@ -361,7 +369,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     paddingHorizontal: H_PADDING,
-    paddingVertical: 12,
+    paddingVertical: 8,
     gap: 12,
   },
   avatarWrap: {
@@ -407,7 +415,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   scrollContent: {
-    paddingHorizontal: H_PADDING,
+    ...screenScrollContent,
     paddingTop: 8,
     paddingBottom: SCROLL_PADDING_BOTTOM,
   },

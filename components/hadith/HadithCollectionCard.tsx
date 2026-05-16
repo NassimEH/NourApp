@@ -1,5 +1,5 @@
-import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
-import Feather from "@expo/vector-icons/Feather";
+﻿import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { AppIcon } from "@/components/AppIcon";
 
 const ACCENT = "#3d6b47";
 const ICON_COLOR = "#191D31";
@@ -28,7 +28,7 @@ export function HadithCollectionCard({
     >
       <View style={styles.inner}>
         <View style={styles.iconWrap}>
-          <Feather name="book" size={28} color={ACCENT} />
+          <AppIcon name="book" size={28} color={ACCENT} />
         </View>
         <Text style={styles.title} numberOfLines={2}>
           {displayName}

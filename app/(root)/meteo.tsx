@@ -1,7 +1,6 @@
 import {
   ActivityIndicator,
   Image,
-  ImageBackground,
   ScrollView,
   StyleSheet,
   Text,
@@ -10,17 +9,21 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router } from "expo-router";
-import Feather from "@expo/vector-icons/Feather";
+import { AppIcon } from "@/components/AppIcon";
 
 import { usePrayerTimes } from "@/lib/usePrayerTimes";
 import { useWeather } from "@/lib/useWeather";
 import { weatherImages, WEATHER_DOU3A } from "@/constants/weather";
+import { ScreenBackground } from "@/components/ScreenBackground";
+import { SCREEN_EDGE_PADDING } from "@/constants/screen-layout";
+import { ScreenPageHeader } from "@/components/ScreenPageHeader";
+import { useTranslation } from "@/lib/i18n";
 
-const homeBackground = require("@/assets/images/home-background.png");
 const ICON_COLOR = "#191D31";
-const H_PADDING = 24;
+const H_PADDING = SCREEN_EDGE_PADDING;
 
 export default function MeteoScreen() {
+  const { t } = useTranslation();
   const { coords: prayerCoords, refetch: refetchLocation } = usePrayerTimes();
   const { data: weatherData, loading: weatherLoading, error: weatherError } = useWeather(
     prayerCoords?.latitude,
@@ -28,14 +31,13 @@ export default function MeteoScreen() {
   );
 
   return (
-    <ImageBackground source={homeBackground} style={styles.background} resizeMode="cover">
+    <ScreenBackground style={styles.background}>
       <SafeAreaView style={styles.safeArea} edges={["top"]}>
-        <View style={styles.header}>
-          <Text style={styles.headerTitle}>La mÃ©tÃ©o chez moi</Text>
-          <TouchableOpacity onPress={() => router.back()} style={styles.backBtn} activeOpacity={0.7}>
-            <Feather name="chevron-left" size={28} color={ICON_COLOR} />
-          </TouchableOpacity>
-        </View>
+        <ScreenPageHeader
+          title={t("screens.weatherTitle")}
+          subtitle={t("screens.weatherSubtitle")}
+          onBack={() => router.back()}
+        />
 
         <ScrollView
           style={styles.scroll}
@@ -44,9 +46,9 @@ export default function MeteoScreen() {
         >
           {!prayerCoords && (
             <View style={styles.weatherEmpty}>
-              <Text style={styles.errorText}>Active la localisation pour afficher la mÃ©tÃ©o</Text>
+              <Text style={styles.errorText}>Active la localisation pour afficher la météo</Text>
               <TouchableOpacity style={styles.locationButton} onPress={refetchLocation} activeOpacity={0.7}>
-                <Feather name="map-pin" size={18} color="#fff" />
+                <AppIcon name="map-pin" size={18} color="#fff" />
                 <Text style={styles.locationButtonText}>Autoriser la localisation</Text>
               </TouchableOpacity>
             </View>
@@ -58,8 +60,8 @@ export default function MeteoScreen() {
             <View style={styles.weatherEmpty}>
               <Text style={styles.errorText}>{weatherError}</Text>
               <TouchableOpacity style={styles.locationButton} onPress={refetchLocation} activeOpacity={0.7}>
-                <Feather name="refresh-cw" size={18} color="#fff" />
-                <Text style={styles.locationButtonText}>RÃ©essayer</Text>
+                <AppIcon name="refresh-cw" size={18} color="#fff" />
+                <Text style={styles.locationButtonText}>Réessayer</Text>
               </TouchableOpacity>
             </View>
           )}
@@ -78,22 +80,22 @@ export default function MeteoScreen() {
               </View>
               <View style={styles.weatherDetails}>
                 <View style={styles.weatherMainRow}>
-                  <Text style={styles.weatherTempLarge}>{Math.round(weatherData.temperature)}Â°</Text>
+                  <Text style={styles.weatherTempLarge}>{Math.round(weatherData.temperature)}°</Text>
                   <View style={styles.weatherMeta}>
                     <View style={styles.weatherDetailRow}>
-                      <Feather name="droplet" size={16} color="#5b5d5e" />
-                      <Text style={styles.weatherDetailText}>{weatherData.humidity} % humiditÃ©</Text>
+                      <AppIcon name="droplet" size={16} color="#5b5d5e" />
+                      <Text style={styles.weatherDetailText}>{weatherData.humidity} % humidité</Text>
                     </View>
                     <View style={styles.weatherDetailRow}>
-                      <Feather name="thermometer" size={16} color="#5b5d5e" />
-                      <Text style={styles.weatherDetailText}>Ressenti {Math.round(weatherData.apparentTemperature)}Â°</Text>
+                      <AppIcon name="thermometer" size={16} color="#5b5d5e" />
+                      <Text style={styles.weatherDetailText}>Ressenti {Math.round(weatherData.apparentTemperature)}°</Text>
                     </View>
                     <View style={styles.weatherDetailRow}>
-                      <Feather name="wind" size={16} color="#5b5d5e" />
+                      <AppIcon name="wind" size={16} color="#5b5d5e" />
                       <Text style={styles.weatherDetailText}>{weatherData.windSpeed} km/h</Text>
                     </View>
                     <View style={styles.weatherDetailRow}>
-                      <Feather name="activity" size={16} color="#5b5d5e" />
+                      <AppIcon name="activity" size={16} color="#5b5d5e" />
                       <Text style={styles.weatherDetailText}>{Math.round(weatherData.surfacePressure)} hPa</Text>
                     </View>
                     <Text style={styles.weatherDayNight}>
@@ -111,7 +113,7 @@ export default function MeteoScreen() {
           )}
         </ScrollView>
       </SafeAreaView>
-    </ImageBackground>
+    </ScreenBackground>
   );
 }
 

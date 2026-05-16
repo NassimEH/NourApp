@@ -1,5 +1,8 @@
-import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
-import Feather from "@expo/vector-icons/Feather";
+﻿import { StyleSheet, Text, TouchableOpacity } from "react-native";
+import { AppIcon } from "@/components/AppIcon";
+
+import { useAppTheme } from "@/lib/app-theme";
+import { useAppTypography } from "@/lib/app-typography";
 
 interface PreferenceOptionRowProps {
   label: string;
@@ -7,16 +10,30 @@ interface PreferenceOptionRowProps {
   onPress: () => void;
 }
 
-export function PreferenceOptionRow({ label, selected, onPress }: PreferenceOptionRowProps) {
+export function PreferenceOptionRow({
+  label,
+  selected,
+  onPress,
+}: PreferenceOptionRowProps) {
+  const colors = useAppTheme();
+  const typography = useAppTypography();
+
   return (
     <TouchableOpacity
       style={styles.row}
       onPress={onPress}
       activeOpacity={0.7}
     >
-      <Text style={styles.label}>{label}</Text>
+      <Text
+        style={[
+          styles.label,
+          { color: colors.text, fontSize: typography.bodyMedium },
+        ]}
+      >
+        {label}
+      </Text>
       {selected ? (
-        <Feather name="check" size={22} color="#191D31" />
+        <AppIcon name="check" size={22} color={colors.accent} />
       ) : null}
     </TouchableOpacity>
   );
@@ -33,7 +50,6 @@ const styles = StyleSheet.create({
   label: {
     fontSize: 17,
     fontFamily: "PlusJakartaSans-Medium",
-    color: "#191D31",
   },
 });
 

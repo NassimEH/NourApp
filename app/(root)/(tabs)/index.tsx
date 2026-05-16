@@ -1,9 +1,8 @@
-import {
+﻿import {
   ActivityIndicator,
   Dimensions,
   FlatList,
   Image,
-  ImageBackground,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -11,7 +10,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import Feather from "@expo/vector-icons/Feather";
+import { AppIcon } from "@/components/AppIcon";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { router, useLocalSearchParams } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -29,22 +28,16 @@ const HIJRI_MONTHS = [
   "Ramadan", "Shawwal", "Dhu al-Qi'dah", "Dhu al-Hijjah",
 ];
 
-const WEEK_DAYS = ["LUN", "MAR", "MER", "JEU", "VEN", "SAM", "DIM"];
-
 const DAY_PILL_ACTIVE = "#3d6b47";
 const DAY_PILL_EMPTY_BORDER = "#c4c1c9";
 
-function useTodayDates() {
+function useTodayDates(locale: "fr" | "en" | "ar") {
   return useMemo(() => {
     const now = new Date();
     const gy = now.getFullYear();
     const gm = now.getMonth() + 1;
     const gd = now.getDate();
-    const gregorian = now.toLocaleDateString("fr-FR", {
-      day: "numeric",
-      month: "short",
-      year: "numeric",
-    });
+    const gregorian = getLocaleDateString(locale, now);
     try {
       const { hy, hm, hd } = toHijri(gy, gm, gd);
       const hijri = `${HIJRI_MONTHS[hm - 1]} ${hd}, ${hy}`;
@@ -52,11 +45,10 @@ function useTodayDates() {
     } catch {
       return { gregorian, hijri: "" };
     }
-  }, []);
+  }, [locale]);
 }
 
-const homeBackground = require("@/assets/images/home-background.png");
-const mosqueImage = require("@/mosquée.png");
+const mosqueImage = require("@/assets/images/mosquee.png");
 
 import { weatherImages, WEATHER_DOU3A } from "@/constants/weather";
 
@@ -100,6 +92,11 @@ import Spacing from "@/constants/Spacing";
 import { usePrayerTimes, type PrayerTimes } from "@/lib/usePrayerTimes";
 import { useWeather, type WeatherImageKey } from "@/lib/useWeather";
 import { useMawaqitPrayerTimes, MAWAQIT_MOSQUEE_EVRY } from "@/lib/useMawaqit";
+import { ScreenBackground } from "@/components/ScreenBackground";
+import { SCREEN_EDGE_PADDING } from "@/constants/screen-layout";
+import { ScreenPageHeader } from "@/components/ScreenPageHeader";
+import { useAppTypography } from "@/lib/app-typography";
+import { useTranslation, getLocaleDateString, TRANSLATIONS } from "@/lib/i18n";
 
 type HomeListHeaderProps = {
   user: { name?: string; avatar?: string } | null;
@@ -154,34 +151,62 @@ const HomeListHeader = React.memo(function HomeListHeader({
       ? latestProperties
       : FEATURED_PLACEHOLDERS;
   const featuredStep = ITEM_WIDTH + Spacing * 2;
+  const typography = useAppTypography();
+  const { t, locale, rtlTextStyle, rtlViewStyle } = useTranslation();
+  const weekDays = TRANSLATIONS[locale].home.weekDays;
 
   return (
-    <View className="px-5">
-      <View className="flex flex-row items-center justify-between mt-5">
-        <View style={styles.headerTitleRow}>
-          <Text style={styles.pageTitle}>Accueil</Text>
-          {vendredi && (
-            <Text style={styles.bonVendredi}>Bon vendredi</Text>
-          )}
-        </View>
-        <HeaderAvatarBell avatarUri={user?.avatar} />
+    <View>
+      <View style={[styles.homeHeaderBlock, rtlViewStyle]}>
+        <ScreenPageHeader
+          title={t("home.title")}
+          subtitle={
+            vendredi
+              ? `${t("home.goodFriday")} · ${t("screens.homeSubtitle")}`
+              : t("screens.homeSubtitle")
+          }
+          rightElement={<HeaderAvatarBell avatarUri={user?.avatar} />}
+        />
       </View>
+      <View style={[styles.homeBody, rtlViewStyle]}>
       <View className="flex flex-col items-start mt-1.5">
-        <Text className="text-2xl font-rubik-bold text-black-300">
-          Bienvenue{user?.name ? ` ${user.name}` : " Utilisateur"}
+        <Text
+          style={[
+            styles.welcomeTitle,
+            rtlTextStyle,
+            { fontSize: typography.title, lineHeight: typography.title * 1.25 },
+          ]}
+        >
+          {t("home.welcome")}
+          {user?.name ? ` ${user.name}` : ` ${t("home.defaultUser")}`}
         </Text>
-        <Text className="text-xl font-rubik-medium text-black-300 mt-1.5">
+        <Text
+          style={[
+            styles.welcomeDate,
+            rtlTextStyle,
+            {
+              fontSize: typography.subtitle,
+              lineHeight: typography.subtitle * 1.35,
+            },
+          ]}
+        >
           {gregorian}
         </Text>
         {hijri ? (
-          <Text className="text-lg font-rubik text-black-200 mt-1">
+          <Text
+            style={[
+              styles.welcomeHijri,
+              rtlTextStyle,
+              { fontSize: typography.body, lineHeight: typography.body * 1.4 },
+            ]}
+          >
             {hijri}
           </Text>
         ) : null}
       </View>
 
       <View className="flex flex-row justify-between mt-6 mb-2">
-        {WEEK_DAYS.map((day, index) => {
+        {weekDays.map((day, index) => {
           const isToday = index === todayIndex;
           const isPassed = index <= todayIndex;
           return (
@@ -245,7 +270,7 @@ const HomeListHeader = React.memo(function HomeListHeader({
                       { key: "Isha", icon: "moon" as const, time: prayerTimes.Isha },
                     ].map(({ key, icon, time }) => (
                       <View key={key} style={styles.mosquePrayerRow}>
-                        <Feather name={icon} size={14} color="#5b5d5e" />
+                        <AppIcon name={icon} size={14} color="#5b5d5e" />
                         <View style={styles.mosquePrayerCell}>
                           <Text style={styles.mosquePrayerLabel}>{key}</Text>
                           <Text style={styles.mosquePrayerTime}>{time}</Text>
@@ -283,7 +308,7 @@ const HomeListHeader = React.memo(function HomeListHeader({
                     onPress={onRequestLocation}
                     activeOpacity={0.7}
                   >
-                    <Feather name="refresh-cw" size={18} color="#fff" />
+                    <AppIcon name="refresh-cw" size={18} color="#fff" />
                     <Text style={styles.weatherLocationButtonText}>Réessayer</Text>
                   </TouchableOpacity>
                 </View>
@@ -294,11 +319,11 @@ const HomeListHeader = React.memo(function HomeListHeader({
                       <Text style={styles.weatherTemp}>{Math.round(weatherData.temperature)}°</Text>
                       <Text style={styles.weatherCondition}>{weatherData.conditionLabel}</Text>
                       <View style={styles.weatherDetailRow}>
-                        <Feather name="droplet" size={14} color="#5b5d5e" />
+                        <AppIcon name="droplet" size={14} color="#5b5d5e" />
                         <Text style={styles.weatherDetailText}>{weatherData.humidity} % humidité</Text>
                       </View>
                       <View style={styles.weatherDetailRow}>
-                        <Feather name="thermometer" size={14} color="#5b5d5e" />
+                        <AppIcon name="thermometer" size={14} color="#5b5d5e" />
                         <Text style={styles.weatherDetailText}>Ressenti {Math.round(weatherData.apparentTemperature)}°</Text>
                       </View>
                     </View>
@@ -311,11 +336,11 @@ const HomeListHeader = React.memo(function HomeListHeader({
                     </View>
                     <View style={styles.weatherInfoSide}>
                       <View style={styles.weatherDetailRow}>
-                        <Feather name="wind" size={14} color="#5b5d5e" />
+                        <AppIcon name="wind" size={14} color="#5b5d5e" />
                         <Text style={styles.weatherDetailText}>{weatherData.windSpeed} km/h</Text>
                       </View>
                       <View style={styles.weatherDetailRow}>
-                        <Feather name="activity" size={14} color="#5b5d5e" />
+                        <AppIcon name="activity" size={14} color="#5b5d5e" />
                         <Text style={styles.weatherDetailText}>{Math.round(weatherData.surfacePressure)} hPa</Text>
                       </View>
                       <Text style={styles.weatherDetailText}>
@@ -337,7 +362,7 @@ const HomeListHeader = React.memo(function HomeListHeader({
                     onPress={onRequestLocation}
                     activeOpacity={0.7}
                   >
-                    <Feather name="map-pin" size={18} color="#fff" />
+                    <AppIcon name="map-pin" size={18} color="#fff" />
                     <Text style={styles.weatherLocationButtonText}>Autoriser la localisation</Text>
                   </TouchableOpacity>
                 </View>
@@ -424,13 +449,15 @@ const HomeListHeader = React.memo(function HomeListHeader({
 
         <Filters />
       </View>
+      </View>
     </View>
   );
 });
 
 const Home = () => {
   const { user } = useGlobalContext();
-  const { gregorian, hijri } = useTodayDates();
+  const { locale } = useTranslation();
+  const { gregorian, hijri } = useTodayDates(locale);
   const todayIndex = useMemo(() => (new Date().getDay() + 6) % 7, []);
   const { timings: prayerTimes, loading: prayerLoading, cityName: prayerCity, coords: prayerCoords, refetch: refetchLocation } = usePrayerTimes();
 
@@ -509,11 +536,7 @@ const Home = () => {
   );
 
   return (
-    <ImageBackground
-      source={homeBackground}
-      style={styles.background}
-      resizeMode="cover"
-    >
+    <ScreenBackground style={styles.background}>
       <SafeAreaView className="h-full bg-transparent" edges={["top", "left", "right"]}>
         <FlatList
         data={properties ?? []}
@@ -524,13 +547,13 @@ const Home = () => {
         )}
         keyExtractor={(item) => item.$id}
         contentContainerClassName="pb-32"
-        columnWrapperClassName="flex gap-5 px-5"
+        columnWrapperStyle={styles.homeListColumns}
         showsVerticalScrollIndicator={false}
         ListEmptyComponent={listEmptyComponent}
         ListHeaderComponent={header}
         />
       </SafeAreaView>
-    </ImageBackground>
+    </ScreenBackground>
   );
 };
 
@@ -538,21 +561,30 @@ const styles = StyleSheet.create({
   background: {
     flex: 1,
   },
-  headerTitleRow: {
-    flexDirection: "row",
-    alignItems: "center",
+  homeHeaderBlock: {
+    paddingTop: 12,
+    marginTop: 8,
   },
-  pageTitle: {
-    fontSize: 28,
+  homeBody: {
+    paddingHorizontal: SCREEN_EDGE_PADDING,
+  },
+  homeListColumns: {
+    paddingHorizontal: SCREEN_EDGE_PADDING,
+    gap: 20,
+  },
+  welcomeTitle: {
     fontFamily: "PlusJakartaSans-Bold",
     color: "#191D31",
-    marginBottom: 0,
   },
-  bonVendredi: {
-    fontSize: 14,
-    fontFamily: "PlusJakartaSans-SemiBold",
-    color: "#3d6b47",
-    marginLeft: 10,
+  welcomeDate: {
+    fontFamily: "PlusJakartaSans-Medium",
+    color: "#191D31",
+    marginTop: 6,
+  },
+  welcomeHijri: {
+    fontFamily: "PlusJakartaSans-Regular",
+    color: "rgba(0,0,0,0.55)",
+    marginTop: 4,
   },
   hadithVendrediBlock: {
     marginTop: 20,

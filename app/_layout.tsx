@@ -1,27 +1,42 @@
-import { useEffect } from "react";
-import { ImageBackground, StyleSheet, View } from "react-native";
+import { useEffect, useMemo } from "react";
+import { StyleSheet, View } from "react-native";
 import { Stack } from "expo-router";
 import { useFonts } from "expo-font";
 import * as SplashScreen from "expo-splash-screen";
+import { StatusBar } from "expo-status-bar";
 
 import "./global.css";
 import GlobalProvider from "@/lib/global-provider";
+import { OnboardingGateProvider } from "@/lib/onboarding-gate";
 import { TabBarPreferenceProvider } from "@/lib/tab-bar-preference";
-import { AppPreferencesProvider } from "@/lib/app-preferences";
+import { AppPreferencesProvider, useAppPreferences } from "@/lib/app-preferences";
+import { getAppThemeColors } from "@/lib/app-theme";
+import { LocaleSync } from "@/components/LocaleSync";
+import { ScreenBackground } from "@/components/ScreenBackground";
 
-const backgroundImage = require("../assets/images/background.png");
+function RootNavigation() {
+  const { theme, accentColor } = useAppPreferences();
+  const colors = useMemo(
+    () => getAppThemeColors(theme, accentColor),
+    [theme, accentColor]
+  );
 
-const transparentTheme = {
-  dark: false,
-  colors: {
-    primary: "#3d6b47",
-    background: "transparent",
-    card: "transparent",
-    text: "#191D31",
-    border: "transparent",
-    notification: "#3d6b47",
-  },
-};
+  return (
+    <>
+      <StatusBar style={colors.statusBarStyle} />
+      <Stack
+        screenOptions={{
+          headerShown: false,
+          contentStyle: {
+            backgroundColor: colors.usesBackgroundImage
+              ? "transparent"
+              : colors.background,
+          },
+        }}
+      />
+    </>
+  );
+}
 
 export default function RootLayout() {
   const [fontsLoaded] = useFonts({
@@ -44,27 +59,20 @@ export default function RootLayout() {
   }
 
   return (
-    <ImageBackground
-      source={backgroundImage}
-      style={styles.background}
-      resizeMode="cover"
-    >
-      <View style={styles.overlay}>
-        <GlobalProvider>
-          <TabBarPreferenceProvider>
-            <AppPreferencesProvider>
-            <Stack
-              screenOptions={{
-                headerShown: false,
-                contentStyle: { backgroundColor: "transparent" },
-              }}
-              theme={transparentTheme}
-            />
-            </AppPreferencesProvider>
-          </TabBarPreferenceProvider>
-        </GlobalProvider>
-      </View>
-    </ImageBackground>
+    <GlobalProvider>
+      <OnboardingGateProvider>
+        <TabBarPreferenceProvider>
+          <AppPreferencesProvider>
+            <LocaleSync />
+            <ScreenBackground variant="root" style={styles.background}>
+              <View style={styles.overlay}>
+                <RootNavigation />
+              </View>
+            </ScreenBackground>
+          </AppPreferencesProvider>
+        </TabBarPreferenceProvider>
+      </OnboardingGateProvider>
+    </GlobalProvider>
   );
 }
 

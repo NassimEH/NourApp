@@ -1,60 +1,25 @@
-import {
-  ImageBackground,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
-} from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
-import { router } from "expo-router";
-import Feather from "@expo/vector-icons/Feather";
+﻿import { StyleSheet, Text } from "react-native";
 
-const homeBackground = require("@/assets/images/home-background.png");
-const ICON_COLOR = "#191D31";
+import { ScreenStackLayout } from "@/components/ScreenStackLayout";
+import { useTranslation } from "@/lib/i18n";
 
 export default function MemorisationScreen() {
+  const { t } = useTranslation();
+
   return (
-    <ImageBackground source={homeBackground} style={styles.background} resizeMode="cover">
-      <SafeAreaView style={styles.safeArea} edges={["top", "left", "right"]}>
-        <View style={styles.header}>
-          <Text style={styles.title}>Mode mémorisation</Text>
-          <TouchableOpacity onPress={() => router.back()} style={styles.backButton} activeOpacity={0.7}>
-            <Feather name="chevron-left" size={28} color={ICON_COLOR} />
-          </TouchableOpacity>
-        </View>
-        <ScrollView
-          style={styles.scroll}
-          contentContainerStyle={styles.content}
-          showsVerticalScrollIndicator={false}
-        >
-          <Text style={styles.placeholder}>
-            Outils pour la mémorisation (hifz) : répétition par verset ou par bloc, récitation avec récitateur, suivi de progression et révision.
-          </Text>
-        </ScrollView>
-      </SafeAreaView>
-    </ImageBackground>
+    <ScreenStackLayout
+      title={t("screens.memorisationTitle")}
+      subtitle={t("screens.memorisationSubtitle")}
+    >
+      <Text style={styles.placeholder}>
+        Outils de mémorisation : répétition espacée, suivi de progression et
+        révision par sourate ou juz.
+      </Text>
+    </ScreenStackLayout>
   );
 }
 
 const styles = StyleSheet.create({
-  background: { flex: 1 },
-  safeArea: { flex: 1, backgroundColor: "transparent" },
-  header: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingHorizontal: 20,
-    paddingVertical: 12,
-  },
-  backButton: { paddingVertical: 8, paddingLeft: 8 },
-  title: {
-    fontSize: 20,
-    fontFamily: "PlusJakartaSans-Bold",
-    color: ICON_COLOR,
-  },
-  scroll: { flex: 1 },
-  content: { paddingHorizontal: 28, paddingTop: 24, paddingBottom: 40 },
   placeholder: {
     fontSize: 15,
     fontFamily: "PlusJakartaSans-Regular",

@@ -1,4 +1,4 @@
-import {
+﻿import {
   Animated,
   Image,
   Platform,
@@ -10,7 +10,7 @@ import {
 } from "react-native";
 import { BlurView } from "expo-blur";
 import { GlassView, isGlassEffectAPIAvailable } from "expo-glass-effect";
-import Feather from "@expo/vector-icons/Feather";
+import { AppIcon } from "@/components/AppIcon";
 import { useEffect, useRef, useState } from "react";
 
 const quranArtwork = require("@/assets/images/islamic-new-year-quran-book-with-dates-photo.jpg");
@@ -125,9 +125,9 @@ export function QuranMiniPlayer({
             activeOpacity={0.7}
           >
             {isLoading ? (
-              <Feather name="loader" size={22} color={ICON_COLOR} />
+              <AppIcon name="loader" size={22} color={ICON_COLOR} />
             ) : (
-              <Feather
+              <AppIcon
                 name={isPlaying ? "pause" : "play"}
                 size={22}
                 color={ICON_COLOR}
@@ -142,7 +142,7 @@ export function QuranMiniPlayer({
               hitSlop={8}
               activeOpacity={0.7}
             >
-              <Feather name="x" size={20} color={TEXT_SECONDARY} />
+              <AppIcon name="x" size={20} color={TEXT_SECONDARY} />
             </TouchableOpacity>
           )}
         </View>

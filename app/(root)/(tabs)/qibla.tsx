@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import React, { useEffect, useState, useRef, useMemo } from "react";
 import {
@@ -11,11 +11,10 @@ import {
   ScrollView,
   Pressable,
   ActivityIndicator,
-  ImageBackground,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import * as Location from "expo-location";
-import Feather from "@expo/vector-icons/Feather";
+import { AppIcon } from "@/components/AppIcon";
 
 import { getQiblaBearing } from "@/lib/prayerUtils";
 import {
@@ -33,14 +32,19 @@ import {
 } from "@/lib/prayerUtils";
 import type { PrayerTimes } from "@/lib/usePrayerTimes";
 import { toHijri } from "hijri-converter";
+import { ScreenBackground } from "@/components/ScreenBackground";
+import {
+  screenPageHeaderSpacing,
+  screenScrollContent,
+} from "@/constants/screen-layout";
+import { ScreenPageHeader } from "@/components/ScreenPageHeader";
+import { useTranslation } from "@/lib/i18n";
 
 const HIJRI_MONTHS = [
   "Muharram", "Safar", "Rabi al-Awwal", "Rabi al-Thani",
   "Jumada al-Awwal", "Jumada al-Thani", "Rajab", "Sha'ban",
   "Ramadan", "Shawwal", "Dhu al-Qi'dah", "Dhu al-Hijjah",
 ];
-
-const homeBackground = require("@/assets/images/home-background.png");
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 const COMPASS_SIZE = Math.min(SCREEN_WIDTH - 64, 260);
@@ -78,6 +82,7 @@ function getDirection(degree: number): string {
 }
 
 export default function MesPrièresScreen() {
+  const { t } = useTranslation();
   const { gregorian, hijri } = useTodayDates();
   const { timings: prayerTimes, loading: prayerLoading, cityName: prayerCity, coords: prayerCoords } = usePrayerTimes();
   const { toggle: togglePrayerChecked, isChecked: isPrayerChecked } = usePrayersChecked();
@@ -165,19 +170,18 @@ export default function MesPrièresScreen() {
   const needleLength = COMPASS_SIZE / 2 - 24;
 
   return (
-    <ImageBackground
-      source={homeBackground}
-      style={styles.background}
-      resizeMode="cover"
-    >
+    <ScreenBackground style={styles.background}>
       <SafeAreaView style={styles.safe} edges={["top", "left", "right"]}>
+        <ScreenPageHeader
+          title={t("screens.prayersTitle")}
+          subtitle={t("screens.prayersSubtitle")}
+          style={screenPageHeaderSpacing}
+        />
         <ScrollView
           style={styles.scroll}
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
         >
-        <Text style={styles.pageTitle}>Mes prières</Text>
-
         {/* Bloc prières */}
         <View style={styles.prayerSection}>
           <Text style={styles.sectionLabel}>
@@ -194,14 +198,14 @@ export default function MesPrièresScreen() {
                   <Text style={styles.prayerCardGregorian}>{gregorian}</Text>
                   {prayerCoords ? (
                     <View style={styles.prayerCardCoords}>
-                      <Feather name="map-pin" size={12} color="rgba(0,0,0,0.5)" />
+                      <AppIcon name="map-pin" size={12} color="rgba(0,0,0,0.5)" />
                       <Text style={styles.prayerCardCoordsText}>
                         Lat: {prayerCoords.latitude.toFixed(5)}, Lon: {prayerCoords.longitude.toFixed(5)}
                       </Text>
                     </View>
                   ) : prayerCity ? (
                     <View style={styles.prayerCardCoords}>
-                      <Feather name="map-pin" size={12} color="rgba(0,0,0,0.5)" />
+                      <AppIcon name="map-pin" size={12} color="rgba(0,0,0,0.5)" />
                       <Text style={styles.prayerCardCoordsText}>{prayerCity}</Text>
                     </View>
                   ) : null}
@@ -238,7 +242,7 @@ export default function MesPrièresScreen() {
                       </View>
                       <View style={styles.prayerRowCheckboxWrap}>
                         <View style={[styles.prayerCheckbox, checked && styles.prayerCheckboxChecked]}>
-                          {checked ? <Feather name="check" size={14} color="#fff" /> : null}
+                          {checked ? <AppIcon name="check" size={14} color="#fff" /> : null}
                         </View>
                       </View>
                     </Pressable>
@@ -251,7 +255,7 @@ export default function MesPrièresScreen() {
                       <View style={styles.prayerNextWidgetLeft}>
                         <Text style={styles.prayerNextLabel}>PROCHAINE PRIÈRE</Text>
                         <View style={styles.prayerNextWidgetRow}>
-                          <Feather name="sunset" size={14} color="rgba(61, 107, 71, 0.9)" />
+                          <AppIcon name="sunset" size={14} color="rgba(61, 107, 71, 0.9)" />
                           <Text style={styles.prayerNextText}>
                             {nextPrayer.label}{nextPrayerTimeStr ? ` à ${nextPrayerTimeStr}` : ""}
                           </Text>
@@ -328,7 +332,7 @@ export default function MesPrièresScreen() {
         </View>
         </ScrollView>
       </SafeAreaView>
-    </ImageBackground>
+    </ScreenBackground>
   );
 }
 
@@ -341,13 +345,9 @@ const styles = StyleSheet.create({
     backgroundColor: "transparent",
   },
   scroll: { flex: 1 },
-  scrollContent: { paddingHorizontal: 20, paddingBottom: 120 },
-  pageTitle: {
-    fontSize: 28,
-    fontFamily: "PlusJakartaSans-Bold",
-    color: "#191D31",
-    marginTop: 8,
-    marginBottom: 20,
+  scrollContent: {
+    ...screenScrollContent,
+    paddingTop: 8,
   },
   sectionLabel: {
     fontSize: 20,

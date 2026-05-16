@@ -1,9 +1,8 @@
-import { useCallback, useState } from "react";
+﻿import { useCallback, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
   Image,
-  ImageBackground,
   Linking,
   ScrollView,
   Share,
@@ -18,35 +17,27 @@ import * as Location from "expo-location";
 import { useFocusEffect } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router } from "expo-router";
-import Feather from "@expo/vector-icons/Feather";
+import { AppIcon, type AppIconName } from "@/components/AppIcon";
 
 import { logout } from "@/lib/appwrite";
 import { getProfileAvatarUri, setProfileAvatarUri } from "@/lib/profile-avatar";
 import { useGlobalContext } from "@/lib/global-provider";
 import { useAppPreferences } from "@/lib/app-preferences";
 import { useTabBarPreference } from "@/lib/tab-bar-preference";
+import { useAppTheme } from "@/lib/app-theme";
+import { useAppTypography } from "@/lib/app-typography";
+import { useTranslation, getPreferenceSubtitle } from "@/lib/i18n";
+import { ScreenBackground } from "@/components/ScreenBackground";
 import {
-  THEME_LABELS,
-  ICON_STYLE_LABELS,
-  TEXT_SIZE_LABELS,
-  ACCENT_COLOR_LABELS,
-  LANGUAGE_LABELS,
-} from "@/lib/app-preferences";
-
-const homeBackground = require("@/assets/images/home-background.png");
-
-const TAB_BAR_LABELS: Record<"custom" | "native", string> = {
-  custom: "Liquid glass",
-  native: "Natif iOS",
-};
+  screenPageHeaderSpacing,
+  screenScrollContent,
+} from "@/constants/screen-layout";
+import { ScreenPageHeader } from "@/components/ScreenPageHeader";
 
 const ICON_SIZE = 22;
-const ICON_COLOR = "#191D31";
-
-type FeatherIconName = React.ComponentProps<typeof Feather>["name"];
 
 interface SettingsItemProp {
-  iconName: FeatherIconName;
+  iconName: AppIconName;
   title: string;
   onPress?: () => void;
   textStyle?: string;
@@ -61,70 +52,85 @@ const SettingsItem = ({
   textStyle,
   showArrow = true,
   subtitle,
-}: SettingsItemProp) => (
-  <TouchableOpacity
-    onPress={onPress}
-    className="flex flex-row items-center justify-between py-3"
-    activeOpacity={0.7}
-    disabled={!onPress}
-  >
-    <View className="flex flex-row items-center gap-3">
-      <Feather name={iconName} size={ICON_SIZE} color={ICON_COLOR} />
-      <Text
-        style={[styles.settingsItemText, textStyle === "text-danger" && styles.settingsItemDanger]}
-      >
-        {title}
-      </Text>
-    </View>
-    <View className="flex flex-row items-center gap-2">
-      {subtitle ? (
-        <Text style={styles.settingsItemSubtitle} numberOfLines={1}>
-          {subtitle}
+}: SettingsItemProp) => {
+  const colors = useAppTheme();
+  const typography = useAppTypography();
+  return (
+    <TouchableOpacity
+      onPress={onPress}
+      className="flex flex-row items-center justify-between py-3"
+      activeOpacity={0.7}
+      disabled={!onPress}
+    >
+      <View className="flex flex-row items-center gap-3">
+        <AppIcon name={iconName} size={ICON_SIZE} color={colors.icon} />
+        <Text
+          style={[
+            styles.settingsItemText,
+            { color: colors.text, fontSize: typography.bodyMedium },
+            textStyle === "text-danger" && { color: colors.danger },
+          ]}
+        >
+          {title}
         </Text>
-      ) : null}
-      {showArrow && onPress ? (
-        <Feather name="chevron-right" size={20} color={ICON_COLOR} />
-      ) : null}
-    </View>
-  </TouchableOpacity>
-);
+      </View>
+      <View className="flex flex-row items-center gap-2">
+        {subtitle ? (
+          <Text
+            style={[
+              styles.settingsItemSubtitle,
+              { color: colors.textMuted, fontSize: typography.subtitle },
+            ]}
+            numberOfLines={1}
+          >
+            {subtitle}
+          </Text>
+        ) : null}
+        {showArrow && onPress ? (
+          <AppIcon name="chevron-right" size={20} color={colors.icon} />
+        ) : null}
+      </View>
+    </TouchableOpacity>
+  );
+};
 
-/** Mon espace : une icône par entrée */
 const PROFIL_SECTION_PRINCIPALE: {
-  title: string;
-  iconName: FeatherIconName;
+  titleKey: string;
+  iconName: AppIconName;
   href?: "/qibla" | "/profile/favorites";
 }[] = [
-  { title: "Horaires de prière", iconName: "calendar", href: "/qibla" },
-  { title: "Favoris", iconName: "heart", href: "/profile/favorites" },
-  { title: "Sadaqa & dons", iconName: "credit-card" },
+  { titleKey: "profile.prayerTimes", iconName: "calendar", href: "/qibla" },
+  { titleKey: "profile.favorites", iconName: "heart", href: "/profile/favorites" },
+  { titleKey: "profile.sadaqa", iconName: "credit-card" },
 ];
 
-/** Personnalisation : icônes distinctes */
-const PROFIL_SECTION_PERSONNALISATION: { title: string; iconName: FeatherIconName; key: string }[] = [
-  { title: "Thème", iconName: "sun", key: "theme" },
-  { title: "Style de la barre", iconName: "layers", key: "tab-bar" },
-  { title: "Style des icônes", iconName: "star", key: "icon-style" },
-  { title: "Taille du texte", iconName: "type", key: "text-size" },
-  { title: "Couleur d'accent", iconName: "droplet", key: "accent" },
+const PROFIL_SECTION_PERSONNALISATION: {
+  titleKey: string;
+  iconName: AppIconName;
+  key: string;
+}[] = [
+  { titleKey: "profile.theme", iconName: "sun", key: "theme" },
+  { titleKey: "profile.tabBarStyle", iconName: "layers", key: "tab-bar" },
+  { titleKey: "profile.iconStyle", iconName: "star", key: "icon-style" },
+  { titleKey: "profile.textSize", iconName: "type", key: "text-size" },
+  { titleKey: "profile.accentColor", iconName: "droplet", key: "accent" },
 ];
 
-/** Paramètres : une icône par entrée, optionnellement href ou action share */
 const PROFIL_SECTION_PARAMETRES: {
-  title: string;
-  iconName: FeatherIconName;
+  titleKey: string;
+  iconName: AppIconName;
   href?: string;
   key?: "language" | "share" | "security";
 }[] = [
-  { title: "Mon profil", iconName: "user" },
-  { title: "Sécurité", iconName: "shield", href: "/profile/security", key: "security" },
-  { title: "Langue", iconName: "globe", href: "/profile/language", key: "language" },
-  { title: "Aide & support", iconName: "help-circle" },
-  { title: "Partager l'application", iconName: "share", key: "share" },
+  { titleKey: "profile.myProfile", iconName: "user" },
+  { titleKey: "profile.security", iconName: "shield", href: "/profile/security", key: "security" },
+  { titleKey: "profile.language", iconName: "globe", href: "/profile/language", key: "language" },
+  { titleKey: "profile.help", iconName: "help-circle" },
+  { titleKey: "profile.shareApp", iconName: "share", key: "share" },
 ];
 
 interface PermissionRowProps {
-  iconName: FeatherIconName;
+  iconName: AppIconName;
   title: string;
   value: boolean;
   onValueChange: (value: boolean) => void;
@@ -137,24 +143,41 @@ const PermissionRow = ({
   value,
   onValueChange,
   disabled,
-}: PermissionRowProps) => (
-  <View style={styles.permissionRow}>
-    <View style={styles.permissionRowLeft}>
-      <Feather name={iconName} size={ICON_SIZE} color={ICON_COLOR} />
-      <Text style={styles.settingsItemText}>{title}</Text>
+}: PermissionRowProps) => {
+  const colors = useAppTheme();
+  const typography = useAppTypography();
+  return (
+    <View style={styles.permissionRow}>
+      <View style={styles.permissionRowLeft}>
+        <AppIcon name={iconName} size={ICON_SIZE} color={colors.icon} />
+        <Text
+          style={[
+            styles.settingsItemText,
+            { color: colors.text, fontSize: typography.bodyMedium },
+          ]}
+        >
+          {title}
+        </Text>
+      </View>
+      <View
+        style={[
+          styles.switchWrapper,
+          { borderColor: colors.border },
+          value && { borderColor: colors.accent },
+        ]}
+      >
+        <Switch
+          value={value}
+          onValueChange={onValueChange}
+          disabled={disabled}
+          trackColor={{ false: "#c4c8cc", true: colors.accent }}
+          thumbColor="#ffffff"
+          ios_backgroundColor="#c4c8cc"
+        />
+      </View>
     </View>
-    <View style={[styles.switchWrapper, value && styles.switchWrapperActive]}>
-      <Switch
-        value={value}
-        onValueChange={onValueChange}
-        disabled={disabled}
-        trackColor={{ false: "#c4c8cc", true: "#3d6b47" }}
-        thumbColor="#ffffff"
-        ios_backgroundColor="#c4c8cc"
-      />
-    </View>
-  </View>
-);
+  );
+};
 
 export default function ProfileScreen() {
   const { user, refetch } = useGlobalContext();
@@ -170,13 +193,15 @@ export default function ProfileScreen() {
   const [notificationsEnabled, setNotificationsEnabled] = useState(false);
   const { tabBarVariant } = useTabBarPreference();
   const { theme, iconStyle, textSize, accentColor, locale } = useAppPreferences();
+  const colors = useAppTheme();
+  const typography = useAppTypography();
+  const { t, rtlTextStyle, rtlViewStyle } = useTranslation();
 
   const handleShareApp = async () => {
     try {
       await Share.share({
-        message:
-          "Découvrez Nûr — horaires de prière, Qibla, lecture et bien plus. Téléchargez l'application !",
-        title: "Partager Nûr",
+        message: t("profile.shareMessage"),
+        title: t("profile.shareTitle"),
       });
     } catch {
       // annulé ou erreur
@@ -206,8 +231,8 @@ export default function ProfileScreen() {
         setLocationGranted(status === "granted");
         if (status !== "granted") {
           Alert.alert(
-            "Permission refusée",
-            "Activez la localisation dans les réglages pour les horaires de prière et la météo."
+            t("profile.locationDeniedTitle"),
+            t("profile.locationDeniedBody")
           );
         }
       } catch {
@@ -231,8 +256,8 @@ export default function ProfileScreen() {
       const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
       if (status !== "granted") {
         Alert.alert(
-          "Permission requise",
-          "Autorisez l'accès à la galerie pour changer votre photo de profil."
+          t("profile.photoPermissionTitle"),
+          t("profile.photoPermissionBody")
         );
         return;
       }
@@ -249,11 +274,11 @@ export default function ProfileScreen() {
       if (savedUri) {
         setLocalAvatarUri(savedUri);
       } else {
-        Alert.alert("Erreur", "Impossible d'enregistrer la photo.");
+        Alert.alert(t("profile.logoutError"), t("profile.photoSaveError"));
       }
     } catch (e) {
       console.error(e);
-      Alert.alert("Erreur", "Une erreur est survenue.");
+      Alert.alert(t("profile.logoutError"), t("profile.photoGenericError"));
     } finally {
       setUploadingPhoto(false);
     }
@@ -262,32 +287,34 @@ export default function ProfileScreen() {
   const handleLogout = async () => {
     const result = await logout();
     if (result) {
-      Alert.alert("Déconnexion", "Vous avez été déconnecté avec succès.");
+      Alert.alert(t("profile.logoutSuccess"), t("profile.logoutSuccessBody"));
       refetch();
     } else {
-      Alert.alert("Erreur", "La déconnexion a échoué.");
+      Alert.alert(t("profile.logoutError"), t("profile.logoutErrorBody"));
     }
   };
 
   return (
-    <ImageBackground
-      source={homeBackground}
-      style={styles.background}
-      resizeMode="cover"
-    >
+    <ScreenBackground style={styles.background}>
       <SafeAreaView style={styles.safeArea} edges={["top", "left", "right"]}>
+        <ScreenPageHeader
+          title={t("profile.title")}
+          subtitle={t("screens.profileSubtitle")}
+          style={screenPageHeaderSpacing}
+          rightElement={<AppIcon name="bell" size={ICON_SIZE} color={colors.icon} />}
+        />
         <ScrollView
           showsVerticalScrollIndicator={false}
-          contentContainerStyle={styles.scrollContent}
+          contentContainerStyle={[styles.scrollContent, rtlViewStyle]}
         >
-          <View style={styles.headerRow}>
-            <Text style={styles.pageTitle}>Profil</Text>
-            <Feather name="bell" size={ICON_SIZE} color={ICON_COLOR} />
-          </View>
-
           <View style={styles.avatarBlock}>
             <View style={styles.avatarRingWrapper}>
-              <View style={styles.avatarPlaceholderRing}>
+              <View
+                style={[
+                  styles.avatarPlaceholderRing,
+                  { borderColor: colors.icon },
+                ]}
+              >
                 {(localAvatarUri ?? user?.avatar) ? (
                   <Image
                     source={{ uri: localAvatarUri ?? user?.avatar }}
@@ -296,33 +323,63 @@ export default function ProfileScreen() {
                 ) : null}
               </View>
               <TouchableOpacity
-                style={styles.editPencilButton}
+                style={[
+                  styles.editPencilButton,
+                  {
+                    backgroundColor: colors.card,
+                    borderColor: colors.icon,
+                  },
+                ]}
                 onPress={handleChangePhoto}
                 disabled={uploadingPhoto}
                 activeOpacity={0.7}
               >
                 {uploadingPhoto ? (
-                  <ActivityIndicator size="small" color="#3d6b47" />
+                  <ActivityIndicator size="small" color={colors.accent} />
                 ) : (
                   <View style={styles.editPencilIconWrap}>
-                    <Feather name="edit-2" size={16} color={ICON_COLOR} />
+                    <AppIcon name="edit-2" size={16} color={colors.icon} />
                   </View>
                 )}
               </TouchableOpacity>
             </View>
-            <Text style={styles.userName}>{user?.name ?? "Utilisateur"}</Text>
-            <Text style={styles.userSubtitle}>
-              Qu'Allah vous accorde Sa bénédiction
+            <Text
+              style={[
+                styles.userName,
+                rtlTextStyle,
+                { color: colors.text, fontSize: typography.title },
+              ]}
+            >
+              {user?.name ?? t("profile.defaultUser")}
+            </Text>
+            <Text
+              style={[
+                styles.userSubtitle,
+                rtlTextStyle,
+                { color: colors.textMuted, fontSize: typography.subtitle },
+              ]}
+            >
+              {t("profile.blessing")}
             </Text>
           </View>
 
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Mon espace</Text>
+            <Text
+              style={[
+                styles.sectionTitle,
+                {
+                  color: colors.accent,
+                  fontSize: typography.sectionTitle,
+                },
+              ]}
+            >
+              {t("profile.sectionMySpace")}
+            </Text>
             {PROFIL_SECTION_PRINCIPALE.map((item, index) => (
               <SettingsItem
                 key={index}
                 iconName={item.iconName}
-                title={item.title}
+                title={t(item.titleKey)}
                 onPress={
                   item.href
                     ? () =>
@@ -337,24 +394,38 @@ export default function ProfileScreen() {
             ))}
           </View>
 
-          <View style={[styles.section, styles.sectionBorder]}>
-            <Text style={styles.sectionTitle}>Personnalisation</Text>
+          <View
+            style={[styles.section, styles.sectionBorder, { borderTopColor: colors.border }]}
+          >
+            <Text
+              style={[
+                styles.sectionTitle,
+                { color: colors.accent, fontSize: typography.sectionTitle },
+              ]}
+            >
+              {t("profile.sectionCustomization")}
+            </Text>
             {PROFIL_SECTION_PERSONNALISATION.map((item) => {
-              const subtitle =
+              const prefValue =
                 item.key === "theme"
-                  ? THEME_LABELS[theme]
+                  ? theme
                   : item.key === "tab-bar"
-                    ? TAB_BAR_LABELS[tabBarVariant]
+                    ? tabBarVariant
                     : item.key === "icon-style"
-                      ? ICON_STYLE_LABELS[iconStyle]
+                      ? iconStyle
                       : item.key === "text-size"
-                        ? TEXT_SIZE_LABELS[textSize]
-                        : ACCENT_COLOR_LABELS[accentColor];
+                        ? textSize
+                        : accentColor;
+              const subtitle = getPreferenceSubtitle(
+                locale,
+                item.key,
+                prefValue
+              );
               return (
                 <SettingsItem
                   key={item.key}
                   iconName={item.iconName}
-                  title={item.title}
+                  title={t(item.titleKey)}
                   subtitle={subtitle}
                   onPress={() => router.push(`/profile/${item.key}`)}
                 />
@@ -362,30 +433,52 @@ export default function ProfileScreen() {
             })}
           </View>
 
-          <View style={[styles.section, styles.sectionBorder]}>
-            <Text style={styles.sectionTitle}>Permissions</Text>
+          <View
+            style={[styles.section, styles.sectionBorder, { borderTopColor: colors.border }]}
+          >
+            <Text
+              style={[
+                styles.sectionTitle,
+                { color: colors.accent, fontSize: typography.sectionTitle },
+              ]}
+            >
+              {t("profile.sectionPermissions")}
+            </Text>
             <PermissionRow
               iconName="bell"
-              title="Notifications"
+              title={t("profile.notifications")}
               value={notificationsEnabled}
               onValueChange={handleNotificationsToggle}
             />
             <PermissionRow
               iconName="map-pin"
-              title="Localisation"
+              title={t("profile.location")}
               value={locationGranted}
               onValueChange={handleLocationToggle}
             />
           </View>
 
-          <View style={[styles.section, styles.sectionBorder]}>
-            <Text style={styles.sectionTitle}>Paramètres</Text>
+          <View
+            style={[styles.section, styles.sectionBorder, { borderTopColor: colors.border }]}
+          >
+            <Text
+              style={[
+                styles.sectionTitle,
+                { color: colors.accent, fontSize: typography.sectionTitle },
+              ]}
+            >
+              {t("profile.sectionSettings")}
+            </Text>
             {PROFIL_SECTION_PARAMETRES.map((item, index) => (
               <SettingsItem
                 key={item.key ?? index}
                 iconName={item.iconName}
-                title={item.title}
-                subtitle={item.key === "language" ? LANGUAGE_LABELS[locale] : undefined}
+                title={t(item.titleKey)}
+                subtitle={
+                  item.key === "language"
+                    ? getPreferenceSubtitle(locale, "language", locale)
+                    : undefined
+                }
                 onPress={
                   item.href
                     ? () => router.push(item.href as "/profile/language" | "/profile/security")
@@ -397,10 +490,12 @@ export default function ProfileScreen() {
             ))}
           </View>
 
-          <View style={[styles.section, styles.sectionBorder]}>
+          <View
+            style={[styles.section, styles.sectionBorder, { borderTopColor: colors.border }]}
+          >
             <SettingsItem
               iconName="log-out"
-              title="Déconnexion"
+              title={t("profile.logout")}
               textStyle="text-danger"
               showArrow={false}
               onPress={handleLogout}
@@ -408,25 +503,16 @@ export default function ProfileScreen() {
           </View>
         </ScrollView>
       </SafeAreaView>
-    </ImageBackground>
+    </ScreenBackground>
   );
 }
 
 const styles = StyleSheet.create({
   background: { flex: 1 },
   safeArea: { flex: 1, backgroundColor: "transparent" },
-  scrollContent: { paddingHorizontal: 28, paddingBottom: 120 },
-  headerRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    marginTop: 20,
-    marginBottom: 8,
-  },
-  pageTitle: {
-    fontSize: 28,
-    fontFamily: "PlusJakartaSans-Bold",
-    color: "#191D31",
+  scrollContent: {
+    ...screenScrollContent,
+    paddingTop: 4,
   },
   avatarBlock: { alignItems: "center", marginTop: 24, marginBottom: 32 },
   avatarRingWrapper: {
@@ -441,9 +527,7 @@ const styles = StyleSheet.create({
     width: 32,
     height: 32,
     borderRadius: 16,
-    backgroundColor: "rgba(255,255,255,0.95)",
     borderWidth: 1.5,
-    borderColor: "#191D31",
     alignItems: "center",
     justifyContent: "center",
     shadowColor: "#000",
@@ -462,7 +546,6 @@ const styles = StyleSheet.create({
     height: 140,
     borderRadius: 70,
     borderWidth: 2,
-    borderColor: "#191D31",
     backgroundColor: "transparent",
     alignItems: "center",
     justifyContent: "center",
@@ -477,26 +560,22 @@ const styles = StyleSheet.create({
   userName: {
     fontSize: 24,
     fontFamily: "PlusJakartaSans-Bold",
-    color: "#191D31",
     marginTop: 12,
   },
   userSubtitle: {
     fontSize: 14,
     fontFamily: "PlusJakartaSans-Medium",
-    color: "rgba(0,0,0,0.6)",
     marginTop: 4,
   },
   section: { marginTop: 8 },
   sectionBorder: {
     borderTopWidth: 1,
-    borderTopColor: "rgba(0,0,0,0.08)",
     paddingTop: 20,
     marginTop: 20,
   },
   sectionTitle: {
     fontSize: 13,
     fontFamily: "PlusJakartaSans-SemiBold",
-    color: "#3d6b47",
     marginBottom: 8,
     letterSpacing: 0.5,
   },
@@ -514,23 +593,16 @@ const styles = StyleSheet.create({
   },
   switchWrapper: {
     borderWidth: 1,
-    borderColor: "rgba(0,0,0,0.12)",
     borderRadius: 22,
     padding: 2,
-  },
-  switchWrapperActive: {
-    borderColor: "rgba(61,107,71,0.4)",
   },
   settingsItemText: {
     fontSize: 17,
     fontFamily: "PlusJakartaSans-Medium",
-    color: "#191D31",
   },
   settingsItemSubtitle: {
     fontSize: 14,
     fontFamily: "PlusJakartaSans-Regular",
-    color: "rgba(0,0,0,0.5)",
     maxWidth: 120,
   },
-  settingsItemDanger: { color: "#dc2626" },
 });

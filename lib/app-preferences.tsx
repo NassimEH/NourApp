@@ -10,7 +10,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const STORAGE_KEY = "@nour_app_preferences";
 
-export type ThemeMode = "light" | "dark" | "system";
+export type ThemeMode = "spiritual" | "light" | "dark";
 export type IconStyleMode = "outline" | "filled";
 export type TextSizeMode = "small" | "medium" | "large";
 export type AccentColorKey = "green" | "blue" | "amber";
@@ -25,7 +25,7 @@ export interface AppPreferencesState {
 }
 
 const DEFAULT_PREFS: AppPreferencesState = {
-  theme: "system",
+  theme: "spiritual",
   iconStyle: "outline",
   textSize: "medium",
   accentColor: "green",
@@ -49,7 +49,7 @@ async function loadStored(): Promise<Partial<AppPreferencesState>> {
     if (!raw) return {};
     const parsed = JSON.parse(raw) as Partial<AppPreferencesState>;
     return {
-      theme: ["light", "dark", "system"].includes(parsed.theme ?? "") ? parsed.theme : undefined,
+      theme: normalizeThemeMode(parsed.theme),
       iconStyle: ["outline", "filled"].includes(parsed.iconStyle ?? "") ? parsed.iconStyle : undefined,
       textSize: ["small", "medium", "large"].includes(parsed.textSize ?? "") ? parsed.textSize : undefined,
       accentColor: ["green", "blue", "amber"].includes(parsed.accentColor ?? "") ? parsed.accentColor : undefined,
@@ -126,10 +126,31 @@ export function useAppPreferences(): AppPreferencesContextType {
   return ctx;
 }
 
+function normalizeThemeMode(value: unknown): ThemeMode | undefined {
+  if (value === "spiritual" || value === "light" || value === "dark") return value;
+  // Anciens réglages : "system" = apparence spirituelle par défaut
+  if (value === "system") return "spiritual";
+  return undefined;
+}
+
 export const THEME_LABELS: Record<ThemeMode, string> = {
+  spiritual: "Thème spirituel",
   light: "Clair",
   dark: "Sombre",
-  system: "Système",
+};
+
+/** Libellé affiché dans Profil → Thème (avec repli si valeur inconnue) */
+export function getThemeLabel(theme: ThemeMode | string | undefined): string {
+  if (theme === "spiritual" || theme === "light" || theme === "dark") {
+    return THEME_LABELS[theme];
+  }
+  return THEME_LABELS.spiritual;
+}
+
+export const THEME_DESCRIPTIONS: Record<ThemeMode, string> = {
+  spiritual: "Fond illustré, ambiance douce et spirituelle",
+  light: "Fond blanc, textes sombres (modèle de base)",
+  dark: "Fond sombre, textes clairs",
 };
 
 export const ICON_STYLE_LABELS: Record<IconStyleMode, string> = {

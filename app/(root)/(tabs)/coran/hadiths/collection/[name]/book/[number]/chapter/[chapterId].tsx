@@ -1,5 +1,4 @@
 import {
-  ImageBackground,
   FlatList,
   StyleSheet,
   Text,
@@ -9,7 +8,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router, useLocalSearchParams } from "expo-router";
-import Feather from "@expo/vector-icons/Feather";
+import { AppIcon } from "@/components/AppIcon";
 import { useCallback, useMemo, useState } from "react";
 
 import {
@@ -21,9 +20,12 @@ import {
 import { HadithListSkeleton } from "@/components/hadith/HadithListSkeleton";
 import type { HadithRecord } from "@/lib/hadith/types";
 import { useCollections } from "@/lib/hadith/hooks/useCollections";
+import { ScreenBackground } from "@/components/ScreenBackground";
+import { ScreenPageHeader } from "@/components/ScreenPageHeader";
+import { useTranslation } from "@/lib/i18n";
+import { SCREEN_EDGE_PADDING } from "@/constants/screen-layout";
 
-const homeBackground = require("@/assets/images/home-background.png");
-const H_PADDING = 24;
+const H_PADDING = SCREEN_EDGE_PADDING;
 const ICON_COLOR = "#191D31";
 const ACCENT = "#3d6b47";
 const TEXT_MUTED = "rgba(0,0,0,0.5)";
@@ -37,6 +39,7 @@ function getHadithPreview(record: HadithRecord): string {
 }
 
 export default function HadithsListScreen() {
+  const { t } = useTranslation();
   const { name, number, chapterId } = useLocalSearchParams<{
     name: string;
     number: string;
@@ -85,25 +88,13 @@ export default function HadithsListScreen() {
   }, [hadiths, search]);
 
   return (
-    <ImageBackground
-      source={homeBackground}
-      style={styles.background}
-      resizeMode="cover"
-    >
+    <ScreenBackground style={styles.background}>
       <SafeAreaView style={styles.safeArea} edges={["top", "left", "right"]}>
-        <View style={styles.header}>
-          <TouchableOpacity
-            onPress={() => router.back()}
-            style={styles.backBtn}
-            activeOpacity={0.7}
-          >
-            <Feather name="chevron-left" size={26} color={ICON_COLOR} />
-          </TouchableOpacity>
-          <Text style={styles.title} numberOfLines={1}>
-            {collectionDisplayName}
-          </Text>
-          <View style={styles.headerRight} />
-        </View>
+        <ScreenPageHeader
+          title={collectionDisplayName}
+          subtitle={t("screens.hadithChapterSubtitle")}
+          onBack={() => router.back()}
+        />
 
         {loading && hadiths.length === 0 ? (
           <HadithListSkeleton />
@@ -115,14 +106,14 @@ export default function HadithsListScreen() {
               style={styles.retryBtn}
               activeOpacity={0.8}
             >
-              <Feather name="refresh-cw" size={20} color="#fff" />
+              <AppIcon name="refresh-cw" size={20} color="#fff" />
               <Text style={styles.retryText}>Réessayer</Text>
             </TouchableOpacity>
           </View>
         ) : (
           <>
             <View style={styles.searchWrap}>
-              <Feather
+              <AppIcon
                 name="search"
                 size={18}
                 color={TEXT_MUTED}
@@ -140,7 +131,7 @@ export default function HadithsListScreen() {
                   onPress={() => setSearch("")}
                   hitSlop={12}
                 >
-                  <Feather name="x" size={18} color={TEXT_MUTED} />
+                  <AppIcon name="x" size={18} color={TEXT_MUTED} />
                 </TouchableOpacity>
               )}
             </View>
@@ -169,7 +160,7 @@ export default function HadithsListScreen() {
                       <Text style={styles.loadMoreText}>Chargement…</Text>
                     ) : (
                       <>
-                        <Feather name="download" size={18} color="#fff" />
+                        <AppIcon name="download" size={18} color="#fff" />
                         <Text style={styles.loadMoreText}>
                           Charger plus de hadiths
                         </Text>
@@ -203,14 +194,14 @@ export default function HadithsListScreen() {
                       {getHadithPreview(item)}
                     </Text>
                   </View>
-                  <Feather name="chevron-right" size={20} color={ICON_COLOR} />
+                  <AppIcon name="chevron-right" size={20} color={ICON_COLOR} />
                 </TouchableOpacity>
               )}
             />
           </>
         )}
       </SafeAreaView>
-    </ImageBackground>
+    </ScreenBackground>
   );
 }
 

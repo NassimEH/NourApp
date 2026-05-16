@@ -1,6 +1,5 @@
 import {
   Image,
-  ImageBackground,
   ScrollView,
   StyleSheet,
   Text,
@@ -8,14 +7,20 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import Feather from "@expo/vector-icons/Feather";
+import { AppIcon } from "@/components/AppIcon";
 import { router } from "expo-router";
 
 import { useGlobalContext } from "@/lib/global-provider";
+import { ScreenBackground } from "@/components/ScreenBackground";
+import {
+  SCREEN_EDGE_PADDING,
+  screenPageHeaderSpacing,
+  screenScrollContent,
+} from "@/constants/screen-layout";
+import { ScreenPageHeader } from "@/components/ScreenPageHeader";
+import { useTranslation } from "@/lib/i18n";
 
-const homeBackground = require("@/assets/images/home-background.png");
-
-const H_PADDING = 20;
+const H_PADDING = SCREEN_EDGE_PADDING;
 const ICON_COLOR = "#191D31";
 const ACCENT = "#3d6b47";
 const TEXT_MUTED = "rgba(0,0,0,0.5)";
@@ -24,53 +29,45 @@ const WEEK_DAYS = ["D", "L", "M", "M", "J", "V", "S"];
 const TODAY_INDEX = new Date().getDay() === 0 ? 6 : new Date().getDay() - 1;
 
 const PROGRESS_LEVELS = [
-  { label: "Débutant", pct: 45, color: "#3d6b47" },
-  { label: "Avancé", pct: 45, color: "#6b9b5c" },
-  { label: "Intermédiaire", pct: 25, color: "#c45c3e" },
+  { label: "D?butant", pct: 45, color: "#3d6b47" },
+  { label: "Avanc?", pct: 45, color: "#6b9b5c" },
+  { label: "Interm?diaire", pct: 25, color: "#c45c3e" },
   { label: "Expert", pct: 20, color: "#d4a84b" },
 ];
 
 export default function ApprendreStatsScreen() {
   const { user } = useGlobalContext();
+  const { t } = useTranslation();
 
   return (
-    <ImageBackground
-      source={homeBackground}
-      style={styles.background}
-      resizeMode="cover"
-    >
+    <ScreenBackground style={styles.background}>
       <SafeAreaView style={styles.safeArea} edges={["top", "left", "right"]}>
-        {/* Header: retour à gauche, nom au centre, paramètres à droite */}
-        <View style={styles.header}>
-          <TouchableOpacity
-            onPress={() => router.back()}
-            style={styles.headerButton}
-            activeOpacity={0.7}
-          >
-            <Feather name="chevron-left" size={26} color={ICON_COLOR} />
-          </TouchableOpacity>
-          <Text style={styles.headerTitle} numberOfLines={1}>
-            {user?.name ?? "Utilisateur"}
-          </Text>
-          <TouchableOpacity
-            onPress={() => router.push("/(root)/(tabs)/profile")}
-            style={styles.headerButton}
-            activeOpacity={0.7}
-          >
-            <Feather name="settings" size={24} color={ICON_COLOR} />
-          </TouchableOpacity>
-        </View>
+        <ScreenPageHeader
+          title={user?.name ?? t("home.defaultUser")}
+          subtitle={t("screens.learnStatsSubtitle")}
+          style={screenPageHeaderSpacing}
+          onBack={() => router.back()}
+          headerActions={
+            <TouchableOpacity
+              onPress={() => router.push("/(root)/(tabs)/profile")}
+              style={styles.headerButton}
+              activeOpacity={0.7}
+            >
+              <AppIcon name="settings" size={24} color={ICON_COLOR} />
+            </TouchableOpacity>
+          }
+        />
 
         <ScrollView
           style={styles.scroll}
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
         >
-          {/* Carte Résumé hebdo */}
+          {/* Carte R?sum? hebdo */}
           <View style={styles.card}>
-            <Text style={styles.cardTitle}>Résumé hebdo</Text>
+            <Text style={styles.cardTitle}>R?sum? hebdo</Text>
 
-            <Text style={styles.sectionLabel}>Activité</Text>
+            <Text style={styles.sectionLabel}>Activit?</Text>
             <View style={styles.daysRow}>
               {WEEK_DAYS.map((day, i) => (
                 <View key={i} style={styles.dayCol}>
@@ -99,17 +96,17 @@ export default function ApprendreStatsScreen() {
               Objectifs hebdo
             </Text>
             <View style={styles.goalsRow}>
-              <Feather name="flag" size={20} color={ICON_COLOR} />
+              <AppIcon name="flag" size={20} color={ICON_COLOR} />
               <View style={styles.goalsTextWrap}>
                 <Text style={styles.goalsTitle}>Objectifs hebdo</Text>
-                <Text style={styles.goalsSubtitle}>Prêts, partez, objectif</Text>
+                <Text style={styles.goalsSubtitle}>Pr?ts, partez, objectif</Text>
               </View>
             </View>
             <TouchableOpacity
               style={styles.setGoalButton}
               activeOpacity={0.8}
             >
-              <Text style={styles.setGoalButtonText}>Définir ton objectif</Text>
+              <Text style={styles.setGoalButtonText}>D?finir ton objectif</Text>
             </TouchableOpacity>
           </View>
 
@@ -169,7 +166,7 @@ export default function ApprendreStatsScreen() {
           <View style={styles.bottomSpacer} />
         </ScrollView>
       </SafeAreaView>
-    </ImageBackground>
+    </ScreenBackground>
   );
 }
 
@@ -177,7 +174,10 @@ const styles = StyleSheet.create({
   background: { flex: 1 },
   safeArea: { flex: 1, backgroundColor: "transparent" },
   scroll: { flex: 1 },
-  scrollContent: { paddingHorizontal: H_PADDING, paddingBottom: 120 },
+  scrollContent: {
+    ...screenScrollContent,
+    paddingTop: 8,
+  },
 
   header: {
     flexDirection: "row",

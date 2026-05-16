@@ -1,5 +1,4 @@
-import {
-  ImageBackground,
+﻿import {
   ScrollView,
   StyleSheet,
   Text,
@@ -8,21 +7,25 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router } from "expo-router";
-import Feather from "@expo/vector-icons/Feather";
+import { AppIcon } from "@/components/AppIcon";
+import { ScreenBackground } from "@/components/ScreenBackground";
+import { ScreenPageHeader } from "@/components/ScreenPageHeader";
+import { screenScrollContent } from "@/constants/screen-layout";
+import { useTranslation } from "@/lib/i18n";
 
-const homeBackground = require("@/assets/images/home-background.png");
 const ICON_COLOR = "#191D31";
 
 export default function RecitateursScreen() {
+  const { t } = useTranslation();
+
   return (
-    <ImageBackground source={homeBackground} style={styles.background} resizeMode="cover">
+    <ScreenBackground style={styles.background}>
       <SafeAreaView style={styles.safeArea} edges={["top", "left", "right"]}>
-        <View style={styles.header}>
-          <Text style={styles.title}>Liste des Récitateurs</Text>
-          <TouchableOpacity onPress={() => router.back()} style={styles.backButton} activeOpacity={0.7}>
-            <Feather name="chevron-left" size={28} color={ICON_COLOR} />
-          </TouchableOpacity>
-        </View>
+        <ScreenPageHeader
+          title={t("screens.recitersTitle")}
+          subtitle={t("screens.recitersSubtitle")}
+          onBack={() => router.back()}
+        />
         <ScrollView
           style={styles.scroll}
           contentContainerStyle={styles.content}
@@ -36,13 +39,13 @@ export default function RecitateursScreen() {
             onPress={() => router.push("recitateur-detail")}
             activeOpacity={0.8}
           >
-            <Feather name="mic" size={24} color={ICON_COLOR} />
+            <AppIcon name="mic" size={24} color={ICON_COLOR} />
             <Text style={styles.cardTitle}>Exemple récitateur</Text>
-            <Feather name="chevron-right" size={20} color={ICON_COLOR} />
+            <AppIcon name="chevron-right" size={20} color={ICON_COLOR} />
           </TouchableOpacity>
         </ScrollView>
       </SafeAreaView>
-    </ImageBackground>
+    </ScreenBackground>
   );
 }
 
@@ -63,7 +66,7 @@ const styles = StyleSheet.create({
     color: ICON_COLOR,
   },
   scroll: { flex: 1 },
-  content: { paddingHorizontal: 28, paddingTop: 24, paddingBottom: 40 },
+  content: { ...screenScrollContent, paddingTop: 8, paddingBottom: 40 },
   placeholder: {
     fontSize: 15,
     fontFamily: "PlusJakartaSans-Regular",

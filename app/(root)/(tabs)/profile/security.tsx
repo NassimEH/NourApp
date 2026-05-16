@@ -1,8 +1,7 @@
-import { useState } from "react";
+﻿import { useState } from "react";
 import {
   ActivityIndicator,
   Alert,
-  ImageBackground,
   ScrollView,
   StyleSheet,
   Text,
@@ -12,16 +11,19 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router } from "expo-router";
-import Feather from "@expo/vector-icons/Feather";
+import { AppIcon } from "@/components/AppIcon";
 
 import { updateUserPassword } from "@/lib/appwrite";
-
-const ICON_COLOR = "#191D31";
-const homeBackground = require("@/assets/images/home-background.png");
+import { useAppTheme } from "@/lib/app-theme";
+import { ScreenBackground } from "@/components/ScreenBackground";
+import { ScreenPageHeader } from "@/components/ScreenPageHeader";
+import { useTranslation } from "@/lib/i18n";
 
 const MIN_PASSWORD_LENGTH = 8;
 
 export default function SecurityScreen() {
+  const colors = useAppTheme();
+  const { t } = useTranslation();
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -74,58 +76,86 @@ export default function SecurityScreen() {
   };
 
   return (
-    <ImageBackground source={homeBackground} style={styles.background} resizeMode="cover">
+    <ScreenBackground style={styles.background}>
       <SafeAreaView style={styles.safeArea} edges={["top", "left", "right"]}>
-        <View style={styles.header}>
-          <Text style={styles.title}>Sécurité</Text>
-          <TouchableOpacity onPress={() => router.back()} style={styles.backButton} activeOpacity={0.7}>
-            <Feather name="chevron-left" size={28} color={ICON_COLOR} />
-          </TouchableOpacity>
-        </View>
+        <ScreenPageHeader
+          title={t("screens.securityTitle")}
+          subtitle={t("screens.securitySubtitle")}
+          onBack={() => router.back()}
+        />
         <ScrollView
           style={styles.scroll}
           contentContainerStyle={styles.content}
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
         >
-          <Text style={styles.sectionLabel}>Changer le mot de passe</Text>
-          <Text style={styles.hint}>
+          <Text style={[styles.sectionLabel, { color: colors.text }]}>
+            Changer le mot de passe
+          </Text>
+          <Text style={[styles.hint, { color: colors.textMuted }]}>
             Saisissez votre mot de passe actuel puis le nouveau (min. {MIN_PASSWORD_LENGTH} caractères).
           </Text>
 
-          <Text style={styles.inputLabel}>Mot de passe actuel</Text>
+          <Text style={[styles.inputLabel, { color: colors.text }]}>
+            Mot de passe actuel
+          </Text>
           <TextInput
-            style={styles.input}
+            style={[
+              styles.input,
+              {
+                color: colors.text,
+                borderColor: colors.border,
+                backgroundColor: colors.card,
+              },
+            ]}
             value={currentPassword}
             onChangeText={setCurrentPassword}
             placeholder="••••••••"
-            placeholderTextColor="rgba(0,0,0,0.4)"
+            placeholderTextColor={colors.textMuted}
             secureTextEntry
             autoCapitalize="none"
             autoCorrect={false}
             editable={!loading}
           />
 
-          <Text style={styles.inputLabel}>Nouveau mot de passe</Text>
+          <Text style={[styles.inputLabel, { color: colors.text }]}>
+            Nouveau mot de passe
+          </Text>
           <TextInput
-            style={styles.input}
+            style={[
+              styles.input,
+              {
+                color: colors.text,
+                borderColor: colors.border,
+                backgroundColor: colors.card,
+              },
+            ]}
             value={newPassword}
             onChangeText={setNewPassword}
             placeholder="••••••••"
-            placeholderTextColor="rgba(0,0,0,0.4)"
+            placeholderTextColor={colors.textMuted}
             secureTextEntry
             autoCapitalize="none"
             autoCorrect={false}
             editable={!loading}
           />
 
-          <Text style={styles.inputLabel}>Confirmer le nouveau mot de passe</Text>
+          <Text style={[styles.inputLabel, { color: colors.text }]}>
+            Confirmer le nouveau mot de passe
+          </Text>
           <TextInput
-            style={styles.input}
+            style={[
+              styles.input,
+              {
+                color: colors.text,
+                borderColor: colors.border,
+                backgroundColor: colors.card,
+              },
+            ]}
             value={confirmPassword}
             onChangeText={setConfirmPassword}
             placeholder="••••••••"
-            placeholderTextColor="rgba(0,0,0,0.4)"
+            placeholderTextColor={colors.textMuted}
             secureTextEntry
             autoCapitalize="none"
             autoCorrect={false}
@@ -133,7 +163,11 @@ export default function SecurityScreen() {
           />
 
           <TouchableOpacity
-            style={[styles.submitButton, loading && styles.submitButtonDisabled]}
+            style={[
+              styles.submitButton,
+              { backgroundColor: colors.accent },
+              loading && styles.submitButtonDisabled,
+            ]}
             onPress={handleChangePassword}
             disabled={loading}
             activeOpacity={0.8}
@@ -146,7 +180,7 @@ export default function SecurityScreen() {
           </TouchableOpacity>
         </ScrollView>
       </SafeAreaView>
-    </ImageBackground>
+    </ScreenBackground>
   );
 }
 
@@ -164,7 +198,6 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 20,
     fontFamily: "PlusJakartaSans-Bold",
-    color: ICON_COLOR,
   },
   scroll: { flex: 1 },
   content: {
@@ -175,35 +208,28 @@ const styles = StyleSheet.create({
   sectionLabel: {
     fontSize: 17,
     fontFamily: "PlusJakartaSans-SemiBold",
-    color: ICON_COLOR,
     marginBottom: 6,
   },
   hint: {
     fontSize: 14,
     fontFamily: "PlusJakartaSans-Regular",
-    color: "rgba(0,0,0,0.6)",
     marginBottom: 20,
   },
   inputLabel: {
     fontSize: 14,
     fontFamily: "PlusJakartaSans-Medium",
-    color: ICON_COLOR,
     marginBottom: 6,
     marginTop: 12,
   },
   input: {
     borderWidth: 1,
-    borderColor: "rgba(0,0,0,0.14)",
     borderRadius: 12,
     paddingHorizontal: 16,
     paddingVertical: 14,
     fontSize: 16,
     fontFamily: "PlusJakartaSans-Regular",
-    color: ICON_COLOR,
-    backgroundColor: "rgba(255,255,255,0.7)",
   },
   submitButton: {
-    backgroundColor: "#3d6b47",
     borderRadius: 12,
     paddingVertical: 16,
     alignItems: "center",

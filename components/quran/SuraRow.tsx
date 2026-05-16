@@ -1,5 +1,5 @@
-import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
-import Feather from "@expo/vector-icons/Feather";
+﻿import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { AppIcon } from "@/components/AppIcon";
 import type { SuraMeta } from "@/lib/quran/types";
 
 const ICON_SIZE = 22;
@@ -22,7 +22,7 @@ export function SuraRow({ sura, onPress }: SuraRowProps) {
     >
       <Text style={styles.suraNumber}>{sura.number}</Text>
       <View style={styles.leftBlock}>
-        <Feather name="book-open" size={ICON_SIZE} color={ICON_COLOR} />
+        <AppIcon name="book-open" size={ICON_SIZE} color={ICON_COLOR} />
         <View style={styles.textBlock}>
           <Text style={styles.title} numberOfLines={1}>
             {sura.name}
@@ -32,7 +32,7 @@ export function SuraRow({ sura, onPress }: SuraRowProps) {
           </Text>
         </View>
       </View>
-      <Feather name="chevron-right" size={20} color={ICON_COLOR} />
+      <AppIcon name="chevron-right" size={20} color={ICON_COLOR} />
     </TouchableOpacity>
   );
 }

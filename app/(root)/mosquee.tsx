@@ -1,4 +1,4 @@
-import {
+﻿import {
   ActivityIndicator,
   Dimensions,
   Image,
@@ -26,7 +26,7 @@ import {
 } from "@/lib/prayerUtils";
 
 const homeBackground = require("@/assets/images/home-background.png");
-const mosqueImage = require("@/mosquée.png");
+const mosqueImage = require("@/assets/images/mosquee.png");
 const ICON_COLOR = "#191D31";
 const { width: screenWidth } = Dimensions.get("window");
 const H_PADDING = 24;

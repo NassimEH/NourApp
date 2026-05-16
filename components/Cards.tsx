@@ -1,4 +1,4 @@
-import {
+﻿import {
   Image,
   ImageBackground,
   StyleSheet,
@@ -7,7 +7,7 @@ import {
   View,
 } from "react-native";
 import { useRouter } from "expo-router";
-import Feather from "@expo/vector-icons/Feather";
+import { AppIcon } from "@/components/AppIcon";
 import { Models } from "react-native-appwrite";
 
 import Colors from "@/constants/Colors";
@@ -39,7 +39,7 @@ export const ReadingCard = ({ item, onPress }: ReadingCardProps) => {
     >
       <View style={styles.readingCardInner}>
         <View style={styles.readingCardIconWrap}>
-          <Feather name={item.icon} size={28} color="#3d6b47" />
+          <AppIcon name={item.icon} size={28} color="#3d6b47" />
         </View>
         <Text style={styles.readingCardTitle} numberOfLines={2}>
           {item.title}
@@ -131,7 +131,7 @@ export const FeaturedCard = ({
             style={styles.arrowCorner}
             activeOpacity={0.8}
           >
-            <Feather name="chevron-right" size={24} color={Colors.text} />
+            <AppIcon name="chevron-right" size={24} color={Colors.text} />
           </TouchableOpacity>
         </View>
       </ImageBackground>
@@ -254,7 +254,7 @@ export const Card = ({ item, onPress }: Props) => {
       onPress={onPress}
     >
       <View className="flex flex-row items-center absolute px-2 top-5 right-5 bg-white/90 p-1 rounded-full z-50">
-        <Feather name="star" size={12} color="#3d6b47" />
+        <AppIcon name="star" size={12} color="#3d6b47" />
         <Text className="text-xs font-rubik-bold text-primary-300 ml-0.5">
           {item.rating}
         </Text>
@@ -274,7 +274,7 @@ export const Card = ({ item, onPress }: Props) => {
           <Text className="text-base font-rubik-bold text-primary-300">
             ${item.price}
           </Text>
-          <Feather name="heart" size={20} color="#191D31" />
+          <AppIcon name="heart" size={20} color="#191D31" />
         </View>
       </View>
     </TouchableOpacity>
