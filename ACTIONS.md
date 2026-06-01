@@ -206,3 +206,5 @@ Légende : `[ ]` à faire · `[OK]` fait
 
 *Dernière mise à jour : parcours Piliers, favoris unifiés, Ramadan, hors-ligne (stub), guide héritage, thème sourates/hadith/mosquée/météo.*
 
+**Backlog features (à cocher à chaque livraison) :** voir [`FEATURES.md`](FEATURES.md).
+
