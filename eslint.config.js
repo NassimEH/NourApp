@@ -7,4 +7,12 @@ module.exports = defineConfig([
   {
     ignores: ["dist/*", "node_modules/*", ".expo/*"],
   },
+  {
+    rules: {
+      // Texte FR/AR fréquent dans <Text> — évite les faux positifs en CI
+      "react/no-unescaped-entities": "off",
+      // Fichiers UTF-8 avec BOM (éditeurs Windows) — bruit sans impact runtime
+      "unicode-bom": "off",
+    },
+  },
 ]);

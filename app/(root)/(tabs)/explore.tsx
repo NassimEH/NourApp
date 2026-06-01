@@ -292,7 +292,7 @@ export default function ExploreScreen() {
                     <View style={styles.juzIconWrap}>
                       <AppIcon name="book-open" size={24} color={colors.accent} />
                     </View>
-                    <Text style={styles.juzNumber}>Juz' {n}</Text>
+                    <Text style={styles.juzNumber}>{`Juz' ${n}`}</Text>
                   </TouchableOpacity>
                 ))}
               </ScrollView>

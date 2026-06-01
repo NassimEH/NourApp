@@ -37,7 +37,7 @@ export default function PlayerScreen() {
               بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ
             </Text>
             <Text style={[styles.verseTranslation, { color: colors.textMuted }]}>
-              Au nom d'Allah, le Tout Miséricordieux, le Très Miséricordieux.
+              {"Au nom d'Allah, le Tout Miséricordieux, le Très Miséricordieux."}
             </Text>
           </View>
           <View style={styles.controls}>

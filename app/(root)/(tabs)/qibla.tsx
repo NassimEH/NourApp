@@ -283,7 +283,7 @@ export default function MesPrièresScreen() {
         <View style={styles.qiblaSection}>
           <Text style={styles.sectionLabel}>Qibla</Text>
           <Text style={styles.qiblaSubtitle}>
-            Dirigez l'aiguille vers le haut pour faire face à la Mecque
+            {"Dirigez l'aiguille vers le haut pour faire face à la Mecque"}
           </Text>
 
           {compassError ? (

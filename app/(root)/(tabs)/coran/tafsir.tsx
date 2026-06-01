@@ -12,9 +12,9 @@ export default function TafsirScreen() {
       subtitle={t("screens.tafsirSubtitle")}
     >
       <Text style={styles.placeholder}>
-        Exégèse et explication des versets : sélection d'une sourate et d'un verset
-        pour afficher les commentaires des savants (tafsir). Les sources et le
-        contenu seront intégrés ici.
+        {
+          "Exégèse et explication des versets : sélection d'une sourate et d'un verset pour afficher les commentaires des savants (tafsir). Les sources et le contenu seront intégrés ici."
+        }
       </Text>
     </ScreenStackLayout>
   );

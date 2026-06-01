@@ -32,7 +32,9 @@ export default function RecitateursScreen() {
           showsVerticalScrollIndicator={false}
         >
           <Text style={styles.placeholder}>
-            Liste des récitateurs disponibles pour l'écoute du Coran. Appuyez sur un récitateur pour voir son détail et lancer la lecture.
+            {
+              "Liste des récitateurs disponibles pour l'écoute du Coran. Appuyez sur un récitateur pour voir son détail et lancer la lecture."
+            }
           </Text>
           <TouchableOpacity
             style={styles.card}
