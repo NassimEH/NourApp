@@ -1,7 +1,7 @@
 import type { LearnCourse } from "../types";
 
 export const PROPHETS_COURSE: LearnCourse = {
-  id: PROPHETS_COURSE_ID,
+  id: "prophets-life",
   title: "La vie des prophètes",
   subtitle: "Découvrir les messagers d'Allah (5 leçons)",
   lessons: [

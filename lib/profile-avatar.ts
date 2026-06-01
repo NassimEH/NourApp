@@ -15,7 +15,7 @@ function avatarPath(): string {
 export async function getProfileAvatarUri(): Promise<string | null> {
   try {
     const path = avatarPath();
-    const info = await FileSystem.getInfoAsync(path, { size: false }).catch(() => null);
+    const info = await FileSystem.getInfoAsync(path).catch(() => null);
     return info?.exists ? path : null;
   } catch {
     return null;

@@ -14,9 +14,12 @@ import type { AppUser } from "./supabase/types";
 
 export type { AppUser };
 
+/** Utilisateur affiché (session Supabase ou profil local invité). */
+export type SessionUser = AppUser | LocalUser;
+
 interface GlobalContextType {
   isLogged: boolean;
-  user: AppUser | null;
+  user: SessionUser | null;
   loading: boolean;
   refetch: () => Promise<void>;
   isGuest: boolean;
@@ -30,7 +33,7 @@ async function resolveGuestUser(): Promise<LocalUser> {
 }
 
 export const GlobalProvider = ({ children }: { children: ReactNode }) => {
-  const [user, setUser] = useState<AppUser | null>(null);
+  const [user, setUser] = useState<SessionUser | null>(null);
   const [loading, setLoading] = useState(true);
   const [isGuest, setIsGuest] = useState(false);
 

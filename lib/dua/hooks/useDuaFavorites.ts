@@ -64,7 +64,7 @@ export function useDuaFavorites(): {
   const toggleFavorite = useCallback(
     async (item: DuaDetail | DuaFavorite) => {
       const slug = item.categorySlug;
-      const id = item.duaId;
+      const id = "duaId" in item ? item.duaId : item.id;
       if (isFavorite(slug, id)) await removeFavorite(slug, id);
       else await addFavorite(item);
     },

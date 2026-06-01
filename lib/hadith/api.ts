@@ -153,7 +153,7 @@ export const COLLECTION_DISPLAY_NAMES: Record<string, string> = {
 /** Nom d’affichage d’une collection */
 export function getCollectionDisplayName(
   collection: HadithCollection,
-  _lang: "en" | "ar" = "en"
+  _lang: "en" | "ar" | "fr" = "en"
 ): string {
   const key = collection.name.toLowerCase();
   if (COLLECTION_DISPLAY_NAMES[key]) return COLLECTION_DISPLAY_NAMES[key];

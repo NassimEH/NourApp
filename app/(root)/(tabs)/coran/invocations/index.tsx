@@ -10,7 +10,12 @@ import { router } from "expo-router";
 import { AppIcon } from "@/components/AppIcon";
 import { useMemo, useState } from "react";
 
-import { useDuaCategories, useDuaLanguage, getCategoryNameForDisplay } from "@/lib/dua";
+import {
+  useDuaCategories,
+  useDuaLanguage,
+  getCategoryNameForDisplay,
+  type DuaCategory,
+} from "@/lib/dua";
 import { DuaCategorySkeleton } from "@/components/dua/DuaCategorySkeleton";
 import { ScreenBackground } from "@/components/ScreenBackground";
 import { SCREEN_EDGE_PADDING } from "@/constants/screen-layout";
@@ -23,9 +28,9 @@ const ACCENT = "#3d6b47";
 const TEXT_MUTED = "rgba(0,0,0,0.5)";
 
 function filterCategories(
-  list: { name: string; slug: string; description?: string }[],
+  list: DuaCategory[],
   query: string,
-  getDisplayName: (c: { name: string; slug: string }) => string
+  getDisplayName: (c: DuaCategory) => string
 ) {
   const q = query.trim().toLowerCase();
   if (!q) return list;
@@ -65,7 +70,7 @@ export default function InvocationsCategoriesScreen() {
             <Text style={styles.errorText}>{error}</Text>
             <TouchableOpacity onPress={() => refetch()} style={styles.retryBtn} activeOpacity={0.8}>
               <AppIcon name="refresh-cw" size={20} color="#fff" />
-              <Text style={styles.retryText}>RÈessayer</Text>
+              <Text style={styles.retryText}>Rùessayer</Text>
             </TouchableOpacity>
           </View>
         ) : (
@@ -74,7 +79,7 @@ export default function InvocationsCategoriesScreen() {
               <AppIcon name="search" size={18} color={TEXT_MUTED} style={styles.searchIcon} />
               <TextInput
                 style={styles.searchInput}
-                placeholder="Rechercher une catÈgorieÖ"
+                placeholder="Rechercher une catùgorieù"
                 placeholderTextColor={TEXT_MUTED}
                 value={search}
                 onChangeText={setSearch}
@@ -89,7 +94,7 @@ export default function InvocationsCategoriesScreen() {
             <View style={styles.listWrap}>
               {filtered.length === 0 ? (
                 <View style={styles.empty}>
-                  <Text style={styles.emptyText}>Aucune catÈgorie trouvÈe</Text>
+                  <Text style={styles.emptyText}>Aucune catùgorie trouvùe</Text>
                 </View>
               ) : (
                 filtered.map((cat) => (

@@ -503,7 +503,16 @@ const fr = {
   },
 } as const;
 
-const en: typeof fr = {
+/** Structure identique à `fr`, valeurs élargies en `string` pour en/ar. */
+type DeepStringValues<T> = T extends readonly string[]
+  ? readonly string[]
+  : T extends object
+    ? { [K in keyof T]: DeepStringValues<T[K]> }
+    : string;
+
+type TranslationMessages = DeepStringValues<typeof fr>;
+
+const en: TranslationMessages = {
   tabs: {
     home: "Home",
     prayers: "My prayers",
@@ -1005,7 +1014,7 @@ const en: typeof fr = {
   },
 };
 
-const ar: typeof fr = {
+const ar: TranslationMessages = {
   tabs: {
     home: "الرئيسية",
     prayers: "صلواتي",
@@ -1507,6 +1516,10 @@ const ar: typeof fr = {
   },
 };
 
-export const TRANSLATIONS: Record<LanguageLocale, typeof fr> = { fr, en, ar };
+export const TRANSLATIONS: Record<LanguageLocale, TranslationMessages> = {
+  fr,
+  en,
+  ar,
+};
 
 export type TranslationTree = typeof fr;

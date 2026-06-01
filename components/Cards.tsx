@@ -53,6 +53,8 @@ export type FeaturedCardItem = {
   image?: string | number | null;
   name?: string;
   price?: number | string;
+  rating?: string | number;
+  address?: string;
 };
 
 interface Props {

@@ -92,7 +92,7 @@ export default function ApprendreStatsScreen() {
             <Text style={[styles.hint, { color: colors.textMuted }]}>
               {t("learn.statsGoalsHint")}
             </Text>
-            {course.lessons.map((lesson) => (
+            {course?.lessons.map((lesson) => (
               <View key={lesson.id} style={styles.lessonRow}>
                 <Text style={[styles.lessonName, { color: colors.text }]}>
                   {lesson.title}

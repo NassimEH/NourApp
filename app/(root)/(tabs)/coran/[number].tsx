@@ -78,7 +78,7 @@ export default function QuranReaderScreen() {
       const restored = Math.max(0, Math.min(Math.floor(lastRead.scrollOffsetY), total - 1));
       setCurrentIndex(restored);
     }
-  }, [data?.number, suraNumber, total, lastRead?.suraNumber, lastRead?.scrollOffsetY]);
+  }, [data, suraNumber, total, lastRead?.suraNumber, lastRead?.scrollOffsetY]);
 
   useEffect(() => {
     if (suraNumber != null && total > 0) {
@@ -92,7 +92,7 @@ export default function QuranReaderScreen() {
   }, []);
   const goNext = useCallback(() => {
     setCurrentIndex((i) => (i < total - 1 ? i + 1 : i));
-  }, []);
+  }, [total]);
 
   const playCurrentAyah = useCallback(() => {
     if (suraNumber && ayah) audio.playAyah(suraNumber, ayah.number);
