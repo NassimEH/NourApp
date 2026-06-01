@@ -84,55 +84,6 @@ export function HomePrayerWeatherCarousel({
         <View style={[styles.carouselSlide, { width: slideWidth }]}>
           <View style={styles.carouselSlideInner}>
             <SectionHeader
-              title={t("home.myMosque")}
-              onSeeAll={() => router.push("/mosquee")}
-              style={styles.slideHeader}
-            />
-            {prayerLoading ? (
-              <ActivityIndicator
-                size="small"
-                color={colors.accent}
-                style={styles.loader}
-              />
-            ) : prayerTimes ? (
-              <View style={styles.mosqueSlideRow}>
-                <View style={styles.mosquePrayerColumnFull}>
-                  {(
-                    [
-                      { key: "Fajr", icon: "sunrise" as const, time: prayerTimes.Fajr },
-                      { key: "Dhuhr", icon: "sun" as const, time: prayerTimes.Dhuhr },
-                      { key: "Asr", icon: "cloud" as const, time: prayerTimes.Asr },
-                      { key: "Maghrib", icon: "sunset" as const, time: prayerTimes.Maghrib },
-                      { key: "Isha", icon: "moon" as const, time: prayerTimes.Isha },
-                    ] as const
-                  ).map(({ key, icon, time }) => (
-                    <View key={key} style={styles.mosquePrayerRow}>
-                      <AppIcon name={icon} size={14} color={colors.iconMuted} />
-                      <View style={styles.mosquePrayerCell}>
-                        <Text style={themed.mosquePrayerLabel}>{key}</Text>
-                        <Text style={themed.mosquePrayerTime}>{time}</Text>
-                      </View>
-                    </View>
-                  ))}
-                </View>
-                <View style={styles.mosqueRightBlock}>
-                  <MosqueImage compact />
-                  <PressableMosqueName
-                    name={mosqueDisplayName}
-                    onPress={onEditMosque}
-                    style={themed.mosqueTitleText}
-                  />
-                </View>
-              </View>
-            ) : (
-              <Text style={themed.weatherError}>{t("home.prayerUnavailable")}</Text>
-            )}
-          </View>
-        </View>
-
-        <View style={[styles.carouselSlide, { width: slideWidth }]}>
-          <View style={styles.carouselSlideInner}>
-            <SectionHeader
               title={t("home.myWeather")}
               onSeeAll={() => router.push("/meteo")}
               style={styles.slideHeader}
@@ -227,6 +178,55 @@ export function HomePrayerWeatherCarousel({
                 allowLabel={t("home.allowLocation")}
                 themed={themed}
               />
+            )}
+          </View>
+        </View>
+
+        <View style={[styles.carouselSlide, { width: slideWidth }]}>
+          <View style={styles.carouselSlideInner}>
+            <SectionHeader
+              title={t("home.myMosque")}
+              onSeeAll={() => router.push("/mosquee")}
+              style={styles.slideHeader}
+            />
+            {prayerLoading ? (
+              <ActivityIndicator
+                size="small"
+                color={colors.accent}
+                style={styles.loader}
+              />
+            ) : prayerTimes ? (
+              <View style={styles.mosqueSlideRow}>
+                <View style={styles.mosquePrayerColumnFull}>
+                  {(
+                    [
+                      { key: "Fajr", icon: "sunrise" as const, time: prayerTimes.Fajr },
+                      { key: "Dhuhr", icon: "sun" as const, time: prayerTimes.Dhuhr },
+                      { key: "Asr", icon: "cloud" as const, time: prayerTimes.Asr },
+                      { key: "Maghrib", icon: "sunset" as const, time: prayerTimes.Maghrib },
+                      { key: "Isha", icon: "moon" as const, time: prayerTimes.Isha },
+                    ] as const
+                  ).map(({ key, icon, time }) => (
+                    <View key={key} style={styles.mosquePrayerRow}>
+                      <AppIcon name={icon} size={14} color={colors.iconMuted} />
+                      <View style={styles.mosquePrayerCell}>
+                        <Text style={themed.mosquePrayerLabel}>{key}</Text>
+                        <Text style={themed.mosquePrayerTime}>{time}</Text>
+                      </View>
+                    </View>
+                  ))}
+                </View>
+                <View style={styles.mosqueRightBlock}>
+                  <MosqueImage compact />
+                  <PressableMosqueName
+                    name={mosqueDisplayName}
+                    onPress={onEditMosque}
+                    style={themed.mosqueTitleText}
+                  />
+                </View>
+              </View>
+            ) : (
+              <Text style={themed.weatherError}>{t("home.prayerUnavailable")}</Text>
             )}
           </View>
         </View>
