@@ -4,7 +4,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const TAB_BAR_STORAGE_KEY = "@nour_tab_bar_variant";
 
-export type TabBarVariant = "custom" | "native";
+export type TabBarVariant = "custom" | "native" | "liquid";
 
 interface TabBarPreferenceContextType {
   tabBarVariant: TabBarVariant;
@@ -20,7 +20,7 @@ export function TabBarPreferenceProvider({ children }: { children: React.ReactNo
     if (Platform.OS === "web") return;
     AsyncStorage.getItem(TAB_BAR_STORAGE_KEY)
       .then((value) => {
-        if (value === "native" || value === "custom") {
+        if (value === "native" || value === "custom" || value === "liquid") {
           setTabBarVariantState(value);
         }
       })

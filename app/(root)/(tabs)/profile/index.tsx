@@ -170,9 +170,9 @@ const PermissionRow = ({
           value={value}
           onValueChange={onValueChange}
           disabled={disabled}
-          trackColor={{ false: "#c4c8cc", true: colors.accent }}
+          trackColor={{ false: colors.switchTrackOff, true: colors.accent }}
           thumbColor="#ffffff"
-          ios_backgroundColor="#c4c8cc"
+          ios_backgroundColor={colors.switchTrackOff}
         />
       </View>
     </View>

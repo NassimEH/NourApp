@@ -1,5 +1,6 @@
 import { Text, type TextProps, type TextStyle } from "react-native";
 
+import { useAppTheme } from "@/lib/app-theme";
 import {
   useAppTypography,
   type TypographyVariant,
@@ -14,6 +15,7 @@ export function AppText({
   style,
   ...rest
 }: AppTextProps) {
+  const colors = useAppTheme();
   const typography = useAppTypography();
   const fontSize = typography[variant];
   const lineHeight =
@@ -23,7 +25,14 @@ export function AppText({
 
   return (
     <Text
-      style={[{ fontSize, lineHeight } as TextStyle, style]}
+      style={[
+        {
+          fontSize,
+          lineHeight,
+          color: colors.text,
+        } as TextStyle,
+        style,
+      ]}
       {...rest}
     />
   );

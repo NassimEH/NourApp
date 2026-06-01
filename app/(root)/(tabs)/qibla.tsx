@@ -39,6 +39,8 @@ import {
 } from "@/constants/screen-layout";
 import { ScreenPageHeader } from "@/components/ScreenPageHeader";
 import { useTranslation } from "@/lib/i18n";
+import { useAppTheme } from "@/lib/app-theme";
+import { createQiblaStyles } from "@/lib/qibla-screen-styles";
 
 const HIJRI_MONTHS = [
   "Muharram", "Safar", "Rabi al-Awwal", "Rabi al-Thani",
@@ -83,6 +85,8 @@ function getDirection(degree: number): string {
 
 export default function MesPrièresScreen() {
   const { t } = useTranslation();
+  const colors = useAppTheme();
+  const styles = useMemo(() => createQiblaStyles(colors), [colors]);
   const { gregorian, hijri } = useTodayDates();
   const { timings: prayerTimes, loading: prayerLoading, cityName: prayerCity, coords: prayerCoords } = usePrayerTimes();
   const { toggle: togglePrayerChecked, isChecked: isPrayerChecked } = usePrayersChecked();
@@ -189,7 +193,7 @@ export default function MesPrièresScreen() {
           </Text>
           <View style={styles.prayerCard}>
             {prayerLoading ? (
-              <ActivityIndicator size="small" color="#3d6b47" style={{ paddingVertical: 24 }} />
+              <ActivityIndicator size="small" color={colors.accent} style={{ paddingVertical: 24 }} />
             ) : prayerTimes ? (
               <>
                 <View style={styles.prayerCardHeader}>
@@ -198,14 +202,14 @@ export default function MesPrièresScreen() {
                   <Text style={styles.prayerCardGregorian}>{gregorian}</Text>
                   {prayerCoords ? (
                     <View style={styles.prayerCardCoords}>
-                      <AppIcon name="map-pin" size={12} color="rgba(0,0,0,0.5)" />
+                      <AppIcon name="map-pin" size={12} color={colors.iconMuted} />
                       <Text style={styles.prayerCardCoordsText}>
                         Lat: {prayerCoords.latitude.toFixed(5)}, Lon: {prayerCoords.longitude.toFixed(5)}
                       </Text>
                     </View>
                   ) : prayerCity ? (
                     <View style={styles.prayerCardCoords}>
-                      <AppIcon name="map-pin" size={12} color="rgba(0,0,0,0.5)" />
+                      <AppIcon name="map-pin" size={12} color={colors.iconMuted} />
                       <Text style={styles.prayerCardCoordsText}>{prayerCity}</Text>
                     </View>
                   ) : null}
@@ -336,235 +340,3 @@ export default function MesPrièresScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  background: {
-    flex: 1,
-  },
-  safe: {
-    flex: 1,
-    backgroundColor: "transparent",
-  },
-  scroll: { flex: 1 },
-  scrollContent: {
-    ...screenScrollContent,
-    paddingTop: 8,
-  },
-  sectionLabel: {
-    fontSize: 20,
-    fontFamily: "PlusJakartaSans-SemiBold",
-    color: "#191D31",
-    marginBottom: 12,
-  },
-  sectionDivider: {
-    height: 1,
-    backgroundColor: "rgba(0,0,0,0.06)",
-    marginVertical: 12,
-  },
-  prayerSection: { marginBottom: 32 },
-  prayerCard: {
-    backgroundColor: "transparent",
-    borderRadius: 20,
-    paddingVertical: 16,
-    paddingHorizontal: 20,
-    paddingLeft: 22,
-    borderLeftWidth: 3,
-    borderLeftColor: "rgba(61, 107, 71, 0.35)",
-  },
-  prayerCardHeader: {
-    marginBottom: 16,
-    paddingBottom: 14,
-    borderBottomWidth: 1,
-    borderBottomColor: "rgba(0, 0, 0, 0.08)",
-  },
-  prayerCardMethod: {
-    fontSize: 11,
-    fontFamily: "PlusJakartaSans-Medium",
-    color: "rgba(0,0,0,0.5)",
-    marginBottom: 4,
-  },
-  prayerCardHijri: {
-    fontSize: 14,
-    fontFamily: "PlusJakartaSans-SemiBold",
-    color: "rgba(0,0,0,0.85)",
-    marginBottom: 2,
-  },
-  prayerCardGregorian: {
-    fontSize: 12,
-    fontFamily: "PlusJakartaSans-Regular",
-    color: "rgba(0,0,0,0.6)",
-    marginBottom: 4,
-  },
-  prayerCardCoords: { flexDirection: "row", alignItems: "center", gap: 4 },
-  prayerCardCoordsText: {
-    fontSize: 11,
-    fontFamily: "PlusJakartaSans-Regular",
-    color: "rgba(0,0,0,0.5)",
-  },
-  prayerCardRemaining: {
-    fontSize: 13,
-    fontFamily: "PlusJakartaSans-Medium",
-    color: "rgba(0,0,0,0.6)",
-    marginTop: 6,
-  },
-  prayerRow: {
-    flexDirection: "row",
-    alignItems: "flex-start",
-    paddingVertical: 16,
-    paddingHorizontal: 8,
-    marginHorizontal: -6,
-    borderBottomWidth: 1,
-    borderBottomColor: "rgba(0, 0, 0, 0.06)",
-    position: "relative",
-  },
-  prayerRowCurrent: {
-    backgroundColor: "rgba(61, 107, 71, 0.12)",
-    borderRadius: 12,
-    marginHorizontal: 0,
-    paddingHorizontal: 14,
-    paddingVertical: 18,
-  },
-  prayerRowLeft: { flex: 1, marginRight: 44 },
-  prayerRowTimeRow: { flexDirection: "row", alignItems: "center", gap: 6, marginTop: 6 },
-  prayerRowLabel: {
-    fontSize: 16,
-    fontFamily: "PlusJakartaSans-Medium",
-    color: "#191D31",
-  },
-  prayerLabelDone: { textDecorationLine: "line-through", color: "#5b5d5e" },
-  prayerRowTime: { fontSize: 14, fontFamily: "PlusJakartaSans-Regular", color: "#5b5d5e" },
-  prayerRowCurrentDot: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-    backgroundColor: "rgba(61, 107, 71, 0.9)",
-  },
-  prayerRowCheckboxWrap: { position: "absolute", right: 0, top: 16 },
-  prayerRowLast: { borderBottomWidth: 0 },
-  prayerRowPressed: { opacity: 0.7 },
-  prayerCheckbox: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
-    borderWidth: 2,
-    borderColor: "rgba(61, 107, 71, 0.8)",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  prayerCheckboxChecked: {
-    backgroundColor: "rgba(61, 107, 71, 0.9)",
-    borderColor: "rgba(61, 107, 71, 0.9)",
-  },
-  prayerNextWidget: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    marginTop: 10,
-  },
-  prayerNextWidgetLeft: { flex: 1 },
-  prayerNextLabel: {
-    fontSize: 9,
-    fontFamily: "PlusJakartaSans-Medium",
-    color: "rgba(0,0,0,0.55)",
-    letterSpacing: 0.3,
-    marginBottom: 2,
-  },
-  prayerNextWidgetRow: { flexDirection: "row", alignItems: "center" },
-  prayerNextText: {
-    fontSize: 14,
-    fontFamily: "PlusJakartaSans-SemiBold",
-    color: "#191D31",
-    marginLeft: 6,
-  },
-  prayerNextCountdown: {
-    fontSize: 16,
-    fontFamily: "PlusJakartaSans-Bold",
-    color: "rgba(0,0,0,0.85)",
-    letterSpacing: 0.5,
-  },
-  prayerCardFooter: {
-    fontSize: 10,
-    fontFamily: "PlusJakartaSans-Regular",
-    color: "rgba(0,0,0,0.45)",
-    marginTop: 10,
-    textAlign: "center",
-  },
-  prayerUnavailable: {
-    fontSize: 14,
-    fontFamily: "PlusJakartaSans-Regular",
-    color: "#5b5d5e",
-    paddingVertical: 12,
-  },
-  qiblaSection: {
-    paddingTop: 8,
-    alignItems: "center",
-  },
-  qiblaSubtitle: {
-    fontSize: 14,
-    fontFamily: "PlusJakartaSans-Regular",
-    color: "#5b5d5e",
-    textAlign: "center",
-    marginBottom: 20,
-  },
-  infoRow: {
-    flexDirection: "row",
-    alignItems: "baseline",
-    gap: 16,
-    marginBottom: 24,
-  },
-  directionLabel: {
-    fontSize: 40,
-    fontFamily: "PlusJakartaSans-Bold",
-    color: "#3d6b47",
-  },
-  degreeLabel: {
-    fontSize: 22,
-    fontFamily: "PlusJakartaSans-SemiBold",
-    color: "#191D31",
-  },
-  compassCircle: {
-    borderWidth: 3,
-    borderColor: "rgba(61, 107, 71, 0.5)",
-    backgroundColor: "rgba(255, 255, 255, 0.95)",
-    alignItems: "center",
-    justifyContent: "center",
-    overflow: "hidden",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.06,
-    shadowRadius: 8,
-    elevation: 6,
-  },
-  northDot: {
-    position: "absolute",
-    width: 10,
-    height: 10,
-    borderRadius: 5,
-    backgroundColor: "rgba(0, 0, 0, 0.2)",
-  },
-  needleWrapper: {
-    position: "absolute",
-    top: "50%",
-    left: "50%",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  needle: {
-    backgroundColor: "#3d6b47",
-    position: "absolute",
-    bottom: 0,
-  },
-  qiblaAngle: {
-    marginTop: 24,
-    fontSize: 16,
-    fontFamily: "PlusJakartaSans-Medium",
-    color: "#5b5d5e",
-  },
-  compassError: { alignItems: "center", paddingVertical: 24 },
-  compassErrorText: {
-    fontSize: 16,
-    fontFamily: "PlusJakartaSans-Medium",
-    color: "#c0392b",
-    textAlign: "center",
-    marginBottom: 8,
-  },
-});

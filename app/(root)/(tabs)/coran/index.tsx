@@ -18,6 +18,7 @@ import {
 } from "@/constants/screen-layout";
 import { ScreenPageHeader } from "@/components/ScreenPageHeader";
 import { useTranslation } from "@/lib/i18n";
+import { useAppTheme } from "@/lib/app-theme";
 
 const H_PADDING = SCREEN_EDGE_PADDING;
 const CORAN_GAP = 8;
@@ -198,6 +199,7 @@ function HadithsHeroBlock() {
 
 export default function BibliothequeScreen() {
   const { t } = useTranslation();
+  const colors = useAppTheme();
 
   return (
     <ScreenBackground style={styles.background}>
@@ -215,27 +217,27 @@ export default function BibliothequeScreen() {
         >
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
-              <Text style={styles.sectionTitle}>Coran</Text>
+              <Text style={[styles.sectionTitle, { color: colors.text }]}>Coran</Text>
               <TouchableOpacity style={styles.seeAllTouch} activeOpacity={0.7}>
-                <Text style={styles.seeAllLink}>Tout voir</Text>
+                <Text style={[styles.seeAllLink, { color: colors.accent }]}>Tout voir</Text>
               </TouchableOpacity>
             </View>
             <CoranHeroBlock />
           </View>
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
-              <Text style={styles.sectionTitle}>Invocations</Text>
+              <Text style={[styles.sectionTitle, { color: colors.text }]}>Invocations</Text>
               <TouchableOpacity style={styles.seeAllTouch} activeOpacity={0.7}>
-                <Text style={styles.seeAllLink}>Tout voir</Text>
+                <Text style={[styles.seeAllLink, { color: colors.accent }]}>Tout voir</Text>
               </TouchableOpacity>
             </View>
             <InvocationsHeroBlock />
           </View>
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
-              <Text style={styles.sectionTitle}>Hadiths</Text>
+              <Text style={[styles.sectionTitle, { color: colors.text }]}>Hadiths</Text>
               <TouchableOpacity style={styles.seeAllTouch} activeOpacity={0.7}>
-                <Text style={styles.seeAllLink}>Tout voir</Text>
+                <Text style={[styles.seeAllLink, { color: colors.accent }]}>Tout voir</Text>
               </TouchableOpacity>
             </View>
             <HadithsHeroBlock />

@@ -95,6 +95,7 @@ export function getPreferenceSubtitle(
     },
     "tab-bar": {
       custom: translate(locale, "preferences.tabBarCustom"),
+      liquid: translate(locale, "preferences.tabBarLiquid"),
       native: translate(locale, "preferences.tabBarNative"),
     },
     "icon-style": {
@@ -110,6 +111,11 @@ export function getPreferenceSubtitle(
       green: translate(locale, "preferences.accentGreen"),
       blue: translate(locale, "preferences.accentBlue"),
       amber: translate(locale, "preferences.accentAmber"),
+      teal: translate(locale, "preferences.accentTeal"),
+      purple: translate(locale, "preferences.accentPurple"),
+      rose: translate(locale, "preferences.accentRose"),
+      indigo: translate(locale, "preferences.accentIndigo"),
+      emerald: translate(locale, "preferences.accentEmerald"),
     },
     language: {
       fr: translate(locale, "languages.fr"),

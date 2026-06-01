@@ -73,19 +73,19 @@ const TABS = [
 
 
 
-const LESSON_COLORS = ["#3d6b47", "#2d6a7a", "#a65c3e"] as const;
+const LESSON_COLORS = [
+  "#3d6b47",
+  "#2d6a7a",
+  "#a65c3e",
+  "#5c4a8a",
+  "#2d5a8a",
+] as const;
 
 
 
-const LESSONS = [
-
-  { id: "1", title: "Les bases de l'arabe", subtitle: "Partie 1", locked: false },
-
-  { id: "2", title: "Les bases de l'arabe", subtitle: "Partie 2", locked: true },
-
-  { id: "3", title: "Salutations et formules", subtitle: "Partie 1", locked: true },
-
-];
+import { PROPHETS_COURSE } from "@/lib/learn/courses/prophets";
+import { useProphetsProgress } from "@/lib/learn/hooks/useProphetsProgress";
+import type { LessonStatus } from "@/lib/learn/types";
 
 
 
@@ -158,6 +158,8 @@ export default function ApprendreScreen() {
   const { list: suras } = useSuraList();
 
   const { recentSuraNumbers, refetch: refetchRecent } = useRecentSuras();
+  const { getStatus, completedCount, totalLessons, loading: progressLoading } =
+    useProphetsProgress();
 
 
 
@@ -200,7 +202,7 @@ export default function ApprendreScreen() {
             <View style={styles.headerRight}>
               <View style={[styles.streakBadge, HAIRLINE_BORDER]}>
                 <AppIcon name="zap" size={28} color={ACCENT} />
-                <Text style={styles.streakCount}>0</Text>
+                <Text style={styles.streakCount}>{completedCount}</Text>
               </View>
               <TouchableOpacity
                 onPress={() => router.push("/apprendre-stats")}
@@ -351,138 +353,92 @@ export default function ApprendreScreen() {
 
 
 
-          <Text style={styles.courseTitle}>Débutant (A1) – Parcours 1</Text>
+          <Text style={styles.courseTitle}>{t("learn.courseProphets")}</Text>
+          <Text style={styles.courseSubtitle}>
+            {t("learn.courseProphetsSubtitle")} ·{" "}
+            {t("learn.progress", { done: completedCount, total: totalLessons })}
+          </Text>
 
-
-
-          {LESSONS.map((lesson, index) => {
-
+          {PROPHETS_COURSE.lessons.map((lesson, index) => {
+            const status: LessonStatus = progressLoading
+              ? index === 0
+                ? "available"
+                : "locked"
+              : getStatus(lesson.id, index);
+            const locked = status === "locked";
+            const completed = status === "completed";
             const color = LESSON_COLORS[index % LESSON_COLORS.length];
+            const cardColor = locked ? `${color}18` : color;
 
-            const cardColor = lesson.locked ? `${color}18` : color;
+            const openLesson = () => {
+              if (locked) return;
+              router.push(`/(root)/apprendre/lecon/${lesson.id}` as const);
+            };
 
             return (
-
               <View key={lesson.id} style={styles.lessonCardWrap}>
-
-                {lesson.locked ? (
-
+                {locked ? (
                   <View
-
                     style={[
-
                       styles.lessonCardRect,
-
                       styles.lessonCardLocked,
-
                       HAIRLINE_BORDER,
-
                       { backgroundColor: cardColor },
-
                     ]}
-
                   >
-
                     <View style={[styles.lockIconWrap, HAIRLINE_BORDER]}>
-
                       <AppIcon name="lock" size={20} color={ICON_COLOR} />
-
                     </View>
-
                     <View style={styles.lessonCardLockedText}>
-
                       <Text style={styles.lessonLockedTitle} numberOfLines={1}>
-
                         {lesson.title}
-
                       </Text>
-
                       <Text style={styles.lessonLockedSubtitle}>
-
-                        Leçon {lesson.id}
-
+                        {t("learn.lesson")} {lesson.order} · {t("learn.lessonLocked")}
                       </Text>
-
                     </View>
-
-                    <View style={styles.lessonCardArrow}>
-
-                      <AppIcon name="chevron-right" size={22} color={ICON_COLOR} />
-
-                    </View>
-
                   </View>
-
                 ) : (
-
                   <View
-
                     style={[
-
                       styles.lessonCardRect,
-
                       styles.lessonCardActive,
-
                       HAIRLINE_BORDER,
-
                       { backgroundColor: cardColor },
-
                     ]}
-
                   >
-
                     <View style={styles.lessonCardActiveContent}>
-
-                      <Text style={styles.lessonActiveBadge}>Leçon {lesson.id}</Text>
-
-                      <Text style={styles.lessonActiveTitle} numberOfLines={2}>
-
-                        {lesson.title} – {lesson.subtitle}
-
+                      <Text style={styles.lessonActiveBadge}>
+                        {t("learn.lesson")} {lesson.order}
+                        {completed ? ` · ${t("learn.lessonCompleted")}` : ""}
                       </Text>
-
+                      <Text style={styles.lessonActiveTitle} numberOfLines={2}>
+                        {lesson.title} — {lesson.subtitle}
+                      </Text>
                       <View style={styles.lessonActiveVisual}>
-
                         <View style={[styles.lessonVisualPlaceholder, HAIRLINE_BORDER]}>
-
                           <AppIcon
-
-                            name="book-open"
-
+                            name={completed ? "check-circle" : "star"}
                             size={36}
-
                             color="rgba(255,255,255,0.85)"
-
                           />
-
                         </View>
-
                       </View>
-
                       <TouchableOpacity
-
                         style={[styles.startButton, HAIRLINE_BORDER]}
-
                         activeOpacity={0.8}
-
+                        onPress={openLesson}
                       >
-
-                        <Text style={styles.startButtonText}>Commencer</Text>
-
+                        <Text style={styles.startButtonText}>
+                          {completed ? t("learn.review") : t("learn.start")}
+                        </Text>
                         <AppIcon name="chevron-right" size={18} color="#fff" />
-
                       </TouchableOpacity>
-
                     </View>
-
                   </View>
-
                 )}
-
               </View>
-
             );
-
           })}
 
 
@@ -826,7 +782,21 @@ const styles = StyleSheet.create({
 
     color: ICON_COLOR,
 
+    marginBottom: 6,
+
+  },
+
+  courseSubtitle: {
+
+    fontSize: 14,
+
+    fontFamily: "PlusJakartaSans-Regular",
+
+    color: TEXT_MUTED,
+
     marginBottom: 20,
+
+    lineHeight: 20,
 
   },
 

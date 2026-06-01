@@ -57,6 +57,13 @@ export interface LastRead {
   timestamp: number;
 }
 
+/** Dernière écoute audio (sourate) */
+export interface LastListen {
+  suraNumber: number;
+  progress: number;
+  timestamp: number;
+}
+
 /** Favori (verset ou sourate) */
 export type FavoriteType = "ayah" | "sura";
 export interface Favorite {

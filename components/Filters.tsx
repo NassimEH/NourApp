@@ -1,12 +1,13 @@
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
 import { router, useLocalSearchParams } from "expo-router";
 import { Text, ScrollView, TouchableOpacity, StyleSheet } from "react-native";
 
 import { categories } from "@/constants/data";
-
-const FILTER_GREEN = "#3d6b47";
+import { useAppTheme } from "@/lib/app-theme";
 
 const Filters = () => {
+  const colors = useAppTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const params = useLocalSearchParams<{ filter?: string }>();
   const [selectedCategory, setSelectedCategory] = useState(
     params.filter || "All"
@@ -57,37 +58,39 @@ const Filters = () => {
   );
 };
 
-const styles = StyleSheet.create({
-  scroll: { marginTop: 12, marginBottom: 8 },
-  scrollContent: { paddingRight: 8 },
-  pill: {
-    flexDirection: "column",
-    alignItems: "center",
-    justifyContent: "center",
-    marginRight: 16,
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    borderRadius: 9999,
-  },
-  pillSelected: {
-    backgroundColor: FILTER_GREEN,
-  },
-  pillDefault: {
-    backgroundColor: "rgba(61, 107, 71, 0.12)",
-    borderWidth: 1,
-    borderColor: "rgba(61, 107, 71, 0.3)",
-  },
-  pillText: {
-    fontSize: 14,
-  },
-  pillTextSelected: {
-    color: "#fff",
-    fontFamily: "PlusJakartaSans-SemiBold",
-  },
-  pillTextDefault: {
-    color: "#191D31",
-    fontFamily: "PlusJakartaSans-Regular",
-  },
-});
+function createStyles(colors: ReturnType<typeof useAppTheme>) {
+  return StyleSheet.create({
+    scroll: { marginTop: 12, marginBottom: 8 },
+    scrollContent: { paddingRight: 8 },
+    pill: {
+      flexDirection: "column",
+      alignItems: "center",
+      justifyContent: "center",
+      marginRight: 16,
+      paddingHorizontal: 16,
+      paddingVertical: 10,
+      borderRadius: 9999,
+    },
+    pillSelected: {
+      backgroundColor: colors.accent,
+    },
+    pillDefault: {
+      backgroundColor: colors.accentSurface,
+      borderWidth: 1,
+      borderColor: colors.accentBorder,
+    },
+    pillText: {
+      fontSize: 14,
+    },
+    pillTextSelected: {
+      color: colors.onAccent,
+      fontFamily: "PlusJakartaSans-SemiBold",
+    },
+    pillTextDefault: {
+      color: colors.text,
+      fontFamily: "PlusJakartaSans-Regular",
+    },
+  });
+}
 
 export default Filters;

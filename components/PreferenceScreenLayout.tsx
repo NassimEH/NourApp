@@ -27,6 +27,7 @@ export function PreferenceScreenLayout({
   children,
   contentStyle,
 }: PreferenceScreenLayoutProps) {
+  const colors = useAppTheme();
   const { rtlViewStyle } = useTranslation();
 
   return (
@@ -42,7 +43,19 @@ export function PreferenceScreenLayout({
           contentContainerStyle={[styles.content, contentStyle]}
           showsVerticalScrollIndicator={false}
         >
-          {children}
+          <View
+            style={[
+              styles.optionsCard,
+              {
+                backgroundColor: colors.usesBackgroundImage
+                  ? colors.card
+                  : colors.cardElevated,
+                borderColor: colors.border,
+              },
+            ]}
+          >
+            {children}
+          </View>
         </ScrollView>
       </SafeAreaView>
     </ScreenBackground>
@@ -59,6 +72,12 @@ const styles = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: "transparent" },
   scroll: { flex: 1 },
   content: { ...screenScrollContent, paddingTop: 8, paddingBottom: 40 },
+  optionsCard: {
+    borderRadius: 16,
+    borderWidth: StyleSheet.hairlineWidth,
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+  },
   divider: {
     borderBottomWidth: 1,
   },

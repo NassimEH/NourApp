@@ -5,6 +5,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { AppIcon } from "@/components/AppIcon";
 
 import BottomBar from "@/components/BottomBar";
+import LiquidBottomBar from "@/components/LiquidBottomBar";
 import { useTabBarPreference } from "@/lib/tab-bar-preference";
 import { QuranAudioProvider } from "@/lib/quran/QuranAudioContext";
 import { useAppTheme } from "@/lib/app-theme";
@@ -39,6 +40,7 @@ export default function TabsLayout() {
   const insets = useSafeAreaInsets();
   const { t } = useTranslation();
   const useNativeTabBar = tabBarVariant === "native";
+  const useLiquidTabBar = tabBarVariant === "liquid";
 
   const nativeTabBottomInset =
     insets.bottom > 0 ? insets.bottom : Platform.OS === "ios" ? 8 : 12;
@@ -80,13 +82,13 @@ export default function TabsLayout() {
         },
         tabBarBackground: () => (
           <BlurView
-            intensity={Platform.OS === "ios" ? 72 : 90}
+            intensity={Platform.OS === "ios" ? (colors.isDark ? 90 : 72) : 90}
             tint={colors.tabBarBlurTint}
             style={StyleSheet.absoluteFill}
           />
         ),
-        tabBarActiveTintColor: colors.accent,
-        tabBarInactiveTintColor: colors.textMuted,
+        tabBarActiveTintColor: colors.tabBarIconActive,
+        tabBarInactiveTintColor: colors.tabBarIconInactive,
         tabBarShowLabel: true,
       }
     : {
@@ -112,7 +114,13 @@ export default function TabsLayout() {
   return (
     <QuranAudioProvider>
       <Tabs
-        tabBar={useNativeTabBar ? undefined : (props) => <BottomBar {...props} />}
+        tabBar={
+          useNativeTabBar
+            ? undefined
+            : useLiquidTabBar
+              ? (props) => <LiquidBottomBar {...props} />
+              : (props) => <BottomBar {...props} />
+        }
       screenOptions={({ route }) => ({
         ...screenOptions,
         ...(useNativeTabBar && {

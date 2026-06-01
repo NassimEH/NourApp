@@ -1,0 +1,251 @@
+import { StyleSheet } from "react-native";
+
+import type { AppThemeColors } from "@/lib/app-theme";
+
+/** Styles de l'accueil dépendants du thème (contrastes lisibles en clair / sombre / spirituel). */
+export function createHomeStyles(c: AppThemeColors) {
+  return StyleSheet.create({
+    welcomeTitle: {
+      fontFamily: "PlusJakartaSans-Bold",
+      color: c.text,
+    },
+    welcomeDate: {
+      fontFamily: "PlusJakartaSans-Medium",
+      color: c.text,
+      marginTop: 6,
+    },
+    welcomeHijri: {
+      fontFamily: "PlusJakartaSans-Regular",
+      color: c.textMuted,
+      marginTop: 4,
+    },
+    hadithVendrediBlock: {
+      marginTop: 20,
+      paddingTop: 14,
+      borderTopWidth: 1,
+      borderTopColor: c.divider,
+    },
+    hadithVendrediLabel: {
+      fontSize: 11,
+      fontFamily: "PlusJakartaSans-SemiBold",
+      color: c.accent,
+      textTransform: "uppercase",
+      letterSpacing: 0.5,
+      marginBottom: 8,
+    },
+    hadithVendrediText: {
+      fontSize: 13,
+      fontFamily: "PlusJakartaSans-Medium",
+      color: c.text,
+      lineHeight: 20,
+      marginBottom: 6,
+    },
+    hadithVendrediSource: {
+      fontSize: 12,
+      fontFamily: "PlusJakartaSans-Regular",
+      color: c.textMuted,
+      lineHeight: 18,
+      fontStyle: "italic",
+    },
+    sectionDivider: {
+      height: 1,
+      backgroundColor: c.divider,
+      marginVertical: 12,
+    },
+    seeAllLink: {
+      fontSize: 16,
+      fontFamily: "PlusJakartaSans-SemiBold",
+      color: c.accent,
+    },
+    prayerCardRemaining: {
+      fontSize: 13,
+      fontFamily: "PlusJakartaSans-Medium",
+      color: c.textMuted,
+      marginTop: 6,
+    },
+    mosquePrayerLabel: {
+      fontSize: 13,
+      fontFamily: "PlusJakartaSans-Medium",
+      color: c.textMuted,
+    },
+    mosquePrayerTime: {
+      fontSize: 14,
+      fontFamily: "PlusJakartaSans-Regular",
+      color: c.text,
+      marginTop: 1,
+    },
+    carouselSlideTitle: {
+      fontSize: 20,
+      fontFamily: "PlusJakartaSans-Bold",
+      color: c.text,
+    },
+    carouselDot: {
+      width: 8,
+      height: 8,
+      borderRadius: 4,
+      backgroundColor: c.isDark ? "rgba(255,255,255,0.25)" : "rgba(0,0,0,0.15)",
+    },
+    carouselDotActive: {
+      backgroundColor: c.accent,
+      width: 10,
+      height: 10,
+      borderRadius: 5,
+    },
+    mosqueTitleBlock: {
+      marginTop: 14,
+      paddingTop: 12,
+      borderTopWidth: 1,
+      borderTopColor: c.divider,
+    },
+    mosqueTitleText: {
+      fontSize: 15,
+      fontFamily: "PlusJakartaSans-SemiBold",
+      color: c.text,
+      textAlign: "center",
+    },
+    mawaqitCard: {
+      marginTop: 14,
+      paddingVertical: 12,
+      paddingHorizontal: 18,
+      backgroundColor: c.accentSurface,
+      borderRadius: 14,
+      borderWidth: 1,
+      borderColor: c.accentBorder,
+      minWidth: 220,
+    },
+    mawaqitTitle: {
+      fontSize: 16,
+      fontFamily: "PlusJakartaSans-Bold",
+      color: c.text,
+      marginBottom: 2,
+    },
+    mawaqitSubtitle: {
+      fontSize: 11,
+      fontFamily: "PlusJakartaSans-Regular",
+      color: c.textMuted,
+      marginBottom: 10,
+    },
+    mawaqitLabel: {
+      fontSize: 13,
+      fontFamily: "PlusJakartaSans-Medium",
+      color: c.text,
+    },
+    mawaqitTime: {
+      fontSize: 13,
+      fontFamily: "PlusJakartaSans-SemiBold",
+      color: c.accent,
+    },
+    weatherSectionTitle: {
+      fontSize: 20,
+      fontFamily: "PlusJakartaSans-Bold",
+      color: c.text,
+      marginBottom: 12,
+    },
+    weatherTemp: {
+      fontSize: 26,
+      fontFamily: "PlusJakartaSans-Bold",
+      color: c.text,
+    },
+    weatherCondition: {
+      fontSize: 13,
+      fontFamily: "PlusJakartaSans-Medium",
+      color: c.textMuted,
+    },
+    weatherDetailText: {
+      fontSize: 12,
+      fontFamily: "PlusJakartaSans-Medium",
+      color: c.textMuted,
+    },
+    weatherDou3a: {
+      marginTop: 16,
+      paddingTop: 14,
+      borderTopWidth: 1,
+      borderTopColor: c.divider,
+      gap: 6,
+    },
+    weatherDou3aLabel: {
+      fontSize: 11,
+      fontFamily: "PlusJakartaSans-SemiBold",
+      color: c.accent,
+      textTransform: "uppercase",
+      letterSpacing: 0.5,
+    },
+    weatherDou3aText: {
+      fontSize: 13,
+      fontFamily: "PlusJakartaSans-Medium",
+      color: c.text,
+      lineHeight: 20,
+    },
+    weatherDou3aReason: {
+      fontSize: 12,
+      fontFamily: "PlusJakartaSans-Regular",
+      color: c.textMuted,
+      lineHeight: 18,
+      fontStyle: "italic",
+    },
+    weatherError: {
+      fontSize: 14,
+      fontFamily: "PlusJakartaSans-Regular",
+      color: c.textMuted,
+    },
+    weatherLocationButton: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "center",
+      gap: 8,
+      backgroundColor: c.accent,
+      paddingVertical: 14,
+      paddingHorizontal: 20,
+      borderRadius: 12,
+      alignSelf: "flex-start",
+    },
+    weatherLocationButtonText: {
+      fontSize: 15,
+      fontFamily: "PlusJakartaSans-SemiBold",
+      color: c.onAccent,
+    },
+    prayerCard: {
+      backgroundColor: c.usesBackgroundImage ? "transparent" : c.card,
+      borderRadius: 20,
+      paddingVertical: 16,
+      paddingHorizontal: 20,
+      paddingLeft: 22,
+      borderLeftWidth: 3,
+      borderLeftColor: c.accentBorder,
+    },
+    prayerCardHeader: {
+      marginBottom: 16,
+      paddingBottom: 14,
+      borderBottomWidth: 1,
+      borderBottomColor: c.divider,
+    },
+    prayerCardMethod: {
+      fontSize: 11,
+      fontFamily: "PlusJakartaSans-Medium",
+      color: c.textMuted,
+      marginBottom: 4,
+    },
+    prayerCardHijri: {
+      fontSize: 14,
+      fontFamily: "PlusJakartaSans-SemiBold",
+      color: c.text,
+    },
+    prayerCardGregorian: {
+      fontSize: 12,
+      fontFamily: "PlusJakartaSans-Regular",
+      color: c.textMuted,
+      marginTop: 2,
+    },
+    prayerCardNext: {
+      fontSize: 18,
+      fontFamily: "PlusJakartaSans-Bold",
+      color: c.text,
+    },
+    prayerCardNextTime: {
+      fontSize: 16,
+      fontFamily: "PlusJakartaSans-SemiBold",
+      color: c.accent,
+      marginTop: 4,
+    },
+  });
+}

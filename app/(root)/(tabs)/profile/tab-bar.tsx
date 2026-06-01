@@ -8,7 +8,7 @@ import {
   PreferenceOptionDivider,
 } from "@/components/PreferenceScreenLayout";
 
-const OPTIONS: TabBarVariant[] = ["custom", "native"];
+const OPTIONS: TabBarVariant[] = ["custom", "liquid", "native"];
 
 export default function TabBarScreen() {
   const { tabBarVariant, setTabBarVariant } = useTabBarPreference();

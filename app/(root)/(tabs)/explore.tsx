@@ -28,16 +28,17 @@ import {
 } from "@/constants/screen-layout";
 import { ScreenPageHeader } from "@/components/ScreenPageHeader";
 import { useTranslation } from "@/lib/i18n";
+import { useAppTheme, type AppThemeColors } from "@/lib/app-theme";
 
 const quranImage = require("@/assets/images/islamic-new-year-quran-book-with-dates-photo.jpg");
 const H_PADDING = SCREEN_EDGE_PADDING;
 const GAP = 8;
 const SCROLL_PADDING_BOTTOM = 120;
 
-const BG_CARD = "rgba(61, 107, 71, 0.12)";
-const ACCENT = "#3d6b47";
-const TEXT_PRIMARY = "#191D31";
-const TEXT_SECONDARY = "#5b5d5e";
+function useExploreStyles() {
+  const colors = useAppTheme();
+  return useMemo(() => createExploreStyles(colors), [colors]);
+}
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 const GRID_CARD_WIDTH = (SCREEN_WIDTH - H_PADDING * 2 - GAP) / 2;
@@ -79,6 +80,7 @@ function SectionHeader({
   title: string;
   onSeeAll?: () => void;
 }) {
+  const styles = useExploreStyles();
   return (
     <View style={styles.sectionHeader}>
       <Text style={styles.sectionTitle}>{title}</Text>
@@ -100,6 +102,7 @@ function CompactCard({
   imageSource?: any;
   onPress: () => void;
 }) {
+  const styles = useExploreStyles();
   return (
     <TouchableOpacity style={styles.compactCard} onPress={onPress} activeOpacity={0.8}>
       <Image source={imageSource || quranImage} style={styles.compactCardImage} />
@@ -121,6 +124,7 @@ function FeaturedCardSpotify({
   imageSource?: any;
   onPress: () => void;
 }) {
+  const styles = useExploreStyles();
   return (
     <TouchableOpacity style={styles.featuredCard} onPress={onPress} activeOpacity={0.8}>
       <Image source={imageSource || quranImage} style={styles.featuredCardImage} />
@@ -143,10 +147,12 @@ function ReciterCardSpotify({
   tag: string;
   onPress: () => void;
 }) {
+  const colors = useAppTheme();
+  const styles = useExploreStyles();
   return (
     <TouchableOpacity style={styles.reciterCard} onPress={onPress} activeOpacity={0.8}>
       <View style={styles.reciterAvatar}>
-        <AppIcon name="mic" size={32} color={ACCENT} />
+        <AppIcon name="mic" size={32} color={colors.accent} />
       </View>
       <Text style={styles.reciterName} numberOfLines={1}>
         {name}
@@ -158,6 +164,8 @@ function ReciterCardSpotify({
 
 export default function ExploreScreen() {
   const { t } = useTranslation();
+  const colors = useAppTheme();
+  const styles = useExploreStyles();
   const [activeTab, setActiveTab] = useState<TabId>("tout");
   const { list: suras, loading } = useSuraList();
   const playSura = usePlaySuraOnExplore();
@@ -211,7 +219,7 @@ export default function ExploreScreen() {
           {showSourates && (
             <>
               {loading && suras.length === 0 ? (
-                <ActivityIndicator size="large" color={ACCENT} style={styles.loader} />
+                <ActivityIndicator size="large" color={colors.accent} style={styles.loader} />
               ) : (
                 <View style={styles.compactGrid}>
                   {quickAccessSuras.map((sura) => (
@@ -286,7 +294,7 @@ export default function ExploreScreen() {
                     activeOpacity={0.8}
                   >
                     <View style={styles.juzIconWrap}>
-                      <AppIcon name="book-open" size={24} color={ACCENT} />
+                      <AppIcon name="book-open" size={24} color={colors.accent} />
                     </View>
                     <Text style={styles.juzNumber}>Juz' {n}</Text>
                   </TouchableOpacity>
@@ -319,7 +327,7 @@ export default function ExploreScreen() {
                     activeOpacity={0.8}
                   >
                     <View style={styles.invocationIconWrap}>
-                      <AppIcon name={item.icon} size={28} color={ACCENT} />
+                      <AppIcon name={item.icon} size={28} color={colors.accent} />
                     </View>
                     <Text style={styles.invocationTitle}>{item.title}</Text>
                   </TouchableOpacity>
@@ -358,7 +366,8 @@ export default function ExploreScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+function createExploreStyles(c: AppThemeColors) {
+  return StyleSheet.create({
   container: {
     flex: 1,
   },
@@ -376,14 +385,14 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: ACCENT,
+    backgroundColor: c.accent,
     alignItems: "center",
     justifyContent: "center",
   },
   avatarText: {
     fontFamily: "PlusJakartaSans-Bold",
     fontSize: 16,
-    color: "#fff",
+    color: c.onAccent,
   },
   tabsContent: {
     flexDirection: "row",
@@ -394,21 +403,21 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: 20,
-    backgroundColor: "rgba(61, 107, 71, 0.08)",
+    backgroundColor: c.accentSurface,
     borderWidth: 1.5,
-    borderColor: "rgba(61, 107, 71, 0.35)",
+    borderColor: c.accentBorder,
   },
   tabActive: {
-    backgroundColor: ACCENT,
-    borderColor: ACCENT,
+    backgroundColor: c.accent,
+    borderColor: c.accent,
   },
   tabLabel: {
     fontSize: 13,
     fontFamily: "PlusJakartaSans-Medium",
-    color: TEXT_PRIMARY,
+    color: c.text,
   },
   tabLabelActive: {
-    color: "#fff",
+    color: c.onAccent,
     fontFamily: "PlusJakartaSans-SemiBold",
   },
   scroll: {
@@ -430,13 +439,13 @@ const styles = StyleSheet.create({
   compactCard: {
     width: GRID_CARD_WIDTH,
     height: GRID_CARD_HEIGHT,
-    backgroundColor: "rgba(255, 255, 255, 0.85)",
+    backgroundColor: c.card,
     borderRadius: 6,
     flexDirection: "row",
     alignItems: "center",
     overflow: "hidden",
     borderWidth: 1,
-    borderColor: "rgba(61, 107, 71, 0.15)",
+    borderColor: c.border,
   },
   compactCardImage: {
     width: GRID_IMAGE_SIZE,
@@ -448,7 +457,7 @@ const styles = StyleSheet.create({
     flex: 1,
     fontFamily: "PlusJakartaSans-SemiBold",
     fontSize: 12,
-    color: TEXT_PRIMARY,
+    color: c.text,
     paddingHorizontal: 10,
   },
   section: {
@@ -463,12 +472,12 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 22,
     fontFamily: "PlusJakartaSans-Bold",
-    color: TEXT_PRIMARY,
+    color: c.text,
   },
   seeAllLink: {
     fontSize: 13,
     fontFamily: "PlusJakartaSans-SemiBold",
-    color: TEXT_SECONDARY,
+    color: c.accent,
   },
   horizontalScroll: {
     flexDirection: "row",
@@ -487,13 +496,13 @@ const styles = StyleSheet.create({
   featuredCardTitle: {
     fontFamily: "PlusJakartaSans-SemiBold",
     fontSize: 14,
-    color: TEXT_PRIMARY,
+    color: c.text,
     marginBottom: 4,
   },
   featuredCardSubtitle: {
     fontFamily: "PlusJakartaSans-Regular",
     fontSize: 12,
-    color: TEXT_SECONDARY,
+    color: c.textMuted,
     lineHeight: 16,
   },
   reciterCard: {
@@ -501,16 +510,16 @@ const styles = StyleSheet.create({
     alignItems: "center",
     paddingVertical: 16,
     paddingHorizontal: 12,
-    backgroundColor: "rgba(255, 255, 255, 0.85)",
+    backgroundColor: c.card,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: "rgba(61, 107, 71, 0.15)",
+    borderColor: c.border,
   },
   reciterAvatar: {
     width: 80,
     height: 80,
     borderRadius: 40,
-    backgroundColor: "rgba(61, 107, 71, 0.12)",
+    backgroundColor: c.accentSurface,
     alignItems: "center",
     justifyContent: "center",
     marginBottom: 12,
@@ -518,13 +527,13 @@ const styles = StyleSheet.create({
   reciterName: {
     fontFamily: "PlusJakartaSans-SemiBold",
     fontSize: 14,
-    color: TEXT_PRIMARY,
+    color: c.text,
     textAlign: "center",
   },
   reciterTag: {
     fontFamily: "PlusJakartaSans-Regular",
     fontSize: 12,
-    color: TEXT_SECONDARY,
+    color: c.textMuted,
     marginTop: 4,
   },
   juzCard: {
@@ -532,16 +541,16 @@ const styles = StyleSheet.create({
     alignItems: "center",
     paddingVertical: 16,
     paddingHorizontal: 8,
-    backgroundColor: "rgba(255, 255, 255, 0.85)",
+    backgroundColor: c.card,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: "rgba(61, 107, 71, 0.15)",
+    borderColor: c.border,
   },
   juzIconWrap: {
     width: 48,
     height: 48,
     borderRadius: 24,
-    backgroundColor: "rgba(61, 107, 71, 0.15)",
+    backgroundColor: c.accentSurface,
     alignItems: "center",
     justifyContent: "center",
     marginBottom: 10,
@@ -549,23 +558,23 @@ const styles = StyleSheet.create({
   juzNumber: {
     fontFamily: "PlusJakartaSans-SemiBold",
     fontSize: 13,
-    color: TEXT_PRIMARY,
+    color: c.text,
   },
   invocationCard: {
     width: 130,
     alignItems: "center",
     paddingVertical: 20,
     paddingHorizontal: 12,
-    backgroundColor: "rgba(255, 255, 255, 0.85)",
+    backgroundColor: c.card,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: "rgba(61, 107, 71, 0.15)",
+    borderColor: c.border,
   },
   invocationIconWrap: {
     width: 56,
     height: 56,
     borderRadius: 28,
-    backgroundColor: "rgba(61, 107, 71, 0.12)",
+    backgroundColor: c.accentSurface,
     alignItems: "center",
     justifyContent: "center",
     marginBottom: 12,
@@ -573,10 +582,12 @@ const styles = StyleSheet.create({
   invocationTitle: {
     fontFamily: "PlusJakartaSans-SemiBold",
     fontSize: 13,
-    color: TEXT_PRIMARY,
+    color: c.text,
     textAlign: "center",
   },
   bottomSpacer: {
     height: 100,
   },
-});
+  });
+}
+

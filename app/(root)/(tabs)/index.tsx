@@ -1,9 +1,7 @@
 ﻿import {
   ActivityIndicator,
   Dimensions,
-  FlatList,
   Image,
-  Pressable,
   ScrollView,
   StyleSheet,
   Text,
@@ -11,8 +9,8 @@
   View,
 } from "react-native";
 import { AppIcon } from "@/components/AppIcon";
-import React, { useCallback, useEffect, useMemo, useState } from "react";
-import { router, useLocalSearchParams } from "expo-router";
+import React, { useMemo, useState } from "react";
+import { router } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { toHijri } from "hijri-converter";
 
@@ -81,14 +79,9 @@ const HeaderAvatarBell = React.memo(function HeaderAvatarBell({
   );
 });
 
-import Filters from "@/components/Filters";
-import NoResults from "@/components/NoResults";
-import { Card, FeaturedCard } from "@/components/Cards";
-import { useAppwrite } from "@/lib/useAppwrite";
+import { HomeToolsSection } from "@/components/home/HomeToolsSection";
+import { HomeContinueSection } from "@/components/home/HomeContinueSection";
 import { useGlobalContext } from "@/lib/global-provider";
-import { getLatestProperties, getProperties } from "@/lib/appwrite";
-import { ITEM_WIDTH } from "@/constants";
-import Spacing from "@/constants/Spacing";
 import { usePrayerTimes, type PrayerTimes } from "@/lib/usePrayerTimes";
 import { useWeather, type WeatherImageKey } from "@/lib/useWeather";
 import { useMawaqitPrayerTimes, MAWAQIT_MOSQUEE_EVRY } from "@/lib/useMawaqit";
@@ -96,6 +89,8 @@ import { ScreenBackground } from "@/components/ScreenBackground";
 import { SCREEN_EDGE_PADDING } from "@/constants/screen-layout";
 import { ScreenPageHeader } from "@/components/ScreenPageHeader";
 import { useAppTypography } from "@/lib/app-typography";
+import { useAppTheme } from "@/lib/app-theme";
+import { createHomeStyles } from "@/lib/home-screen-styles";
 import { useTranslation, getLocaleDateString, TRANSLATIONS } from "@/lib/i18n";
 
 type HomeListHeaderProps = {
@@ -108,18 +103,7 @@ type HomeListHeaderProps = {
   prayerCity: string | null;
   prayerCoords: { latitude: number; longitude: number } | null;
   onRequestLocation: () => void;
-  latestProperties?: unknown[];
-  latestPropertiesLoading?: boolean;
-  onCardPress?: (id: string) => void;
 };
-
-const FEATURED_PLACEHOLDERS = [
-  { $id: "_p1", name: "Sourate Al-Fatiha", price: "7 versets", image: null },
-  { $id: "_p2", name: "Tafsir du jour", price: "~5 min", image: null },
-  { $id: "_p3", name: "Invocations du matin", price: "Adhkâr", image: null },
-  { $id: "_p4", name: "Vie du Prophète ﷺ", price: "Biographie", image: null },
-  { $id: "_p5", name: "Hadith du jour", price: "Paroles du Prophète", image: null },
-];
 
 const HomeListHeader = React.memo(function HomeListHeader({
   user,
@@ -131,29 +115,23 @@ const HomeListHeader = React.memo(function HomeListHeader({
   prayerCity,
   prayerCoords,
   onRequestLocation,
-  latestProperties = [],
-  latestPropertiesLoading = false,
-  onCardPress,
 }: HomeListHeaderProps) {
   const { data: weatherData, loading: weatherLoading, error: weatherError } =
     useWeather(prayerCoords?.latitude, prayerCoords?.longitude);
   const { data: mawaqitTimes, loading: mawaqitLoading } =
     useMawaqitPrayerTimes(MAWAQIT_MOSQUEE_EVRY);
   const [carouselIndex, setCarouselIndex] = useState(0);
-  const [featuredCarouselIndex, setFeaturedCarouselIndex] = useState(0);
   const screenWidth = Dimensions.get("window").width;
   const vendredi = isVendredi();
   const hadithVendredi = getHadithVendrediDuJour();
   const slideWidth = screenWidth;
 
-  const featuredData =
-    latestProperties && latestProperties.length > 0
-      ? latestProperties
-      : FEATURED_PLACEHOLDERS;
-  const featuredStep = ITEM_WIDTH + Spacing * 2;
   const typography = useAppTypography();
+  const colors = useAppTheme();
+  const themed = useMemo(() => createHomeStyles(colors), [colors]);
   const { t, locale, rtlTextStyle, rtlViewStyle } = useTranslation();
   const weekDays = TRANSLATIONS[locale].home.weekDays;
+  const dayPillEmptyBorder = colors.isDark ? "#4B5563" : "#c4c1c9";
 
   return (
     <View>
@@ -172,7 +150,7 @@ const HomeListHeader = React.memo(function HomeListHeader({
       <View className="flex flex-col items-start mt-1.5">
         <Text
           style={[
-            styles.welcomeTitle,
+            themed.welcomeTitle,
             rtlTextStyle,
             { fontSize: typography.title, lineHeight: typography.title * 1.25 },
           ]}
@@ -182,7 +160,7 @@ const HomeListHeader = React.memo(function HomeListHeader({
         </Text>
         <Text
           style={[
-            styles.welcomeDate,
+            themed.welcomeDate,
             rtlTextStyle,
             {
               fontSize: typography.subtitle,
@@ -195,7 +173,7 @@ const HomeListHeader = React.memo(function HomeListHeader({
         {hijri ? (
           <Text
             style={[
-              styles.welcomeHijri,
+              themed.welcomeHijri,
               rtlTextStyle,
               { fontSize: typography.body, lineHeight: typography.body * 1.4 },
             ]}
@@ -212,11 +190,13 @@ const HomeListHeader = React.memo(function HomeListHeader({
           return (
             <View key={day} className="flex-1 items-center">
               <Text
-                className={
-                  isToday
-                    ? "text-xs font-rubik-bold text-black-300"
-                    : "text-xs font-rubik text-black-200"
-                }
+                style={{
+                  fontSize: 12,
+                  fontFamily: isToday
+                    ? "PlusJakartaSans-Bold"
+                    : "PlusJakartaSans-Regular",
+                  color: isToday ? colors.text : colors.textMuted,
+                }}
               >
                 {day}
               </Text>
@@ -224,11 +204,11 @@ const HomeListHeader = React.memo(function HomeListHeader({
                 style={[
                   styles.dayPill,
                   isPassed
-                    ? { backgroundColor: DAY_PILL_ACTIVE }
+                    ? { backgroundColor: colors.accent }
                     : {
                         backgroundColor: "transparent",
                         borderWidth: 2,
-                        borderColor: DAY_PILL_EMPTY_BORDER,
+                        borderColor: dayPillEmptyBorder,
                       },
                 ]}
               />
@@ -252,13 +232,13 @@ const HomeListHeader = React.memo(function HomeListHeader({
           <View style={[styles.carouselSlide, { width: slideWidth }]}>
             <View style={styles.carouselSlideInner}>
               <View style={styles.carouselSlideHeader}>
-                <Text style={styles.carouselSlideTitle}>Ma mosquée</Text>
+                <Text style={themed.carouselSlideTitle}>Ma mosquée</Text>
                 <TouchableOpacity onPress={() => router.push("/mosquee")} activeOpacity={0.7}>
-                  <Text style={styles.seeAllLink}>Voir tout</Text>
+                  <Text style={themed.seeAllLink}>Voir tout</Text>
                 </TouchableOpacity>
               </View>
               {prayerLoading ? (
-                <ActivityIndicator size="small" color="#3d6b47" style={{ paddingVertical: 20 }} />
+                <ActivityIndicator size="small" color={colors.accent} style={{ paddingVertical: 20 }} />
               ) : prayerTimes ? (
                 <View style={styles.mosqueSlideRow}>
                   <View style={styles.mosquePrayerColumnFull}>
@@ -270,61 +250,61 @@ const HomeListHeader = React.memo(function HomeListHeader({
                       { key: "Isha", icon: "moon" as const, time: prayerTimes.Isha },
                     ].map(({ key, icon, time }) => (
                       <View key={key} style={styles.mosquePrayerRow}>
-                        <AppIcon name={icon} size={14} color="#5b5d5e" />
+                        <AppIcon name={icon} size={14} color={colors.iconMuted} />
                         <View style={styles.mosquePrayerCell}>
-                          <Text style={styles.mosquePrayerLabel}>{key}</Text>
-                          <Text style={styles.mosquePrayerTime}>{time}</Text>
+                          <Text style={themed.mosquePrayerLabel}>{key}</Text>
+                          <Text style={themed.mosquePrayerTime}>{time}</Text>
                         </View>
                       </View>
                     ))}
                   </View>
                   <View style={styles.mosqueRightBlock}>
                     <MosqueImage />
-                    <Text style={[styles.mosqueTitleText, { marginTop: 10 }]}>Mosquée de Crosne</Text>
+                    <Text style={[themed.mosqueTitleText, { marginTop: 10 }]}>Mosquée de Crosne</Text>
                   </View>
                 </View>
               ) : (
-                <Text style={styles.weatherError}>Horaires non disponibles</Text>
+                <Text style={themed.weatherError}>Horaires non disponibles</Text>
               )}
             </View>
           </View>
           <View style={[styles.carouselSlide, { width: slideWidth }]}>
             <View style={styles.carouselSlideInner}>
               <View style={styles.carouselSlideHeader}>
-                <Text style={styles.carouselSlideTitle}>La météo chez moi</Text>
+                <Text style={themed.carouselSlideTitle}>La météo chez moi</Text>
                 <TouchableOpacity onPress={() => router.push("/meteo")} activeOpacity={0.7}>
-                  <Text style={styles.seeAllLink}>Voir tout</Text>
+                  <Text style={themed.seeAllLink}>Voir tout</Text>
                 </TouchableOpacity>
               </View>
               {!prayerCoords && prayerLoading ? (
-                <ActivityIndicator size="small" color="#3d6b47" style={{ paddingVertical: 20 }} />
+                <ActivityIndicator size="small" color={colors.accent} style={{ paddingVertical: 20 }} />
               ) : weatherLoading ? (
-                <ActivityIndicator size="small" color="#3d6b47" style={{ paddingVertical: 20 }} />
+                <ActivityIndicator size="small" color={colors.accent} style={{ paddingVertical: 20 }} />
               ) : weatherError ? (
                 <View style={styles.weatherEmpty}>
-                  <Text style={styles.weatherError}>{weatherError}</Text>
+                  <Text style={themed.weatherError}>{weatherError}</Text>
                   <TouchableOpacity
-                    style={styles.weatherLocationButton}
+                    style={themed.weatherLocationButton}
                     onPress={onRequestLocation}
                     activeOpacity={0.7}
                   >
                     <AppIcon name="refresh-cw" size={18} color="#fff" />
-                    <Text style={styles.weatherLocationButtonText}>Réessayer</Text>
+                    <Text style={themed.weatherLocationButtonText}>Réessayer</Text>
                   </TouchableOpacity>
                 </View>
               ) : weatherData ? (
                 <>
                   <View style={styles.weatherRow}>
                     <View style={styles.weatherInfoSide}>
-                      <Text style={styles.weatherTemp}>{Math.round(weatherData.temperature)}°</Text>
-                      <Text style={styles.weatherCondition}>{weatherData.conditionLabel}</Text>
+                      <Text style={themed.weatherTemp}>{Math.round(weatherData.temperature)}°</Text>
+                      <Text style={themed.weatherCondition}>{weatherData.conditionLabel}</Text>
                       <View style={styles.weatherDetailRow}>
-                        <AppIcon name="droplet" size={14} color="#5b5d5e" />
-                        <Text style={styles.weatherDetailText}>{weatherData.humidity} % humidité</Text>
+                        <AppIcon name="droplet" size={14} color={colors.iconMuted} />
+                        <Text style={themed.weatherDetailText}>{weatherData.humidity} % humidité</Text>
                       </View>
                       <View style={styles.weatherDetailRow}>
-                        <AppIcon name="thermometer" size={14} color="#5b5d5e" />
-                        <Text style={styles.weatherDetailText}>Ressenti {Math.round(weatherData.apparentTemperature)}°</Text>
+                        <AppIcon name="thermometer" size={14} color={colors.iconMuted} />
+                        <Text style={themed.weatherDetailText}>Ressenti {Math.round(weatherData.apparentTemperature)}°</Text>
                       </View>
                     </View>
                     <View style={styles.weatherImageWrap}>
@@ -336,34 +316,34 @@ const HomeListHeader = React.memo(function HomeListHeader({
                     </View>
                     <View style={styles.weatherInfoSide}>
                       <View style={styles.weatherDetailRow}>
-                        <AppIcon name="wind" size={14} color="#5b5d5e" />
-                        <Text style={styles.weatherDetailText}>{weatherData.windSpeed} km/h</Text>
+                        <AppIcon name="wind" size={14} color={colors.iconMuted} />
+                        <Text style={themed.weatherDetailText}>{weatherData.windSpeed} km/h</Text>
                       </View>
                       <View style={styles.weatherDetailRow}>
-                        <AppIcon name="activity" size={14} color="#5b5d5e" />
-                        <Text style={styles.weatherDetailText}>{Math.round(weatherData.surfacePressure)} hPa</Text>
+                        <AppIcon name="activity" size={14} color={colors.iconMuted} />
+                        <Text style={themed.weatherDetailText}>{Math.round(weatherData.surfacePressure)} hPa</Text>
                       </View>
-                      <Text style={styles.weatherDetailText}>
+                      <Text style={themed.weatherDetailText}>
                         {weatherData.isDay === 1 ? "Jour" : "Nuit"}
                       </Text>
                     </View>
                   </View>
-                  <View style={styles.weatherDou3a}>
-                    <Text style={styles.weatherDou3aLabel}>Invocation</Text>
-                    <Text style={styles.weatherDou3aText}>{WEATHER_DOU3A[weatherData.imageKey].dou3a}</Text>
-                    <Text style={styles.weatherDou3aReason}>{WEATHER_DOU3A[weatherData.imageKey].reason}</Text>
+                  <View style={themed.weatherDou3a}>
+                    <Text style={themed.weatherDou3aLabel}>Invocation</Text>
+                    <Text style={themed.weatherDou3aText}>{WEATHER_DOU3A[weatherData.imageKey].dou3a}</Text>
+                    <Text style={themed.weatherDou3aReason}>{WEATHER_DOU3A[weatherData.imageKey].reason}</Text>
                   </View>
                 </>
               ) : (
                 <View style={styles.weatherEmpty}>
-                  <Text style={styles.weatherError}>Active la localisation pour afficher la météo</Text>
+                  <Text style={themed.weatherError}>Active la localisation pour afficher la météo</Text>
                   <TouchableOpacity
-                    style={styles.weatherLocationButton}
+                    style={themed.weatherLocationButton}
                     onPress={onRequestLocation}
                     activeOpacity={0.7}
                   >
                     <AppIcon name="map-pin" size={18} color="#fff" />
-                    <Text style={styles.weatherLocationButtonText}>Autoriser la localisation</Text>
+                    <Text style={themed.weatherLocationButtonText}>Autoriser la localisation</Text>
                   </TouchableOpacity>
                 </View>
               )}
@@ -371,84 +351,21 @@ const HomeListHeader = React.memo(function HomeListHeader({
           </View>
         </ScrollView>
         <View style={styles.carouselDots}>
-          <View style={[styles.carouselDot, carouselIndex === 0 && styles.carouselDotActive]} />
-          <View style={[styles.carouselDot, carouselIndex === 1 && styles.carouselDotActive]} />
+          <View style={[themed.carouselDot, carouselIndex === 0 && themed.carouselDotActive]} />
+          <View style={[themed.carouselDot, carouselIndex === 1 && themed.carouselDotActive]} />
         </View>
       </View>
 
       {vendredi && hadithVendredi && (
-        <View style={styles.hadithVendrediBlock}>
-          <Text style={styles.hadithVendrediLabel}>Hadith — La prière du vendredi</Text>
-          <Text style={styles.hadithVendrediText}>{hadithVendredi.text}</Text>
-          <Text style={styles.hadithVendrediSource}>{hadithVendredi.source}</Text>
+        <View style={themed.hadithVendrediBlock}>
+          <Text style={themed.hadithVendrediLabel}>Hadith — La prière du vendredi</Text>
+          <Text style={themed.hadithVendrediText}>{hadithVendredi.text}</Text>
+          <Text style={themed.hadithVendrediSource}>{hadithVendredi.source}</Text>
         </View>
       )}
 
-      <View className="my-5">
-        <View className="flex flex-row items-center justify-between">
-          <Text className="text-xl font-rubik-bold text-black-300">
-            Reprendre ma lecture
-          </Text>
-          <TouchableOpacity>
-            <Text style={styles.seeAllLink}>Tout voir</Text>
-          </TouchableOpacity>
-        </View>
-
-        {latestPropertiesLoading ? (
-          <ActivityIndicator size="large" color="#3d6b47" style={{ marginTop: 20 }} />
-        ) : (
-          <>
-            <FlatList
-              data={featuredData}
-              renderItem={({ item }) => (
-                <FeaturedCard
-                  item={item as Parameters<typeof FeaturedCard>[0]["item"]}
-                  onPress={() =>
-                    (item as { $id: string }).$id !== "_placeholder" &&
-                    onCardPress?.((item as { $id: string }).$id)
-                  }
-                  actionLabel="Lire"
-                />
-              )}
-              keyExtractor={(item: { $id: string }) => item.$id}
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              onMomentumScrollEnd={(e) => {
-                const index = Math.round(
-                  e.nativeEvent.contentOffset.x / featuredStep
-                );
-                setFeaturedCarouselIndex(Math.min(index, featuredData.length - 1));
-              }}
-              style={styles.featuredList}
-              contentContainerStyle={styles.featuredListContent}
-            />
-            <View style={styles.carouselDots}>
-              {featuredData.map((_, i) => (
-                <View
-                  key={i}
-                  style={[
-                    styles.carouselDot,
-                    featuredCarouselIndex === i && styles.carouselDotActive,
-                  ]}
-                />
-              ))}
-            </View>
-          </>
-        )}
-      </View>
-
-      <View className="mt-5">
-        <View className="flex flex-row items-center justify-between">
-          <Text className="text-xl font-rubik-bold text-black-300">
-            Recommandations
-          </Text>
-          <TouchableOpacity>
-            <Text style={styles.seeAllLink}>Tout voir</Text>
-          </TouchableOpacity>
-        </View>
-
-        <Filters />
-      </View>
+      <HomeToolsSection />
+      <HomeContinueSection />
       </View>
     </View>
   );
@@ -459,99 +376,33 @@ const Home = () => {
   const { locale } = useTranslation();
   const { gregorian, hijri } = useTodayDates(locale);
   const todayIndex = useMemo(() => (new Date().getDay() + 6) % 7, []);
-  const { timings: prayerTimes, loading: prayerLoading, cityName: prayerCity, coords: prayerCoords, refetch: refetchLocation } = usePrayerTimes();
-
-  const params = useLocalSearchParams<{ query?: string; filter?: string }>();
-
-  const { data: latestProperties, loading: latestPropertiesLoading } =
-    useAppwrite({ fn: getLatestProperties });
-
   const {
-    data: properties,
-    refetch,
-    loading,
-  } = useAppwrite({
-    fn: getProperties,
-    params: {
-      filter: params.filter!,
-      query: params.query!,
-      limit: 6,
-    },
-    skip: true,
-  });
-
-  useEffect(() => {
-    refetch({
-      filter: params.filter!,
-      query: params.query!,
-      limit: 6,
-    });
-  }, [params.filter, params.query]);
-
-  const handleCardPress = useCallback((id: string) => {
-    router.push(`/properties/${id}`);
-  }, []);
-
-  const header = useMemo(
-    () => (
-      <HomeListHeader
-        user={user}
-        gregorian={gregorian}
-        hijri={hijri}
-        todayIndex={todayIndex}
-        prayerLoading={prayerLoading}
-        prayerTimes={prayerTimes}
-        prayerCity={prayerCity}
-        prayerCoords={prayerCoords}
-        onRequestLocation={refetchLocation}
-        latestProperties={latestProperties}
-        latestPropertiesLoading={latestPropertiesLoading}
-        onCardPress={handleCardPress}
-      />
-    ),
-    [
-      user,
-      gregorian,
-      hijri,
-      todayIndex,
-      prayerLoading,
-      prayerTimes,
-      prayerCity,
-      prayerCoords,
-      refetchLocation,
-      latestProperties,
-      latestPropertiesLoading,
-      handleCardPress,
-    ]
-  );
-
-  const listEmptyComponent = useMemo(
-    () =>
-      loading ? (
-        <ActivityIndicator size="large" className="text-primary-300 mt-5" />
-      ) : (
-        <NoResults />
-      ),
-    [loading]
-  );
+    timings: prayerTimes,
+    loading: prayerLoading,
+    cityName: prayerCity,
+    coords: prayerCoords,
+    refetch: refetchLocation,
+  } = usePrayerTimes();
 
   return (
     <ScreenBackground style={styles.background}>
       <SafeAreaView className="h-full bg-transparent" edges={["top", "left", "right"]}>
-        <FlatList
-        data={properties ?? []}
-        extraData={properties?.length ?? 0}
-        numColumns={2}
-        renderItem={({ item }) => (
-          <Card item={item} onPress={() => handleCardPress(item.$id)} />
-        )}
-        keyExtractor={(item) => item.$id}
-        contentContainerClassName="pb-32"
-        columnWrapperStyle={styles.homeListColumns}
-        showsVerticalScrollIndicator={false}
-        ListEmptyComponent={listEmptyComponent}
-        ListHeaderComponent={header}
-        />
+        <ScrollView
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={styles.scrollContent}
+        >
+          <HomeListHeader
+            user={user}
+            gregorian={gregorian}
+            hijri={hijri}
+            todayIndex={todayIndex}
+            prayerLoading={prayerLoading}
+            prayerTimes={prayerTimes}
+            prayerCity={prayerCity}
+            prayerCoords={prayerCoords}
+            onRequestLocation={refetchLocation}
+          />
+        </ScrollView>
       </SafeAreaView>
     </ScreenBackground>
   );
@@ -568,9 +419,8 @@ const styles = StyleSheet.create({
   homeBody: {
     paddingHorizontal: SCREEN_EDGE_PADDING,
   },
-  homeListColumns: {
-    paddingHorizontal: SCREEN_EDGE_PADDING,
-    gap: 20,
+  scrollContent: {
+    paddingBottom: 120,
   },
   welcomeTitle: {
     fontFamily: "PlusJakartaSans-Bold",
@@ -1052,13 +902,6 @@ const styles = StyleSheet.create({
   prayerFooterItem: {
     flexDirection: "row",
     alignItems: "center",
-  },
-  featuredList: {
-    height: 424,
-    marginTop: 20,
-  },
-  featuredListContent: {
-    paddingRight: 20,
   },
 });
 

@@ -4,9 +4,10 @@
  */
 
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import type { LastRead, Favorite } from "./types";
+import type { LastRead, LastListen, Favorite } from "./types";
 
 const KEY_LAST_READ = "@quran_last_read";
+const KEY_LAST_LISTEN = "@quran_last_listen";
 const KEY_RECENT_SURAS = "@quran_recent_suras";
 const KEY_FAVORITES = "@quran_favorites";
 const MAX_RECENT_SURAS = 8;
@@ -19,6 +20,42 @@ export async function getLastRead(): Promise<LastRead | null> {
   } catch {
     return null;
   }
+}
+
+export async function getLastListen(): Promise<LastListen | null> {
+  try {
+    const raw = await AsyncStorage.getItem(KEY_LAST_LISTEN);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as LastListen;
+    if (
+      typeof parsed.suraNumber !== "number" ||
+      parsed.suraNumber < 1 ||
+      parsed.suraNumber > 114 ||
+      typeof parsed.timestamp !== "number" ||
+      parsed.timestamp <= 0
+    ) {
+      return null;
+    }
+    return {
+      suraNumber: parsed.suraNumber,
+      progress:
+        typeof parsed.progress === "number"
+          ? Math.min(1, Math.max(0, parsed.progress))
+          : 0,
+      timestamp: parsed.timestamp,
+    };
+  } catch {
+    return null;
+  }
+}
+
+export async function setLastListen(listen: LastListen): Promise<void> {
+  try {
+    await AsyncStorage.setItem(KEY_LAST_LISTEN, JSON.stringify(listen));
+    if (listen.timestamp > 0) {
+      await pushRecentSura(listen.suraNumber);
+    }
+  } catch {}
 }
 
 export async function setLastRead(read: LastRead): Promise<void> {

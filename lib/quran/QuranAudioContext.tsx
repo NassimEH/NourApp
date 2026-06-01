@@ -15,6 +15,7 @@ import React, {
 import { Audio } from "expo-av";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { getSuraAudioUrl, getAyahAudioUrl } from "./api";
+import { persistLastListen } from "./persistLastListen";
 import { DEFAULT_AUDIO_RECITER, AVAILABLE_RECITERS, type Reciter } from "./types";
 
 export type PlaybackMode = "sura" | "ayah";
@@ -74,6 +75,13 @@ export function QuranAudioProvider({ children }: { children: React.ReactNode }) 
   const positionRef = useRef(0);
   const durationRef = useRef(0);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const currentSuraRef = useRef<number | null>(null);
+  const playbackModeRef = useRef<PlaybackMode | null>(null);
+
+  useEffect(() => {
+    currentSuraRef.current = state.currentSura;
+    playbackModeRef.current = state.mode;
+  }, [state.currentSura, state.mode]);
 
   useEffect(() => {
     // #region agent log
@@ -185,13 +193,19 @@ export function QuranAudioProvider({ children }: { children: React.ReactNode }) 
           setState((s) => {
             const d = durationRef.current;
             const p = positionRef.current;
+            const progress = d > 0 ? p / d : 0;
+            const sura = currentSuraRef.current;
+            if (sura != null && playbackModeRef.current === "sura") {
+              persistLastListen(sura, progress);
+            }
             return {
               ...s,
-              progress: d > 0 ? p / d : 0,
+              progress,
               durationMs: d,
             };
           });
         }, 500);
+        persistLastListen(suraNumber, 0, true);
         const status = await sound.getStatusAsync();
         if (status.isLoaded && !playRequested) {
           playRequested = true;
@@ -298,13 +312,19 @@ export function QuranAudioProvider({ children }: { children: React.ReactNode }) 
           setState((s) => {
             const d = durationRef.current;
             const p = positionRef.current;
+            const progress = d > 0 ? p / d : 0;
+            const sura = currentSuraRef.current;
+            if (sura != null && playbackModeRef.current === "sura") {
+              persistLastListen(sura, progress);
+            }
             return {
               ...s,
-              progress: d > 0 ? p / d : 0,
+              progress,
               durationMs: d,
             };
           });
         }, 500);
+        persistLastListen(suraNumber, 0, true);
         const status = await sound.getStatusAsync();
         if (status.isLoaded && !playRequested) {
           playRequested = true;
@@ -385,13 +405,19 @@ export function QuranAudioProvider({ children }: { children: React.ReactNode }) 
           setState((s) => {
             const d = durationRef.current;
             const p = positionRef.current;
+            const progress = d > 0 ? p / d : 0;
+            const sura = currentSuraRef.current;
+            if (sura != null) {
+              persistLastListen(sura, progress);
+            }
             return {
               ...s,
-              progress: d > 0 ? p / d : 0,
+              progress,
               durationMs: d,
             };
           });
         }, 500);
+        persistLastListen(suraNumber, 0, true);
         const status = await sound.getStatusAsync();
         if (status.isLoaded && !playRequested) {
           playRequested = true;

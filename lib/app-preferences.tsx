@@ -8,12 +8,17 @@ import React, {
 import { Platform } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
+import {
+  isAccentColorKey,
+  type AccentColorKey,
+} from "@/lib/accent-colors";
+
 const STORAGE_KEY = "@nour_app_preferences";
 
 export type ThemeMode = "spiritual" | "light" | "dark";
 export type IconStyleMode = "outline" | "filled";
 export type TextSizeMode = "small" | "medium" | "large";
-export type AccentColorKey = "green" | "blue" | "amber";
+export type { AccentColorKey } from "@/lib/accent-colors";
 export type LanguageLocale = "fr" | "en" | "ar";
 
 export interface AppPreferencesState {
@@ -52,7 +57,9 @@ async function loadStored(): Promise<Partial<AppPreferencesState>> {
       theme: normalizeThemeMode(parsed.theme),
       iconStyle: ["outline", "filled"].includes(parsed.iconStyle ?? "") ? parsed.iconStyle : undefined,
       textSize: ["small", "medium", "large"].includes(parsed.textSize ?? "") ? parsed.textSize : undefined,
-      accentColor: ["green", "blue", "amber"].includes(parsed.accentColor ?? "") ? parsed.accentColor : undefined,
+      accentColor: isAccentColorKey(parsed.accentColor)
+        ? parsed.accentColor
+        : undefined,
       locale: ["fr", "en", "ar"].includes(parsed.locale ?? "") ? parsed.locale : undefined,
     };
   } catch {
@@ -162,12 +169,6 @@ export const TEXT_SIZE_LABELS: Record<TextSizeMode, string> = {
   small: "Petite",
   medium: "Normale",
   large: "Grande",
-};
-
-export const ACCENT_COLOR_LABELS: Record<AccentColorKey, string> = {
-  green: "Vert",
-  blue: "Bleu",
-  amber: "Ambre",
 };
 
 export const LANGUAGE_LABELS: Record<LanguageLocale, string> = {

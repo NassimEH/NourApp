@@ -12,8 +12,7 @@ import {
   Image,
   PanResponder,
 } from "react-native";
-import { BlurView } from "expo-blur";
-import { GlassView, isGlassEffectAPIAvailable } from "expo-glass-effect";
+import { ThemedGlassSurface } from "@/components/ThemedGlassSurface";
 import * as Haptics from "expo-haptics";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { AppIcon } from "@/components/AppIcon";
@@ -39,21 +38,6 @@ const TAB_ROUTES = [
 ];
 
 const { height: SCREEN_HEIGHT, width: SCREEN_WIDTH } = Dimensions.get("window");
-const TEXT_SECONDARY = "#5b5d5e";
-
-const useGlassAvailable = () => {
-  const [available, setAvailable] = useState(false);
-  useEffect(() => {
-    if (Platform.OS !== "ios") return;
-    try {
-      setAvailable(typeof isGlassEffectAPIAvailable === "function" && isGlassEffectAPIAvailable());
-    } catch {
-      setAvailable(false);
-    }
-  }, []);
-  return available;
-};
-
 function formatTime(ms: number): string {
   const totalSeconds = Math.floor(ms / 1000);
   const minutes = Math.floor(totalSeconds / 60);
@@ -127,7 +111,11 @@ function TabIconButton({
       ]}
     >
       <Animated.View style={{ transform: [{ scale }] }}>
-        <AppIcon name={route.icon} size={22} color={isActive ? "#fff" : colors.icon} />
+        <AppIcon
+          name={route.icon}
+          size={22}
+          color={isActive ? colors.onAccent : colors.tabBarIconInactive}
+        />
       </Animated.View>
     </Pressable>
   );
@@ -148,14 +136,6 @@ function ReciterSelector({
 }) {
   const colors = useAppTheme();
   const insets = useSafeAreaInsets();
-  const glassAvailable = useGlassAvailable();
-  const isIOS = Platform.OS === "ios";
-
-  // #region agent log
-  useEffect(() => {
-    fetch('http://127.0.0.1:7475/ingest/33850d28-f7a1-46b3-b658-a07cfbabfea4',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'2f0651'},body:JSON.stringify({sessionId:'2f0651',location:'ReciterSelector.tsx:visibleProp',message:'ReciterSelector visible prop',data:{visible,recitersCount:reciters?.length},timestamp:Date.now(),hypothesisId:'A2'})}).catch(()=>{});
-  }, [visible, reciters]);
-  // #endregion
 
   if (!visible) return null;
 
@@ -178,6 +158,7 @@ function ReciterSelector({
               style={[
                 reciterStyles.item,
                 isSelected && { backgroundColor: colors.accent },
+                !isSelected && { backgroundColor: colors.accentSurface },
               ]}
               onPress={() => {
                 onSelect(reciter.id);
@@ -185,27 +166,34 @@ function ReciterSelector({
               }}
               activeOpacity={0.7}
             >
-              <View style={reciterStyles.itemIcon}>
+              <View
+                style={[
+                  reciterStyles.itemIcon,
+                  { backgroundColor: colors.cardElevated },
+                ]}
+              >
                 <AppIcon
                   name="mic"
                   size={22}
-                  color={isSelected ? "#fff" : colors.accent}
+                  color={isSelected ? colors.onAccent : colors.accent}
                 />
               </View>
               <View style={reciterStyles.itemInfo}>
                 <Text
                   style={[
                     reciterStyles.itemName,
-                    { color: isSelected ? "#fff" : colors.text },
+                    { color: isSelected ? colors.onAccent : colors.text },
                   ]}
                 >
                   {reciter.name}
                 </Text>
-                <Text style={reciterStyles.itemStyle}>{reciter.style}</Text>
+                <Text style={[reciterStyles.itemStyle, { color: colors.textMuted }]}>
+                  {reciter.style}
+                </Text>
               </View>
-              {isSelected && (
-                <AppIcon name="check" size={20} color="#fff" />
-              )}
+              {isSelected ? (
+                <AppIcon name="check" size={20} color={colors.onAccent} />
+              ) : null}
             </TouchableOpacity>
           );
         })}
@@ -219,21 +207,9 @@ function ReciterSelector({
         <View />
       </Pressable>
       <View style={reciterStyles.container}>
-        {glassAvailable ? (
-          <GlassView style={reciterStyles.glass} glassEffectStyle="regular">
-            {renderContent()}
-          </GlassView>
-        ) : (
-          <View style={reciterStyles.glass}>
-            <BlurView
-              intensity={isIOS ? 100 : 120}
-              tint="light"
-              style={StyleSheet.absoluteFill}
-            />
-            <View style={reciterStyles.overlay} pointerEvents="none" />
-            {renderContent()}
-          </View>
-        )}
+        <ThemedGlassSurface style={reciterStyles.glass} borderRadius={24}>
+          {renderContent()}
+        </ThemedGlassSurface>
       </View>
     </Modal>
   );
@@ -255,11 +231,6 @@ const reciterStyles = StyleSheet.create({
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
     overflow: "hidden",
-    backgroundColor: Platform.OS === "android" ? "rgba(255,255,255,0.95)" : undefined,
-  },
-  overlay: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: "rgba(255,255,255,0.85)",
   },
   content: {
     paddingTop: 20,
@@ -292,14 +263,11 @@ const reciterStyles = StyleSheet.create({
     paddingHorizontal: 16,
     borderRadius: 12,
     marginBottom: 8,
-    backgroundColor: "rgba(61, 107, 71, 0.08)",
   },
-  itemSelected: {},
   itemIcon: {
     width: 44,
     height: 44,
     borderRadius: 22,
-    backgroundColor: "rgba(255,255,255,0.9)",
     alignItems: "center",
     justifyContent: "center",
     marginRight: 14,
@@ -311,16 +279,14 @@ const reciterStyles = StyleSheet.create({
     fontSize: 15,
     fontFamily: "PlusJakartaSans-SemiBold",
   },
-  itemNameSelected: {},
   itemStyle: {
     fontSize: 13,
     fontFamily: "PlusJakartaSans-Regular",
-    color: TEXT_SECONDARY,
     marginTop: 2,
   },
 });
 
-function FullScreenPlayer({
+export function FullScreenPlayer({
   visible,
   onClose,
   suraNumber,
@@ -352,17 +318,10 @@ function FullScreenPlayer({
   const colors = useAppTheme();
   const insets = useSafeAreaInsets();
   const translateY = useRef(new Animated.Value(SCREEN_HEIGHT)).current;
-  const glassAvailable = useGlassAvailable();
-  const isIOS = Platform.OS === "ios";
   const [reciterModalVisible, setReciterModalVisible] = useState(false);
 
-  const currentReciterName = availableReciters.find((r) => r.id === currentReciter)?.name ?? "Récitateur";
-
-  // #region agent log
-  useEffect(() => {
-    fetch('http://127.0.0.1:7475/ingest/33850d28-f7a1-46b3-b658-a07cfbabfea4',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'2f0651'},body:JSON.stringify({sessionId:'2f0651',location:'BottomBar.tsx:reciterModalEffect',message:'Modal visibility changed',data:{reciterModalVisible},timestamp:Date.now(),hypothesisId:'A2'})}).catch(()=>{});
-  }, [reciterModalVisible]);
-  // #endregion
+  const currentReciterName =
+    availableReciters.find((r) => r.id === currentReciter)?.name ?? "Récitateur";
 
   useEffect(() => {
     if (visible) {
@@ -418,7 +377,10 @@ function FullScreenPlayer({
 
   const renderContent = () => (
     <View style={[styles.fullPlayerContent, { paddingTop: insets.top + 20 }]}>
-      <View style={styles.fullPlayerHandle} {...panResponder.panHandlers} />
+      <View
+        style={[styles.fullPlayerHandle, { backgroundColor: colors.handle }]}
+        {...panResponder.panHandlers}
+      />
 
       <View style={styles.fullPlayerHeader}>
         <TouchableOpacity style={styles.fullPlayerCloseBtn} onPress={onClose}>
@@ -426,12 +388,7 @@ function FullScreenPlayer({
         </TouchableOpacity>
         <TouchableOpacity
           style={styles.fullPlayerMenuBtn}
-          onPress={() => {
-            // #region agent log
-            fetch('http://127.0.0.1:7475/ingest/33850d28-f7a1-46b3-b658-a07cfbabfea4',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'2f0651'},body:JSON.stringify({sessionId:'2f0651',location:'BottomBar.tsx:menuBtn',message:'Menu button pressed',data:{currentModalState:reciterModalVisible},timestamp:Date.now(),hypothesisId:'A1'})}).catch(()=>{});
-            // #endregion
-            setReciterModalVisible(true);
-          }}
+          onPress={() => setReciterModalVisible(true)}
         >
           <AppIcon name="more-vertical" size={24} color={colors.icon} />
         </TouchableOpacity>
@@ -442,65 +399,98 @@ function FullScreenPlayer({
       </View>
 
       <View style={styles.fullPlayerInfo}>
-        <Text style={styles.fullPlayerTitle}>
+        <Text style={[styles.fullPlayerTitle, { color: colors.text }]}>
           Sourate {suraNumber}
         </Text>
-        {suraName && (
-          <Text style={styles.fullPlayerSubtitle}>{suraName}</Text>
-        )}
+        {suraName ? (
+          <Text style={[styles.fullPlayerSubtitle, { color: colors.textMuted }]}>
+            {suraName}
+          </Text>
+        ) : null}
         <TouchableOpacity
-          style={styles.fullPlayerReciterBtn}
+          style={[
+            styles.fullPlayerReciterBtn,
+            { backgroundColor: colors.accentSurface },
+          ]}
           onPress={() => setReciterModalVisible(true)}
         >
           <AppIcon name="mic" size={14} color={colors.accent} />
-          <Text style={styles.fullPlayerReciterText}>{currentReciterName}</Text>
-          <AppIcon name="chevron-right" size={14} color={TEXT_SECONDARY} />
+          <Text style={[styles.fullPlayerReciterText, { color: colors.accent }]}>
+            {currentReciterName}
+          </Text>
+          <AppIcon name="chevron-right" size={14} color={colors.iconMuted} />
         </TouchableOpacity>
       </View>
 
       <View style={styles.fullPlayerProgressWrap}>
-        <View style={styles.fullPlayerProgressBar}>
+        <View
+          style={[
+            styles.fullPlayerProgressBar,
+            { backgroundColor: colors.progressTrack },
+          ]}
+        >
           <View
-            style={[styles.fullPlayerProgressFill, { width: `${progress * 100}%` }]}
+            style={[
+              styles.fullPlayerProgressFill,
+              { width: `${progress * 100}%`, backgroundColor: colors.accent },
+            ]}
           />
         </View>
         <View style={styles.fullPlayerTimeRow}>
-          <Text style={styles.fullPlayerTimeText}>{currentTime}</Text>
-          <Text style={styles.fullPlayerTimeText}>{totalTime}</Text>
+          <Text style={[styles.fullPlayerTimeText, { color: colors.textMuted }]}>
+            {currentTime}
+          </Text>
+          <Text style={[styles.fullPlayerTimeText, { color: colors.textMuted }]}>
+            {totalTime}
+          </Text>
         </View>
       </View>
 
       <View style={styles.fullPlayerControls}>
-        <TouchableOpacity style={styles.fullPlayerSecondaryBtn}>
+        <TouchableOpacity
+          style={[
+            styles.fullPlayerSecondaryBtn,
+            { backgroundColor: colors.accentSurface },
+          ]}
+        >
           <AppIcon name="skip-back" size={28} color={colors.icon} />
         </TouchableOpacity>
 
         <TouchableOpacity
-          style={styles.fullPlayerPlayBtn}
+          style={[styles.fullPlayerPlayBtn, { backgroundColor: colors.accent }]}
           onPress={onPlayPause}
           disabled={isLoading}
         >
           {isLoading ? (
-            <AppIcon name="loader" size={32} color="#fff" />
+            <AppIcon name="loader" size={32} color={colors.onAccent} />
           ) : (
-            <AppIcon name={isPlaying ? "pause" : "play"} size={32} color="#fff" />
+            <AppIcon
+              name={isPlaying ? "pause" : "play"}
+              size={32}
+              color={colors.onAccent}
+            />
           )}
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.fullPlayerSecondaryBtn}>
+        <TouchableOpacity
+          style={[
+            styles.fullPlayerSecondaryBtn,
+            { backgroundColor: colors.accentSurface },
+          ]}
+        >
           <AppIcon name="skip-forward" size={28} color={colors.icon} />
         </TouchableOpacity>
       </View>
 
       <View style={styles.fullPlayerActions}>
         <TouchableOpacity style={styles.fullPlayerActionBtn}>
-          <AppIcon name="repeat" size={22} color={TEXT_SECONDARY} />
+          <AppIcon name="repeat" size={22} color={colors.iconMuted} />
         </TouchableOpacity>
         <TouchableOpacity style={styles.fullPlayerActionBtn}>
-          <AppIcon name="heart" size={22} color={TEXT_SECONDARY} />
+          <AppIcon name="heart" size={22} color={colors.iconMuted} />
         </TouchableOpacity>
         <TouchableOpacity style={styles.fullPlayerActionBtn} onPress={onUnload}>
-          <AppIcon name="x-circle" size={22} color={TEXT_SECONDARY} />
+          <AppIcon name="x-circle" size={22} color={colors.iconMuted} />
         </TouchableOpacity>
       </View>
     </View>
@@ -512,21 +502,9 @@ function FullScreenPlayer({
     <>
       <Modal transparent visible={visible} animationType="none" statusBarTranslucent>
         <Animated.View style={[styles.fullPlayerContainer, { transform: [{ translateY }] }]}>
-          {glassAvailable ? (
-            <GlassView style={styles.fullPlayerGlass} glassEffectStyle="regular">
-              {renderContent()}
-            </GlassView>
-          ) : (
-            <View style={styles.fullPlayerGlass}>
-              <BlurView
-                intensity={isIOS ? 100 : 120}
-                tint="light"
-                style={StyleSheet.absoluteFill}
-              />
-              <View style={styles.fullPlayerOverlay} pointerEvents="none" />
-              {renderContent()}
-            </View>
-          )}
+          <ThemedGlassSurface style={styles.fullPlayerGlass} borderRadius={0}>
+            {renderContent()}
+          </ThemedGlassSurface>
         </Animated.View>
       </Modal>
       <ReciterSelector
@@ -543,14 +521,12 @@ function FullScreenPlayer({
 export default function BottomBar({ state }: BottomTabBarProps) {
   const colors = useAppTheme();
   const insets = useSafeAreaInsets();
-  const glassAvailable = useGlassAvailable();
   const audio = useQuranAudioContextOptional();
   const { list: suraList } = useSuraList();
   const currentRoute = state.routes[state.index]?.name;
   const [fullPlayerVisible, setFullPlayerVisible] = useState(false);
 
   const paddingBottom = Math.max(insets.bottom, 12);
-  const isIOS = Platform.OS === "ios";
   const isPlayerVisible = audio?.isPlayerVisible ?? false;
 
   const suraName =
@@ -581,25 +557,26 @@ export default function BottomBar({ state }: BottomTabBarProps) {
     </View>
   );
 
-  const renderPillContent = () =>
-    glassAvailable ? (
-      <GlassView style={styles.glassPillOuter} glassEffectStyle="regular" isInteractive>
-        {renderGlassPill()}
-      </GlassView>
-    ) : (
-      <View style={styles.glassPillOuter}>
-        <BlurView intensity={isIOS ? 120 : 140} tint="light" style={StyleSheet.absoluteFill}>
-          <View style={StyleSheet.absoluteFill} collapsable />
-        </BlurView>
-        <View style={styles.glassPillOverlay} pointerEvents="none" />
-        {renderGlassPill()}
-      </View>
-    );
+  const renderPillContent = () => (
+    <ThemedGlassSurface
+      style={styles.glassPillOuter}
+      borderRadius={32}
+      interactive
+    >
+      {renderGlassPill()}
+    </ThemedGlassSurface>
+  );
 
   return (
     <>
       <View
-        style={[styles.container, { paddingBottom: paddingBottom + (isIOS ? 22 : 12) }]}
+        style={[
+          styles.container,
+          {
+            paddingBottom:
+              paddingBottom + (Platform.OS === "ios" ? 22 : 12),
+          },
+        ]}
         pointerEvents="box-none"
       >
         {isPlayerVisible && audio && audio.currentSura != null && (
@@ -663,32 +640,19 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   glassPillOuter: {
-    borderRadius: 32,
-    overflow: "hidden",
     minHeight: 64,
     maxWidth: 360,
     width: "100%",
-    borderWidth: 0.5,
-    borderColor: "rgba(255,255,255,0.25)",
     ...(Platform.OS === "android" && {
       elevation: 12,
       shadowColor: "#000",
       shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: 0.08,
+      shadowOpacity: 0.12,
       shadowRadius: 20,
-      backgroundColor: "rgba(255,255,255,0.25)",
     }),
-  },
-  glassPillOverlay: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: "rgba(255,255,255,0.06)",
-    borderRadius: 32,
   },
   glassPill: {
     flex: 1,
-    ...(Platform.OS === "android" && {
-      backgroundColor: "rgba(255,255,255,0.2)",
-    }),
   },
   pillInner: {
     flexDirection: "row",
@@ -705,9 +669,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
-  tabIconButtonActive: {
-    backgroundColor: "rgba(61, 107, 71, 0.9)",
-  },
   fullPlayerContainer: {
     position: "absolute",
     top: 0,
@@ -717,11 +678,6 @@ const styles = StyleSheet.create({
   },
   fullPlayerGlass: {
     flex: 1,
-    backgroundColor: Platform.OS === "android" ? "rgba(255,255,255,0.95)" : undefined,
-  },
-  fullPlayerOverlay: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: "rgba(255,255,255,0.85)",
   },
   fullPlayerContent: {
     flex: 1,
@@ -731,7 +687,6 @@ const styles = StyleSheet.create({
     width: 40,
     height: 5,
     borderRadius: 2.5,
-    backgroundColor: "rgba(0,0,0,0.15)",
     alignSelf: "center",
     marginBottom: 20,
     paddingVertical: 15,
@@ -775,13 +730,11 @@ const styles = StyleSheet.create({
   fullPlayerTitle: {
     fontSize: 24,
     fontFamily: "PlusJakartaSans-Bold",
-    color: "#191D31",
     textAlign: "center",
   },
   fullPlayerSubtitle: {
     fontSize: 16,
     fontFamily: "PlusJakartaSans-Medium",
-    color: TEXT_SECONDARY,
     marginTop: 6,
     textAlign: "center",
   },
@@ -791,14 +744,12 @@ const styles = StyleSheet.create({
     marginTop: 12,
     paddingVertical: 8,
     paddingHorizontal: 14,
-    backgroundColor: "rgba(61, 107, 71, 0.1)",
     borderRadius: 20,
     gap: 6,
   },
   fullPlayerReciterText: {
     fontSize: 13,
     fontFamily: "PlusJakartaSans-Medium",
-    color: "#3d6b47",
   },
   fullPlayerProgressWrap: {
     marginBottom: 24,
@@ -806,12 +757,10 @@ const styles = StyleSheet.create({
   fullPlayerProgressBar: {
     height: 4,
     borderRadius: 2,
-    backgroundColor: "rgba(61, 107, 71, 0.2)",
     overflow: "hidden",
   },
   fullPlayerProgressFill: {
     height: "100%",
-    backgroundColor: "#3d6b47",
     borderRadius: 2,
   },
   fullPlayerTimeRow: {
@@ -822,7 +771,6 @@ const styles = StyleSheet.create({
   fullPlayerTimeText: {
     fontSize: 12,
     fontFamily: "PlusJakartaSans-Regular",
-    color: TEXT_SECONDARY,
   },
   fullPlayerControls: {
     flexDirection: "row",
@@ -835,7 +783,6 @@ const styles = StyleSheet.create({
     width: 56,
     height: 56,
     borderRadius: 28,
-    backgroundColor: "rgba(61, 107, 71, 0.1)",
     alignItems: "center",
     justifyContent: "center",
   },
@@ -843,10 +790,9 @@ const styles = StyleSheet.create({
     width: 72,
     height: 72,
     borderRadius: 36,
-    backgroundColor: "#3d6b47",
     alignItems: "center",
     justifyContent: "center",
-    shadowColor: "#3d6b47",
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 12,

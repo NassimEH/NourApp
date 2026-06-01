@@ -1,5 +1,6 @@
 import { StyleSheet, Text, View } from "react-native";
 import { AppIcon } from "@/components/AppIcon";
+import { ACCENT_HEX } from "@/lib/accent-colors";
 import {
   ACCENT,
   CARD_BG,
@@ -15,11 +16,13 @@ const THEMES = [
   { id: "dark", label: "Sombre", desc: "Confort visuel de nuit" },
 ];
 
-const ACCENTS = [
-  { key: "green", color: "#3d6b47", label: "Vert" },
-  { key: "blue", color: "#2563eb", label: "Bleu" },
-  { key: "amber", color: "#d97706", label: "Ambre" },
-];
+const ACCENTS = (
+  ["green", "blue", "amber", "teal", "purple", "rose", "indigo", "emerald"] as const
+).map((key) => ({
+  key,
+  color: ACCENT_HEX[key],
+  label: key,
+}));
 
 export function CustomizeProfilePreview() {
   return (
@@ -63,11 +66,11 @@ export function CustomizeProfilePreview() {
             <View
               style={[
                 styles.accentSwatch,
+                styles.accentSwatchSmall,
                 { backgroundColor: a.color },
                 i === 0 && styles.accentSwatchSelected,
               ]}
             />
-            <Text style={styles.accentLabel}>{a.label}</Text>
           </View>
         ))}
       </View>
@@ -159,15 +162,21 @@ const styles = StyleSheet.create({
   },
   accentRow: {
     flexDirection: "row",
+    flexWrap: "wrap",
     paddingHorizontal: PREVIEW_PAD,
-    gap: 20,
+    gap: 10,
     marginBottom: 16,
   },
-  accentItem: { alignItems: "center", gap: 6 },
+  accentItem: { alignItems: "center" },
   accentSwatch: {
     width: 40,
     height: 40,
     borderRadius: 20,
+  },
+  accentSwatchSmall: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
   },
   accentSwatchSelected: {
     borderWidth: 3,
