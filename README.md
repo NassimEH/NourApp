@@ -1,472 +1,263 @@
-<div align="center">
-  <br />
-    <a href="https://youtu.be/CzJQEstIiEI" target="_blank">
-      <img src="assets/readme/hero.webp" alt="Project Banner">
-    </a>
-  <br />
-  <div>
-    <img src="https://img.shields.io/badge/-Expo-black?style=for-the-badge&logoColor=white&logo=expo&color=000020" alt="expo" />
-    <img src="https://img.shields.io/badge/-TypeScript-black?style=for-the-badge&logoColor=white&logo=typescript&color=3178C6" alt="typescript" />
-    <img src="https://img.shields.io/badge/-Appwrite-black?style=for-the-badge&logoColor=white&logo=appwrite&color=FD366E" alt="appwrite" />
-    <img src="https://img.shields.io/badge/-Tailwind_CSS-black?style=for-the-badge&logoColor=white&logo=tailwindcss&color=06B6D4" alt="tailwindcss" />
-  </div>
+# Nûr (NourApp)
 
-  <h3 align="center">A Real Estate App</h3>
+Application mobile islamique construite avec **Expo** et **React Native**. Nûr regroupe lecture et écoute du Coran, horaires de prière, Qibla, hadiths, invocations, parcours d’apprentissage et une boîte à outils pratique (zakat, dhikr, dates hijriennes, etc.).
 
-   <div align="center">
-     Build this project step by step with our detailed tutorial on <a href="https://www.youtube.com/@javascriptmastery/videos" target="_blank"><b>JavaScript Mastery</b></a> YouTube. Join the JSM family!
-    </div>
-</div>
+Interface en **français**, **anglais** et **arabe** (RTL), avec thème clair / sombre personnalisable.
 
-## 📋 <a name="table">Table of Contents</a>
+---
 
-1. 🤖 [Introduction](#introduction)
-2. ⚙️ [Tech Stack](#tech-stack)
-3. 🔋 [Features](#features)
-4. 🤸 [Quick Start](#quick-start)
-5. 🕸️ [Snippets](#snippets)
-6. 🔗 [Assets](#links)
-7. 🚀 [More](#more)
+## Sommaire
 
-## 🚨 Tutorial
+- [Fonctionnalités](#fonctionnalités)
+- [Onglets principaux](#onglets-principaux)
+- [Outils](#outils)
+- [Stack technique](#stack-technique)
+- [Prérequis](#prérequis)
+- [Installation](#installation)
+- [Variables d’environnement](#variables-denvironnement)
+- [Scripts npm](#scripts-npm)
+- [Tests](#tests)
+- [Structure du projet](#structure-du-projet)
+- [Données & APIs externes](#données--apis-externes)
+- [Compte utilisateur](#compte-utilisateur)
+- [Documentation interne](#documentation-interne)
+- [État du projet](#état-du-projet)
 
-This repository contains the code corresponding to an in-depth tutorial available on our YouTube channel, <a href="https://www.youtube.com/@javascriptmastery/videos" target="_blank"><b>JavaScript Mastery</b></a>. 
+---
 
-If you prefer visual learning, this is the perfect resource for you. Follow our tutorial to learn how to build projects like these step-by-step in a beginner-friendly manner!
+## Fonctionnalités
 
-<a href="https://youtu.be/CzJQEstIiEI" target="_blank"><img src="https://github.com/sujatagunale/EasyRead/assets/151519281/1736fca5-a031-4854-8c09-bc110e3bc16d" /></a>
+| Domaine | Contenu |
+|--------|---------|
+| **Prières** | Horaires (API Aladhan), méthode MWL ou UOIF, Qibla, suivi des prières cochées, rappels / notifications |
+| **Coran** | Liste des sourates, lecture par verset, traduction, tafsir, recherche, favoris, dernière lecture |
+| **Audio** | Écoute par récitateur, mini-lecteur, progression sauvegardée, écran Juz / récitateurs |
+| **Hadiths** | Collections (ex. Boukhari), navigation livre / chapitre, détail, favoris, partage |
+| **Invocations** | Catégories de duʿās, détail, favoris, thématiques (matin/soir, météo, sommeil) |
+| **Apprendre** | Parcours avec leçons et quiz : *La vie des prophètes* et *Les piliers de l’Islam* ; objectif hebdomadaire ; stats |
+| **Accueil** | Calendrier de la semaine, carousel prière + météo, hadith du vendredi, reprise lecture/écoute, bannière Ramadan (mois hijri 9) |
+| **Profil** | Thème, langue, taille du texte, couleur d’accent, style de barre d’onglets (native / classique / liquid glass), favoris unifiés |
 
-## <a name="introduction">🤖 Introduction</a>
+**Compte optionnel (Supabase Auth)** : connexion e-mail / mot de passe, inscription ou Google. **Mode invité** sans compte. Leçons, favoris et préférences restent **locaux** pour l’instant (sync cloud à venir).
 
-Build a full-stack Real Estate application with React Native, featuring Google authentication, dynamic property listings, and user profiles. Designed with modern tools like Expo SDK 52, Appwrite, Tailwind CSS, and TypeScript for a seamless and scalable experience.
+---
 
-If you're getting started and need assistance or face any bugs, join our active Discord community with over **50k+** members. It's a place where people help each other out.
+## Onglets principaux
 
-<a href="https://discord.com/invite/n6EdbFJ" target="_blank"><img src="https://github.com/sujatagunale/EasyRead/assets/151519281/618f4872-1e10-42da-8213-1d69e486d02e" /></a>
+Six onglets dans la barre de navigation (`app/(root)/(tabs)/`) :
 
-## <a name="tech-stack">⚙️ Tech Stack</a>
+| Onglet | Route | Rôle |
+|--------|-------|------|
+| **Accueil** | `index` | Vue d’ensemble : prières, météo, outils, continuer |
+| **Mes prières** | `qibla` | Boussole Qibla + accès aux horaires |
+| **Bibliothèque** | `coran` | Hub Coran, hadiths, invocations, mémorisation |
+| **Apprendre** | `apprendre` | Aujourd’hui / Parcours, sourates récentes |
+| **Écoute** | `explore` | Récitateurs, sourates populaires, Juz |
+| **Profil** | `profile` | Réglages, favoris, notifications, mosquée |
 
-- **[Expo](https://expo.dev/)** is an open-source platform for building universal native apps (Android, iOS, web) using JavaScript/TypeScript and React Native. It features file-based routing via Expo Router, fast refresh, native modules for camera/maps/notifications, over-the-air updates (EAS), and streamlined app deployment.
+Écrans modaux ou stack courants (hors onglets) : mosquée, météo, rappels, leçons (`apprendre/lecon/[id]`), lecteur audio, écrans outils sous `app/(root)/`.
 
-- **[React Native](https://reactnative.dev/)** is a framework for building mobile UIs with React. It enables component‑based, cross-platform development with declarative UI, deep native API support, and is tightly integrated with Expo for navigation and native capabilities.
+---
 
-- **[Appwrite](https://jsm.dev/rn25-appwrite)** is an open-source backend-as-a-service platform offering secure authentication (email/password, OAuth, SMS, magic links), databases, file storage with compression/encryption, real-time messaging, serverless functions, and static site hosting via Appwrite Sites—all managed through a unified console and microservices architecture.
+## Outils
 
-- **[TypeScript](https://www.typescriptlang.org/)** is a statically-typed superset of JavaScript providing type annotations, interfaces, enums, generics, and enhanced tooling. It improves error detection, code quality, and scalability—ideal for robust, maintainable projects.
+Les outils sont déclarés dans `lib/tools/tools-registry.ts` et affichés sur l’accueil (`HomeToolsSection`) :
 
-- **[NativeWind](https://www.nativewind.dev/)** brings Tailwind CSS to React Native and Expo, allowing you to style mobile components using utility-first classes for fast, consistent, and responsive UI design.
+1. **Zakat al-Fitr** — estimateur par personne / pays indicatifs  
+2. **Zakat al-mal** — rappels sur la zakat de richesse  
+3. **Dhikr** — compteur de invocations  
+4. **Convertisseur de dates** — grégorien ↔ hijri  
+5. **Résumé des prières** — horaires du jour  
+6. **Objectif sadaqa** — suivi d’objectif de dons  
+7. **99 noms d’Allah** — liste pour méditation  
+8. **Qibla & prières** — raccourci vers l’onglet prières  
+9. **Héritage islamique** — guide **éducatif** uniquement (pas de calculateur juridique)
 
-- **[Tailwind CSS](https://tailwindcss.com/)** is a utility-first CSS framework enabling rapid UI design via low-level classes. In React Native/Expo, it’s commonly used with NativeWind to apply Tailwind-style utilities to mobile components.
+---
 
-## <a name="features">🔋 Features</a>
+## Stack technique
 
-👉 **Authentication with Google**: Secure and seamless user sign-ins using Google’s authentication service.
+| Couche | Technologies |
+|--------|----------------|
+| Framework | Expo SDK 54, React Native 0.81, React 19 |
+| Navigation | Expo Router 6 (file-based) |
+| Langage | TypeScript |
+| Styles | NativeWind 4 / Tailwind 3 + `StyleSheet` thématisé |
+| UI | Composants maison (`ScreenPageHeader`, `ListRow`, `LiquidTabBar`, etc.) |
+| Effets | `expo-blur`, `expo-glass-effect` (barre liquid glass sur iOS) |
+| Audio | `expo-av` + `QuranAudioContext` |
+| Localisation | `expo-location`, notifications `expo-notifications` |
+| Persistance | AsyncStorage (session Supabase + préférences) + fichiers locaux (avatar) |
+| Auth | Supabase (`lib/supabase/`) — `@supabase/supabase-js` |
+| Dates hijri | `hijri-converter` |
 
-👉 **Home Page**: Displays the latest and recommended properties with powerful search and filter functionality.
+---
 
-👉 **Explore Page**: Allows users to browse all types of properties with a clean and intuitive interface.
+## Prérequis
 
-👉 **Property Details Page**: Provides comprehensive information about individual properties, including images and key details.
+- **Node.js** 18+ (LTS recommandé)  
+- **npm** ou **yarn**  
+- Pour tester sur appareil : [Expo Go](https://expo.dev/go) ou un simulateur iOS / émulateur Android avec le dev client Expo  
 
-👉 **Profile Page**: Customizable user settings and profile management
+Permissions utiles en développement : **localisation** (horaires, météo, Qibla), **notifications** (rappels de prière).
 
-👉 **Centralized Data Fetching**: Custom-built solution inspired by TanStack’s useQuery for efficient API calls.
+---
 
-and many more, including code architecture and reusability 
-
-## <a name="quick-start">🤸 Quick Start</a>
-
-Follow these steps to set up the project locally on your machine.
-
-**Prerequisites**
-
-Make sure you have the following installed on your machine:
-
-- [Git](https://git-scm.com/)
-- [Node.js](https://nodejs.org/en)
-- [npm](https://www.npmjs.com/) (Node Package Manager)
-
-**Cloning the Repository**
+## Installation
 
 ```bash
-git clone https://github.com/adrianhajdin/react_native-restate.git
-cd react_native-restate
-```
-
-**Installation** 
-
-```bash
+git clone <url-du-repo>
+cd NourApp
 npm install
 ```
 
-**Set Up Environment Variables**
+Puis lancer :
 
-Create a new file named `.env.local` in the root of your project and add the following content:
-
-```env
-EXPO_PUBLIC_APPWRITE_ENDPOINT=https://cloud.appwrite.io/v1
-EXPO_PUBLIC_APPWRITE_PROJECT_ID=
-EXPO_PUBLIC_APPWRITE_DATABASE_ID=
-EXPO_PUBLIC_APPWRITE_GALLERIES_COLLECTION_ID=
-EXPO_PUBLIC_APPWRITE_REVIEWS_COLLECTION_ID=
-EXPO_PUBLIC_APPWRITE_AGENTS_COLLECTION_ID=
-EXPO_PUBLIC_APPWRITE_PROPERTIES_COLLECTION_ID=
-```
-
-Replace the values with your actual Appwrite credentials. You can obtain these credentials by signing up & creating a new project on the [**Appwrite Dashboard**](https://jsm.dev/rn25-appwrite).
-
-**Start the app**
-   
 ```bash
- npx expo start
+# Expo Go sur téléphone (QR code)
+npm run start:go
+
+# Serveur de dev classique
+npm run start
+
+# Tunnel (réseau restrictif)
+npm run start:tunnel
+
+# Plateforme ciblée
+npm run ios
+npm run android
+npm run web
 ```
 
-In the output, you'll find options to open the app in a
+Au premier lancement : **onboarding** → **connexion** (ou mode invité). Voir `lib/onboarding-gate.tsx` et `lib/global-provider.tsx`.
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+---
 
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
+## Variables d’environnement
 
-## <a name="snippets">🕸️ Snippets</a>
+Copier `.env.example` vers `.env.local` :
 
-<details>
-<summary><code>lib/data.ts</code></summary>
-
-```ts
-export const galleryImages = [
-  "https://images.unsplash.com/photo-1507089947368-19c1da9775ae?q=60&w=640&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
-  "https://unsplash.com/photos/comfort-room-with-white-bathtub-and-brown-wooden-cabinets-CMejBwGAdGk",
-  "https://images.unsplash.com/photo-1638799869566-b17fa794c4de?q=60&w=640&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
-  "https://images.unsplash.com/photo-1560185009-dddeb820c7b7?q=60&w=640&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
-  "https://images.unsplash.com/photo-1641910532059-ad684fd3049c?q=60&w=640&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
-  "https://images.unsplash.com/photo-1621293954908-907159247fc8?q=60&w=640&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
-  "https://images.unsplash.com/photo-1604328702728-d26d2062c20b?q=60&w=640&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
-  "https://images.unsplash.com/photo-1600435335786-d74d2bb6de37?q=60&w=640&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
-  "https://images.unsplash.com/photo-1560448204-603b3fc33ddc?q=60&w=640&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
-  "https://images.unsplash.com/photo-1635108198979-9806fdf275c6?q=60&w=640&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
-];
-
-export const agentImages = [
-  "https://images.unsplash.com/photo-1691335053879-02096d6ee2ca?q=60&w=640&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
-  "https://images.unsplash.com/photo-1544723495-432537d12f6c?q=60&w=640&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
-  "https://images.unsplash.com/photo-1492562080023-ab3db95bfbce?q=60&w=640&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
-  "https://images.unsplash.com/photo-1542507464418-09c375b86bbe?q=60&w=640&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
-  "https://images.unsplash.com/photo-1534308143481-c55f00be8bd7?q=60&w=640&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
-];
-
-export const reviewImages = [
-  "https://images.unsplash.com/photo-1517331671191-ddc2c6d3ebd1?q=60&w=640&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
-  "https://images.unsplash.com/photo-1474176857210-7287d38d27c6?q=60&w=640&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
-  "https://images.unsplash.com/photo-1511551203524-9a24350a5771?q=60&w=640&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
-  "https://images.unsplash.com/photo-1507591064344-4c6ce005b128?q=60&w=640&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
-  "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?q=60&w=640&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
-];
-
-export const propertiesImages = [
-  "https://images.unsplash.com/photo-1580587771525-78b9dba3b914?q=60&w=640&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
-  "https://images.unsplash.com/photo-1605146768851-eda79da39897?q=60&w=640&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
-  "https://images.unsplash.com/photo-1568605114967-8130f3a36994?q=60&w=640&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
-  "https://images.unsplash.com/photo-1564013799919-ab600027ffc6?q=60&w=640&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
-  "https://images.unsplash.com/photo-1561753757-d8880c5a3551?q=60&w=640&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
-  "https://images.unsplash.com/photo-1551241090-67de81d3541c?q=60&w=640&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
-  "https://images.unsplash.com/photo-1697299262049-e9b5fa1e9761?q=60&w=640&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
-  "https://images.unsplash.com/photo-1719299225324-301bad5c333c?q=60&w=640&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
-  "https://images.unsplash.com/photo-1582063289852-62e3ba2747f8?q=60&w=640&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
-  "https://images.unsplash.com/photo-1516095901529-0ef7be431a4f?q=60&w=640&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
-  "https://images.unsplash.com/photo-1600585153490-76fb20a32601?q=60&w=640&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
-  "https://images.unsplash.com/photo-1605276373954-0c4a0dac5b12?q=60&w=640&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
-  "https://images.unsplash.com/photo-1583608205776-bfd35f0d9f83?q=60&w=640&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
-  "https://images.unsplash.com/photo-1720432972486-2d53db5badf0?q=60&w=640&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
-];
+```bash
+cp .env.example .env.local
 ```
 
-</details>
+| Variable | Description |
+|----------|-------------|
+| `EXPO_PUBLIC_SUPABASE_URL` | URL du projet (Supabase → Settings → API) |
+| `EXPO_PUBLIC_SUPABASE_ANON_KEY` | Clé **anon** publique |
 
-<details>
-<summary><code>lib/seed.ts</code></summary>
+Sans ces variables, l’app affiche un message sur les écrans de connexion ; le **mode invité** reste utilisable.
 
-```ts
-import { ID } from "react-native-appwrite";
-import { databases, config } from "./appwrite";
-import {
-  agentImages,
-  galleryImages,
-  propertiesImages,
-  reviewImages,
-} from "./data";
+Les APIs Coran, hadiths et prières ne nécessitent pas de clé supplémentaire.
 
-const COLLECTIONS = {
-  AGENT: config.agentsCollectionId,
-  REVIEWS: config.reviewsCollectionId,
-  GALLERY: config.galleriesCollectionId,
-  PROPERTY: config.propertiesCollectionId,
-};
+**Google OAuth** : activer le fournisseur Google dans Supabase Auth et ajouter l’URL de redirection `nourapp://` (schéma dans `app.json`).
 
-const propertyTypes = [
-  "House",
-  "Townhomes",
-  "Condos",
-  "Duplexes",
-  "Studios",
-  "Villa",
-  "Apartments",
-  "Others",
-];
+---
 
-const facilities = [
-  "Laundry",
-  "Car Parking",
-  "Sports Center",
-  "Cutlery",
-  "Gym",
-  "Swimming pool",
-  "Wifi",
-  "Pet Center",
-];
+## Scripts npm
 
-function getRandomSubset<T>(
-  array: T[],
-  minItems: number,
-  maxItems: number
-): T[] {
-  if (minItems > maxItems) {
-    throw new Error("minItems cannot be greater than maxItems");
-  }
-  if (minItems < 0 || maxItems > array.length) {
-    throw new Error(
-      "minItems or maxItems are out of valid range for the array"
-    );
-  }
+| Commande | Action |
+|----------|--------|
+| `npm run start` | Démarre Expo |
+| `npm run start:go` | Expo avec ouverture Expo Go |
+| `npm run start:tunnel` | Expo en mode tunnel |
+| `npm run ios` / `android` / `web` | Lance sur la plateforme |
+| `npm run lint` | ESLint (Expo) |
+| `npm test` | Jest en mode watch |
+| `npx jest --watchAll=false` | Tests une fois (CI / vérif rapide) |
 
-  // Generate a random size for the subset within the range [minItems, maxItems]
-  const subsetSize =
-    Math.floor(Math.random() * (maxItems - minItems + 1)) + minItems;
+---
 
-  // Create a copy of the array to avoid modifying the original
-  const arrayCopy = [...array];
+## Tests
 
-  // Shuffle the array copy using Fisher-Yates algorithm
-  for (let i = arrayCopy.length - 1; i > 0; i--) {
-    const randomIndex = Math.floor(Math.random() * (i + 1));
-    [arrayCopy[i], arrayCopy[randomIndex]] = [
-      arrayCopy[randomIndex],
-      arrayCopy[i],
-    ];
-  }
+Tests unitaires Jest (`jest-expo`) :
 
-  // Return the first `subsetSize` elements of the shuffled array
-  return arrayCopy.slice(0, subsetSize);
-}
+- `__tests__/learn-progress.test.ts` — déverrouillage et complétion des leçons  
+- `__tests__/persist-last-listen.test.ts` — persistance de la dernière écoute  
 
-async function seed() {
-  try {
-    // Clear existing data from all collections
-    for (const key in COLLECTIONS) {
-      const collectionId = COLLECTIONS[key as keyof typeof COLLECTIONS];
-      const documents = await databases.listDocuments(
-        config.databaseId!,
-        collectionId!
-      );
-      for (const doc of documents.documents) {
-        await databases.deleteDocument(
-          config.databaseId!,
-          collectionId!,
-          doc.$id
-        );
-      }
-    }
-
-    console.log("Cleared all existing data.");
-
-    // Seed Agents
-    const agents = [];
-    for (let i = 1; i <= 5; i++) {
-      const agent = await databases.createDocument(
-        config.databaseId!,
-        COLLECTIONS.AGENT!,
-        ID.unique(),
-        {
-          name: `Agent ${i}`,
-          email: `agent${i}@example.com`,
-          avatar: agentImages[Math.floor(Math.random() * agentImages.length)],
-        }
-      );
-      agents.push(agent);
-    }
-    console.log(`Seeded ${agents.length} agents.`);
-
-    // Seed Reviews
-    const reviews = [];
-    for (let i = 1; i <= 20; i++) {
-      const review = await databases.createDocument(
-        config.databaseId!,
-        COLLECTIONS.REVIEWS!,
-        ID.unique(),
-        {
-          name: `Reviewer ${i}`,
-          avatar: reviewImages[Math.floor(Math.random() * reviewImages.length)],
-          review: `This is a review by Reviewer ${i}.`,
-          rating: Math.floor(Math.random() * 5) + 1, // Rating between 1 and 5
-        }
-      );
-      reviews.push(review);
-    }
-    console.log(`Seeded ${reviews.length} reviews.`);
-
-    // Seed Galleries
-    const galleries = [];
-    for (const image of galleryImages) {
-      const gallery = await databases.createDocument(
-        config.databaseId!,
-        COLLECTIONS.GALLERY!,
-        ID.unique(),
-        { image }
-      );
-      galleries.push(gallery);
-    }
-
-    console.log(`Seeded ${galleries.length} galleries.`);
-
-    // Seed Properties
-    for (let i = 1; i <= 20; i++) {
-      const assignedAgent = agents[Math.floor(Math.random() * agents.length)];
-
-      const assignedReviews = getRandomSubset(reviews, 5, 7); // 5 to 7 reviews
-      const assignedGalleries = getRandomSubset(galleries, 3, 8); // 3 to 8 galleries
-
-      const selectedFacilities = facilities
-        .sort(() => 0.5 - Math.random())
-        .slice(0, Math.floor(Math.random() * facilities.length) + 1);
-
-      const image =
-        propertiesImages.length - 1 >= i
-          ? propertiesImages[i]
-          : propertiesImages[
-              Math.floor(Math.random() * propertiesImages.length)
-            ];
-
-      const property = await databases.createDocument(
-        config.databaseId!,
-        COLLECTIONS.PROPERTY!,
-        ID.unique(),
-        {
-          name: `Property ${i}`,
-          type: propertyTypes[Math.floor(Math.random() * propertyTypes.length)],
-          description: `This is the description for Property ${i}.`,
-          address: `123 Property Street, City ${i}`,
-          geolocation: `192.168.1.${i}, 192.168.1.${i}`,
-          price: Math.floor(Math.random() * 9000) + 1000,
-          area: Math.floor(Math.random() * 3000) + 500,
-          bedrooms: Math.floor(Math.random() * 5) + 1,
-          bathrooms: Math.floor(Math.random() * 5) + 1,
-          rating: Math.floor(Math.random() * 5) + 1,
-          facilities: selectedFacilities,
-          image: image,
-          agent: assignedAgent.$id,
-          reviews: assignedReviews.map((review) => review.$id),
-          gallery: assignedGalleries.map((gallery) => gallery.$id),
-        }
-      );
-
-      console.log(`Seeded property: ${property.name}`);
-    }
-
-    console.log("Data seeding completed.");
-  } catch (error) {
-    console.error("Error seeding data:", error);
-  }
-}
-
-export default seed;
+```bash
+npx jest --watchAll=false
 ```
 
-</details>
+---
 
-<details>
-<summary><code>lib/useAppwrite.ts</code></summary>
+## Structure du projet
 
-```ts
-import { Alert } from "react-native";
-import { useEffect, useState, useCallback } from "react";
+```
+app/                          # Routes Expo Router
+  (root)/(tabs)/              # Onglets : accueil, qibla, coran, apprendre, explore, profile
+  (root)/                     # Outils, mosquée, météo, leçons, offline, etc.
+  onboarding.tsx, sign-in.tsx, sign-up.tsx  # Premier lancement & auth Supabase
 
-interface UseAppwriteOptions<T, P extends Record<string, string | number>> {
-  fn: (params: P) => Promise<T>;
-  params?: P;
-  skip?: boolean;
-}
+components/                   # UI réutilisable
+  home/                       # Accueil (carousel, outils, Ramadan, continuer)
+  quran/, hadith/, dua/       # Listes et skeletons
+  ScreenPageHeader, ListRow, LiquidTabBar, …
 
-interface UseAppwriteReturn<T, P> {
-  data: T | null;
-  loading: boolean;
-  error: string | null;
-  refetch: (newParams: P) => Promise<void>;
-}
+lib/                          # Logique métier
+  quran/                      # API AlQuran Cloud, audio, favoris, cache
+  hadith/                     # API hadith, favoris
+  dua/                        # Invocations
+  learn/                      # Parcours, leçons, quiz, progression
+  favorites/                  # Favoris unifiés (dua + hadith + coran)
+  tools/                      # Registre des outils
+  i18n/                       # Traductions FR / EN / AR
+  app-theme.ts                # Thème clair (#F0EEE6) / sombre (#333333)
+  supabase/                   # Client + auth Supabase
+  local-profile.ts            # Profil mode invité
+  usePrayerTimes.ts           # Aladhan + méthode MWL/UOIF
+  notifications/              # Rappels de prière
+  seasonal/ramadan.ts         # Détection mois Ramadan
 
-export const useAppwrite = <T, P extends Record<string, string | number>>({
-  fn,
-  params = {} as P,
-  skip = false,
-}: UseAppwriteOptions<T, P>): UseAppwriteReturn<T, P> => {
-  const [data, setData] = useState<T | null>(null);
-  const [loading, setLoading] = useState(!skip);
-  const [error, setError] = useState<string | null>(null);
-
-  const fetchData = useCallback(
-    async (fetchParams: P) => {
-      setLoading(true);
-      setError(null);
-
-      try {
-        const result = await fn(fetchParams);
-        setData(result);
-      } catch (err: unknown) {
-        const errorMessage =
-          err instanceof Error ? err.message : "An unknown error occurred";
-        setError(errorMessage);
-        Alert.alert("Error", errorMessage);
-      } finally {
-        setLoading(false);
-      }
-    },
-    [fn]
-  );
-
-  useEffect(() => {
-    if (!skip) {
-      fetchData(params);
-    }
-  }, []);
-
-  const refetch = async (newParams: P) => await fetchData(newParams);
-
-  return { data, loading, error, refetch };
-};
+constants/                    # Layout, assets météo, etc.
+assets/                       # Images, polices (Plus Jakarta Sans)
+docs/                         # PRODUCT.md, checklist captures UI
+__tests__/                    # Tests Jest
+ACTIONS.md                    # Plan d’amélioration et statut des tâches
 ```
 
-</details>
+Alias TypeScript `@/` → racine du projet (voir `tsconfig.json`).
 
-## <a name="links">🔗 Assets</a>
+---
 
-Assets and snippets used in the project can be found in the **[video kit](https://jsm.dev/rn25-restate)**.
+## Données & APIs externes
 
-Appwrite Database Setup can be found [here](https://jsmastery.notion.site/Database-Setup-16260f3cbaf3807f8fb6cbed8d1e84fd)
+| Service | Usage dans l’app |
+|---------|------------------|
+| [Aladhan](https://aladhan.com/prayer-times-api) | Horaires de prière (méthode configurable) |
+| [AlQuran Cloud](https://alquran.cloud/api) | Texte du Coran, traductions, audio des récitations |
+| API hadith / duʿā | Chargement via modules `lib/hadith`, `lib/dua` |
+| Météo | Coordonnées GPS → prévisions (`lib/useWeather.ts`) |
+| Qibla | Calcul de l’azimut (`lib/useQiblaBearing.ts`) |
 
-<a href="https://jsm.dev/rn25-restate" target="_blank">
-  <img src="assets/readme/videokit.webp" alt="Video Kit Banner">
-</a>
+Le mode **hors-ligne** des récitations est prévu (`offline-recitations.tsx`, préférence AsyncStorage) ; le téléchargement effectif des fichiers audio n’est pas encore implémenté.
 
+---
 
-## <a name="more">🚀 More</a>
+## Compte utilisateur
 
-**Advance your skills with Next.js Pro Course**
+- **Supabase Auth** : `lib/supabase/auth.ts` (connexion, inscription, Google, déconnexion, mot de passe).
+- **Invité** : pas de session ; photo de profil locale.
+- Favoris / progression : encore locaux. Voir [docs/PRODUCT.md](./docs/PRODUCT.md).
 
-Enjoyed creating this project? Dive deeper into our PRO courses for a richer learning adventure. They're packed with
+---
 
-detailed explanations, cool features, and exercises to boost your skills. Give it a go!
+## Documentation interne
 
-<a href="https://jsm.dev/rn25-jsm" target="_blank">
-   <img src="assets/readme/jsmpro.webp" alt="Project Banner">
-</a>
+| Fichier | Contenu |
+|---------|---------|
+| [ACTIONS.md](./ACTIONS.md) | Roadmap et tâches (`[OK]` / `[ ]`) |
+| [docs/PRODUCT.md](./docs/PRODUCT.md) | Choix produit (auth, sync, héritage, Ramadan…) |
+| [docs/ui-screenshots.md](./docs/ui-screenshots.md) | Checklist captures d’écran pour la doc visuelle |
+
+---
+
+## État du projet
+
+Version **1.0.0** (`package.json` / `app.json`). Fonctionnalités principales livrées ; quelques écrans secondaires de la bibliothèque Coran utilisent encore des couleurs en dur (voir [ACTIONS.md](./ACTIONS.md)).
+
+Améliorations possibles : cache audio hors-ligne, sync cloud optionnelle, migration complète des listes Coran vers `ListRow`, mise à jour de `docs/PRODUCT.md` pour refléter les livrables récents (Piliers, favoris unifiés, Ramadan).
+
+---
+
+Développé pour un usage personnel et communautaire. Pour toute contribution, commencer par lire `ACTIONS.md` et lancer `npm run lint` ainsi que `npx jest --watchAll=false` avant une pull request.

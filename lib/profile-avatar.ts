@@ -1,5 +1,5 @@
 /**
- * Photo de profil stockée localement (sans Appwrite, sans AsyncStorage).
+ * Photo de profil stockée localement sur le disque (prioritaire sur l’avatar Supabase).
  * L'image est copiée dans le répertoire documents de l'app (chemin fixe).
  */
 

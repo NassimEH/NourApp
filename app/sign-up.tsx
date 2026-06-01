@@ -2,70 +2,45 @@ import { useState } from "react";
 import {
   ActivityIndicator,
   Alert,
-  KeyboardAvoidingView,
-  Platform,
   Pressable,
   ScrollView,
   StyleSheet,
   Text,
+  TouchableOpacity,
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Redirect, router } from "expo-router";
 
-import { AppIcon } from "@/components/AppIcon";
-import { SignInDecorOrbs } from "@/components/sign-in/SignInDecorOrbs";
-import { SignUpAuthPanel } from "@/components/sign-in/SignUpAuthPanel";
+import { AuthTextField } from "@/components/auth/AuthTextField";
+import { ScreenBackground } from "@/components/ScreenBackground";
 import { SCREEN_EDGE_PADDING } from "@/constants/screen-layout";
-import type { AuthErrorKey } from "@/lib/auth-errors";
+import { resolveAuthErrorKey } from "@/lib/auth-errors";
 import {
   isValidEmail,
   isValidPassword,
-  MIN_PASSWORD_LENGTH,
+  passwordsMatch,
 } from "@/lib/auth-validation";
-import { registerWithEmail } from "@/lib/appwrite";
 import { useAppTheme } from "@/lib/app-theme";
 import { useGlobalContext } from "@/lib/global-provider";
 import { useTranslation } from "@/lib/i18n";
-import { useOnboardingGate } from "@/lib/onboarding-gate";
+import { isSupabaseConfigured } from "@/lib/supabase/client";
+import { registerWithEmail } from "@/lib/supabase/auth";
 
 export default function SignUpScreen() {
   const colors = useAppTheme();
-  const { t, rtlTextStyle, rtlViewStyle } = useTranslation();
+  const { t } = useTranslation();
   const { refetch, loading, isLogged } = useGlobalContext();
-  const { hydrated, isComplete } = useOnboardingGate();
-  const [submitting, setSubmitting] = useState(false);
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirm, setConfirm] = useState("");
+  const [busy, setBusy] = useState(false);
 
   if (!loading && isLogged) return <Redirect href="/" />;
 
-  if (!hydrated) {
-    return (
-      <SafeAreaView style={styles.safe}>
-        <ActivityIndicator size="large" color={colors.accent} style={styles.loader} />
-      </SafeAreaView>
-    );
-  }
-
-  if (!isComplete) return <Redirect href="/onboarding" />;
-
-  const showAuthError = (title: string, errorKey: AuthErrorKey) => {
-    Alert.alert(title, t(`auth.errors.${errorKey}`));
-  };
-
-  const handleSignUp = async (data: {
-    name: string;
-    email: string;
-    password: string;
-    confirmPassword: string;
-  }) => {
-    if (submitting) return;
-
-    const name = data.name.trim();
-    const email = data.email.trim();
-    const password = data.password;
-    const confirm = data.confirmPassword;
-
-    if (!name) {
+  const handleSignUp = async () => {
+    if (!name.trim()) {
       Alert.alert(t("auth.validationTitle"), t("auth.validationName"));
       return;
     }
@@ -76,138 +51,164 @@ export default function SignUpScreen() {
     if (!isValidPassword(password)) {
       Alert.alert(
         t("auth.validationTitle"),
-        t("auth.validationPassword", { min: MIN_PASSWORD_LENGTH })
+        t("auth.validationPassword", { min: 8 })
       );
       return;
     }
-    if (password !== confirm) {
+    if (!passwordsMatch(password, confirm)) {
       Alert.alert(t("auth.validationTitle"), t("auth.validationPasswordMatch"));
       return;
     }
 
-    setSubmitting(true);
+    setBusy(true);
     try {
-      const result = await registerWithEmail({ name, email, password });
-      if (result.ok) {
-        refetch();
-        router.replace("/");
-      } else {
-        showAuthError(t("auth.signUpErrorTitle"), result.errorKey);
-      }
+      await registerWithEmail(email, password, name);
+      await refetch();
+      router.replace("/(root)/(tabs)" as const);
+    } catch (e) {
+      const key = resolveAuthErrorKey(e);
+      Alert.alert(
+        t("auth.signUpErrorTitle"),
+        t(`auth.errors.${key}` as "auth.errors.unknown")
+      );
     } finally {
-      setSubmitting(false);
+      setBusy(false);
     }
   };
 
   return (
-    <SafeAreaView style={styles.safe} edges={["top", "left", "right", "bottom"]}>
-      <SignInDecorOrbs accent={colors.accent} />
-
-      <KeyboardAvoidingView
-        style={styles.flex}
-        behavior={Platform.OS === "ios" ? "padding" : undefined}
-      >
+    <ScreenBackground style={styles.background}>
+      <SafeAreaView style={styles.safeArea} edges={["top", "left", "right"]}>
         <ScrollView
           contentContainerStyle={styles.scroll}
-          showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
         >
-          <View style={[styles.topBar, rtlViewStyle]}>
-            <Pressable
-              onPress={() => router.back()}
-              style={({ pressed }) => [
-                styles.backBtn,
-                {
-                  backgroundColor: colors.card,
-                  borderColor: colors.border,
-                  opacity: pressed ? 0.85 : 1,
-                },
-              ]}
-              hitSlop={8}
-            >
-              <AppIcon name="chevron-left" size={22} color={colors.text} />
+          <Text style={[styles.title, { color: colors.text }]}>
+            {t("auth.signUpPageTitle")}
+          </Text>
+          <Text style={[styles.subtitle, { color: colors.textMuted }]}>
+            {t("auth.signUpPageSubtitle")}
+          </Text>
+          <Text style={[styles.hint, { color: colors.textMuted }]}>
+            {t("auth.signUpHint")}
+          </Text>
+
+          {!isSupabaseConfigured ? (
+            <Text style={[styles.configWarning, { color: colors.danger }]}>
+              {t("auth.errors.notConfigured")}
+            </Text>
+          ) : null}
+
+          <AuthTextField
+            label={t("auth.name")}
+            icon="user"
+            value={name}
+            onChangeText={setName}
+            placeholder={t("auth.namePlaceholder")}
+            autoComplete="name"
+            editable={!busy}
+          />
+          <AuthTextField
+            label={t("auth.email")}
+            icon="mail"
+            value={email}
+            onChangeText={setEmail}
+            placeholder={t("auth.emailPlaceholder")}
+            keyboardType="email-address"
+            autoComplete="email"
+            editable={!busy}
+          />
+          <AuthTextField
+            label={t("auth.password")}
+            icon="lock"
+            value={password}
+            onChangeText={setPassword}
+            secureTextEntry
+            editable={!busy}
+          />
+          <AuthTextField
+            label={t("auth.confirmPassword")}
+            icon="lock"
+            value={confirm}
+            onChangeText={setConfirm}
+            secureTextEntry
+            editable={!busy}
+          />
+
+          <TouchableOpacity
+            style={[styles.primaryBtn, { backgroundColor: colors.accent }]}
+            onPress={handleSignUp}
+            disabled={busy}
+            activeOpacity={0.85}
+          >
+            {busy ? (
+              <ActivityIndicator color="#fff" />
+            ) : (
+              <Text style={styles.primaryBtnText}>{t("auth.signUpSubmit")}</Text>
+            )}
+          </TouchableOpacity>
+
+          <View style={styles.footerRow}>
+            <Text style={{ color: colors.textMuted }}>{t("auth.hasAccount")} </Text>
+            <Pressable onPress={() => router.replace("/sign-in")} disabled={busy}>
+              <Text style={{ color: colors.accent, fontFamily: "PlusJakartaSans-SemiBold" }}>
+                {t("auth.signInLink")}
+              </Text>
             </Pressable>
           </View>
-
-          <View style={styles.header}>
-            <Text style={[styles.pageTitle, rtlTextStyle, { color: colors.text }]}>
-              {t("auth.signUpPageTitle")}
-            </Text>
-            <Text
-              style={[styles.pageSubtitle, rtlTextStyle, { color: colors.textMuted }]}
-            >
-              {t("auth.signUpPageSubtitle")}
-            </Text>
-          </View>
-
-          <SignUpAuthPanel
-            panelTitle={t("auth.signUpPanelTitle")}
-            hint={t("auth.signUpHint")}
-            nameLabel={t("auth.name")}
-            namePlaceholder={t("auth.namePlaceholder")}
-            emailLabel={t("auth.email")}
-            emailPlaceholder={t("auth.emailPlaceholder")}
-            passwordLabel={t("auth.password")}
-            confirmPasswordLabel={t("auth.confirmPassword")}
-            submitLabel={t("auth.signUpSubmit")}
-            hasAccountLabel={t("auth.hasAccount")}
-            signInLinkLabel={t("auth.signInLink")}
-            onSubmit={(data) => void handleSignUp(data)}
-            loading={submitting}
-            titleStyle={rtlTextStyle}
-            hintStyle={rtlTextStyle}
-            textStyle={rtlTextStyle}
-          />
         </ScrollView>
-      </KeyboardAvoidingView>
-    </SafeAreaView>
+      </SafeAreaView>
+    </ScreenBackground>
   );
 }
 
 const styles = StyleSheet.create({
-  safe: {
-    flex: 1,
-    backgroundColor: "transparent",
-  },
-  flex: { flex: 1 },
-  loader: {
-    flex: 1,
-    alignSelf: "center",
-  },
+  background: { flex: 1 },
+  safeArea: { flex: 1, backgroundColor: "transparent" },
   scroll: {
-    flexGrow: 1,
     paddingHorizontal: SCREEN_EDGE_PADDING,
-    paddingBottom: 36,
+    paddingTop: 32,
+    paddingBottom: 48,
   },
-  topBar: {
-    paddingTop: 8,
+  title: {
+    fontSize: 26,
+    fontFamily: "PlusJakartaSans-Bold",
     marginBottom: 8,
   },
-  backBtn: {
-    width: 44,
-    height: 44,
-    borderRadius: 14,
-    borderWidth: 1,
-    alignItems: "center",
-    justifyContent: "center",
-    shadowColor: "#191D31",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.08,
-    shadowRadius: 8,
-    elevation: 3,
-  },
-  header: {
-    marginBottom: 20,
-  },
-  pageTitle: {
-    fontSize: 32,
-    fontFamily: "PlusJakartaSans-ExtraBold",
-    letterSpacing: -0.5,
-    marginBottom: 8,
-  },
-  pageSubtitle: {
+  subtitle: {
     fontSize: 15,
     fontFamily: "PlusJakartaSans-Regular",
+    marginBottom: 12,
+  },
+  hint: {
+    fontSize: 14,
+    fontFamily: "PlusJakartaSans-Regular",
     lineHeight: 22,
+    marginBottom: 24,
+  },
+  configWarning: {
+    fontSize: 13,
+    fontFamily: "PlusJakartaSans-Medium",
+    marginBottom: 16,
+    lineHeight: 20,
+  },
+  primaryBtn: {
+    borderRadius: 14,
+    minHeight: 52,
+    alignItems: "center",
+    justifyContent: "center",
+    marginTop: 8,
+  },
+  primaryBtnText: {
+    color: "#fff",
+    fontSize: 16,
+    fontFamily: "PlusJakartaSans-SemiBold",
+  },
+  footerRow: {
+    flexDirection: "row",
+    justifyContent: "center",
+    marginTop: 28,
+    flexWrap: "wrap",
   },
 });

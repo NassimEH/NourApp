@@ -24,10 +24,10 @@ import {
   getNextPrayerTimestamp,
   formatCountdownHM,
 } from "@/lib/prayerUtils";
+import { useAppTheme } from "@/lib/app-theme";
 
 const homeBackground = require("@/assets/images/home-background.png");
 const mosqueImage = require("@/assets/images/mosquee.png");
-const ICON_COLOR = "#191D31";
 const { width: screenWidth } = Dimensions.get("window");
 const H_PADDING = 24;
 
@@ -59,6 +59,7 @@ function useTodayDates() {
 }
 
 export default function MosqueeScreen() {
+  const colors = useAppTheme();
   const { gregorian, hijri } = useTodayDates();
   const { timings: prayerTimes, loading: prayerLoading, cityName: prayerCity, coords: prayerCoords } = usePrayerTimes();
   const { toggle: togglePrayerChecked, isChecked: isPrayerChecked } = usePrayersChecked();
@@ -86,9 +87,9 @@ export default function MosqueeScreen() {
     <ImageBackground source={homeBackground} style={styles.background} resizeMode="cover">
       <SafeAreaView style={styles.safeArea} edges={["top"]}>
         <View style={styles.header}>
-          <Text style={styles.headerTitle}>Ma mosquée</Text>
+          <Text style={[styles.headerTitle, { color: colors.text }]}>Ma mosquée</Text>
           <TouchableOpacity onPress={() => router.back()} style={styles.backBtn} activeOpacity={0.7}>
-            <Feather name="chevron-left" size={28} color={ICON_COLOR} />
+            <Feather name="chevron-left" size={28} color={colors.icon} />
           </TouchableOpacity>
         </View>
 
@@ -103,11 +104,13 @@ export default function MosqueeScreen() {
               style={styles.mosqueImageLarge}
               resizeMode="contain"
             />
-            <Text style={styles.mosqueName}>Mosquée de Crosne</Text>
+            <Text style={[styles.mosqueName, { color: colors.text }]}>
+              Mosquée de Crosne
+            </Text>
           </View>
 
           <View style={styles.prayerSection}>
-            <Text style={styles.sectionLabel}>
+            <Text style={[styles.sectionLabel, { color: colors.text }]}>
               Prières{prayerCity ? ` — ${prayerCity}` : ""}
             </Text>
             <View style={styles.prayerCard}>
@@ -153,7 +156,12 @@ export default function MosqueeScreen() {
                       >
                         <View style={styles.prayerRowLeft}>
                           <Text
-                            style={[styles.prayerRowLabel, checked && styles.prayerLabelDone]}
+                            style={[
+                              styles.prayerRowLabel,
+                              { color: colors.text },
+                              checked && styles.prayerLabelDone,
+                              checked && { color: colors.textMuted },
+                            ]}
                             numberOfLines={1}
                           >
                             {getPrayerLabel(prayerKey)}
@@ -179,7 +187,7 @@ export default function MosqueeScreen() {
                           <Text style={styles.prayerNextLabel}>PROCHAINE PRIÈRE</Text>
                           <View style={styles.prayerNextWidgetRow}>
                             <Feather name="sunset" size={14} color="rgba(61, 107, 71, 0.9)" />
-                            <Text style={styles.prayerNextText}>
+                            <Text style={[styles.prayerNextText, { color: colors.text }]}>
                               {nextPrayer.label}{nextPrayerTimeStr ? ` à ${nextPrayerTimeStr}` : ""}
                             </Text>
                           </View>
@@ -218,7 +226,6 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 22,
     fontFamily: "PlusJakartaSans-Bold",
-    color: ICON_COLOR,
   },
   backBtn: { paddingVertical: 8, paddingLeft: 8 },
   scroll: { flex: 1 },
@@ -232,14 +239,12 @@ const styles = StyleSheet.create({
   mosqueName: {
     fontSize: 18,
     fontFamily: "PlusJakartaSans-Bold",
-    color: ICON_COLOR,
     marginTop: 12,
   },
   prayerSection: { marginBottom: 24 },
   sectionLabel: {
     fontSize: 20,
     fontFamily: "PlusJakartaSans-SemiBold",
-    color: "#191D31",
     marginBottom: 12,
   },
   sectionDivider: {
@@ -314,7 +319,6 @@ const styles = StyleSheet.create({
   prayerRowLabel: {
     fontSize: 16,
     fontFamily: "PlusJakartaSans-Medium",
-    color: "#191D31",
   },
   prayerLabelDone: { textDecorationLine: "line-through", color: "#5b5d5e" },
   prayerRowTime: { fontSize: 14, fontFamily: "PlusJakartaSans-Regular", color: "#5b5d5e" },
@@ -358,7 +362,6 @@ const styles = StyleSheet.create({
   prayerNextText: {
     fontSize: 14,
     fontFamily: "PlusJakartaSans-SemiBold",
-    color: "#191D31",
     marginLeft: 6,
   },
   prayerNextCountdown: {

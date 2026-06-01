@@ -16,6 +16,7 @@ import { Audio } from "expo-av";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { getSuraAudioUrl, getAyahAudioUrl } from "./api";
 import { persistLastListen } from "./persistLastListen";
+import { getLastListen } from "./storage";
 import { DEFAULT_AUDIO_RECITER, AVAILABLE_RECITERS, type Reciter } from "./types";
 
 export type PlaybackMode = "sura" | "ayah";
@@ -62,7 +63,7 @@ async function setAudioMode() {
   try {
     await Audio.setAudioModeAsync({
       playsInSilentModeIOS: true,
-      staysActiveInBackground: false,
+      staysActiveInBackground: true,
       shouldDuckAndroid: true,
       playThroughEarpieceAndroid: false,
     });
@@ -84,23 +85,13 @@ export function QuranAudioProvider({ children }: { children: React.ReactNode }) 
   }, [state.currentSura, state.mode]);
 
   useEffect(() => {
-    // #region agent log
-    fetch('http://127.0.0.1:7475/ingest/33850d28-f7a1-46b3-b658-a07cfbabfea4',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'2f0651'},body:JSON.stringify({sessionId:'2f0651',location:'QuranAudioContext.tsx:loadReciter',message:'Attempting to load reciter from storage',data:{},timestamp:Date.now(),hypothesisId:'B1'})}).catch(()=>{});
-    // #endregion
     AsyncStorage.getItem(RECITER_STORAGE_KEY)
       .then((savedReciter) => {
-        // #region agent log
-        fetch('http://127.0.0.1:7475/ingest/33850d28-f7a1-46b3-b658-a07cfbabfea4',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'2f0651'},body:JSON.stringify({sessionId:'2f0651',location:'QuranAudioContext.tsx:loadReciterSuccess',message:'Loaded reciter from storage',data:{savedReciter},timestamp:Date.now(),hypothesisId:'B1'})}).catch(()=>{});
-        // #endregion
         if (savedReciter && AVAILABLE_RECITERS.some((r) => r.id === savedReciter)) {
           setState((s) => ({ ...s, currentReciter: savedReciter }));
         }
       })
-      .catch((err) => {
-        // #region agent log
-        fetch('http://127.0.0.1:7475/ingest/33850d28-f7a1-46b3-b658-a07cfbabfea4',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'2f0651'},body:JSON.stringify({sessionId:'2f0651',location:'QuranAudioContext.tsx:loadReciterError',message:'Error loading reciter',data:{error:err?.message},timestamp:Date.now(),hypothesisId:'B1'})}).catch(()=>{});
-        // #endregion
-      });
+      .catch(() => {});
   }, []);
 
   const unload = useCallback(async () => {
@@ -229,17 +220,10 @@ export function QuranAudioProvider({ children }: { children: React.ReactNode }) 
 
   const setReciter = useCallback(
     async (reciterId: string) => {
-      // #region agent log
-      fetch('http://127.0.0.1:7475/ingest/33850d28-f7a1-46b3-b658-a07cfbabfea4',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'2f0651'},body:JSON.stringify({sessionId:'2f0651',location:'QuranAudioContext.tsx:setReciter',message:'setReciter called',data:{reciterId},timestamp:Date.now(),hypothesisId:'B2'})}).catch(()=>{});
-      // #endregion
       if (!AVAILABLE_RECITERS.some((r) => r.id === reciterId)) return;
       try {
         await AsyncStorage.setItem(RECITER_STORAGE_KEY, reciterId);
-      } catch (err) {
-        // #region agent log
-        fetch('http://127.0.0.1:7475/ingest/33850d28-f7a1-46b3-b658-a07cfbabfea4',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'2f0651'},body:JSON.stringify({sessionId:'2f0651',location:'QuranAudioContext.tsx:setReciterStorageError',message:'AsyncStorage.setItem failed',data:{error:err?.message},timestamp:Date.now(),hypothesisId:'B2'})}).catch(()=>{});
-        // #endregion
-      }
+      } catch {}
       const currentSura = state.currentSura;
       const currentMode = state.mode;
       setState((s) => ({ ...s, currentReciter: reciterId }));
@@ -267,22 +251,33 @@ export function QuranAudioProvider({ children }: { children: React.ReactNode }) 
       }));
       let playRequested = false;
       try {
+        const lastListen = await getLastListen();
+        const resumeProgress =
+          lastListen?.suraNumber === suraNumber && lastListen.progress > 0.02
+            ? lastListen.progress
+            : 0;
+
         const url = getSuraAudioUrl(suraNumber, state.currentReciter);
         const { sound } = await Audio.Sound.createAsync(
           { uri: url },
           { shouldPlay: false }
         );
         soundRef.current = sound;
-        if (durationRef.current === 0) {
-          const status = await sound.getStatusAsync();
-          if (status.isLoaded && status.durationMillis)
-            durationRef.current = status.durationMillis;
+        const status = await sound.getStatusAsync();
+        if (status.isLoaded && status.durationMillis) {
+          durationRef.current = status.durationMillis;
+          if (resumeProgress > 0) {
+            const seekMs = Math.floor(resumeProgress * status.durationMillis);
+            await sound.setPositionAsync(seekMs);
+            positionRef.current = seekMs;
+          }
         }
         setState((s) => ({
           ...s,
           isLoading: false,
           isPlaying: false,
           durationMs: durationRef.current,
+          progress: resumeProgress,
         }));
         sound.setOnPlaybackStatusUpdate((st) => {
           if (!st.isLoaded) return;
@@ -324,8 +319,7 @@ export function QuranAudioProvider({ children }: { children: React.ReactNode }) 
             };
           });
         }, 500);
-        persistLastListen(suraNumber, 0, true);
-        const status = await sound.getStatusAsync();
+        persistLastListen(suraNumber, resumeProgress, true);
         if (status.isLoaded && !playRequested) {
           playRequested = true;
           await sound.playAsync();

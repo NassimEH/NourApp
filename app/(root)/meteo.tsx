@@ -18,12 +18,13 @@ import { ScreenBackground } from "@/components/ScreenBackground";
 import { SCREEN_EDGE_PADDING } from "@/constants/screen-layout";
 import { ScreenPageHeader } from "@/components/ScreenPageHeader";
 import { useTranslation } from "@/lib/i18n";
+import { useAppTheme } from "@/lib/app-theme";
 
-const ICON_COLOR = "#191D31";
 const H_PADDING = SCREEN_EDGE_PADDING;
 
 export default function MeteoScreen() {
   const { t } = useTranslation();
+  const colors = useAppTheme();
   const { coords: prayerCoords, refetch: refetchLocation } = usePrayerTimes();
   const { data: weatherData, loading: weatherLoading, error: weatherError } = useWeather(
     prayerCoords?.latitude,
@@ -46,7 +47,7 @@ export default function MeteoScreen() {
         >
           {!prayerCoords && (
             <View style={styles.weatherEmpty}>
-              <Text style={styles.errorText}>Active la localisation pour afficher la mÈtÈo</Text>
+              <Text style={styles.errorText}>Active la localisation pour afficher la mùtùo</Text>
               <TouchableOpacity style={styles.locationButton} onPress={refetchLocation} activeOpacity={0.7}>
                 <AppIcon name="map-pin" size={18} color="#fff" />
                 <Text style={styles.locationButtonText}>Autoriser la localisation</Text>
@@ -54,14 +55,18 @@ export default function MeteoScreen() {
             </View>
           )}
           {prayerCoords && weatherLoading && (
-            <ActivityIndicator size="large" color="#3d6b47" style={{ marginVertical: 40 }} />
+            <ActivityIndicator
+              size="large"
+              color={colors.accent}
+              style={{ marginVertical: 40 }}
+            />
           )}
           {prayerCoords && weatherError && (
             <View style={styles.weatherEmpty}>
               <Text style={styles.errorText}>{weatherError}</Text>
               <TouchableOpacity style={styles.locationButton} onPress={refetchLocation} activeOpacity={0.7}>
                 <AppIcon name="refresh-cw" size={18} color="#fff" />
-                <Text style={styles.locationButtonText}>RÈessayer</Text>
+                <Text style={styles.locationButtonText}>Rùessayer</Text>
               </TouchableOpacity>
             </View>
           )}
@@ -75,20 +80,24 @@ export default function MeteoScreen() {
                 />
               </View>
               <View style={styles.weatherImageCaption}>
-                <Text style={styles.weatherCityLabel}>Ma ville</Text>
-                <Text style={styles.weatherConditionHero}>{weatherData.conditionLabel}</Text>
+                <Text style={[styles.weatherCityLabel, { color: colors.textMuted }]}>
+                  Ma ville
+                </Text>
+                <Text style={[styles.weatherConditionHero, { color: colors.text }]}>
+                  {weatherData.conditionLabel}
+                </Text>
               </View>
               <View style={styles.weatherDetails}>
                 <View style={styles.weatherMainRow}>
-                  <Text style={styles.weatherTempLarge}>{Math.round(weatherData.temperature)}∞</Text>
+                  <Text style={[styles.weatherTempLarge, { color: colors.text }]}>{Math.round(weatherData.temperature)}ù</Text>
                   <View style={styles.weatherMeta}>
                     <View style={styles.weatherDetailRow}>
                       <AppIcon name="droplet" size={16} color="#5b5d5e" />
-                      <Text style={styles.weatherDetailText}>{weatherData.humidity} % humiditÈ</Text>
+                      <Text style={styles.weatherDetailText}>{weatherData.humidity} % humiditù</Text>
                     </View>
                     <View style={styles.weatherDetailRow}>
                       <AppIcon name="thermometer" size={16} color="#5b5d5e" />
-                      <Text style={styles.weatherDetailText}>Ressenti {Math.round(weatherData.apparentTemperature)}∞</Text>
+                      <Text style={styles.weatherDetailText}>Ressenti {Math.round(weatherData.apparentTemperature)}ù</Text>
                     </View>
                     <View style={styles.weatherDetailRow}>
                       <AppIcon name="wind" size={16} color="#5b5d5e" />
@@ -105,9 +114,13 @@ export default function MeteoScreen() {
                 </View>
               </View>
               <View style={styles.dou3aBlock}>
-                <Text style={styles.dou3aLabel}>Invocation</Text>
-                <Text style={styles.dou3aText}>{WEATHER_DOU3A[weatherData.imageKey].dou3a}</Text>
-                <Text style={styles.dou3aReason}>{WEATHER_DOU3A[weatherData.imageKey].reason}</Text>
+                <Text style={[styles.dou3aLabel, { color: colors.accent }]}>Invocation</Text>
+                <Text style={[styles.dou3aText, { color: colors.text }]}>
+                  {WEATHER_DOU3A[weatherData.imageKey].dou3a}
+                </Text>
+                <Text style={[styles.dou3aReason, { color: colors.textMuted }]}>
+                  {WEATHER_DOU3A[weatherData.imageKey].reason}
+                </Text>
               </View>
             </>
           )}
@@ -130,7 +143,6 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 22,
     fontFamily: "PlusJakartaSans-Bold",
-    color: ICON_COLOR,
   },
   backBtn: { paddingVertical: 8, paddingLeft: 8 },
   scroll: { flex: 1 },
@@ -191,7 +203,6 @@ const styles = StyleSheet.create({
   weatherTempLarge: {
     fontSize: 48,
     fontFamily: "PlusJakartaSans-Bold",
-    color: ICON_COLOR,
   },
   weatherMeta: {
     flex: 1,
@@ -226,7 +237,6 @@ const styles = StyleSheet.create({
   dou3aText: {
     fontSize: 15,
     fontFamily: "PlusJakartaSans-Medium",
-    color: ICON_COLOR,
     lineHeight: 24,
   },
   dou3aReason: {

@@ -1,5 +1,21 @@
 import type { ViewStyle } from "react-native";
 
+import {
+  CARD_RADIUS,
+  LIST_GAP,
+  SECTION_GAP,
+  SECTION_TITLE_GAP,
+  SPACE,
+} from "@/lib/ui/spacing";
+
+export {
+  CARD_RADIUS,
+  LIST_GAP,
+  SECTION_GAP,
+  SECTION_TITLE_GAP,
+  SPACE,
+};
+
 /** Marge horizontale unique : titres et contenu alignés sur le même axe */
 export const SCREEN_EDGE_PADDING = 28;
 

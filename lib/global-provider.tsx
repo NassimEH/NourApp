@@ -1,51 +1,97 @@
-import React, { createContext, useContext, ReactNode, useState } from "react";
+import React, {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useState,
+  type ReactNode,
+} from "react";
 
-import { getCurrentUser } from "./appwrite";
-import { useAppwrite } from "./useAppwrite";
+import { loadLocalUser, type LocalUser } from "./local-profile";
+import { getCurrentUser, logout as supabaseLogout } from "./supabase/auth";
+import { supabase } from "./supabase/client";
+import type { AppUser } from "./supabase/types";
+
+export type { AppUser };
 
 interface GlobalContextType {
   isLogged: boolean;
-  user: User | null;
+  user: AppUser | null;
   loading: boolean;
-  refetch: () => void;
+  refetch: () => Promise<void>;
   isGuest: boolean;
   enterAsGuest: () => void;
 }
 
-interface User {
-  $id: string;
-  name: string;
-  email: string;
-  avatar: string;
-}
-
 const GlobalContext = createContext<GlobalContextType | undefined>(undefined);
 
-interface GlobalProviderProps {
-  children: ReactNode;
+async function resolveGuestUser(): Promise<LocalUser> {
+  return loadLocalUser();
 }
 
-export const GlobalProvider = ({ children }: GlobalProviderProps) => {
+export const GlobalProvider = ({ children }: { children: ReactNode }) => {
+  const [user, setUser] = useState<AppUser | null>(null);
+  const [loading, setLoading] = useState(true);
   const [isGuest, setIsGuest] = useState(false);
-  const {
-    data: user,
-    loading,
-    refetch,
-  } = useAppwrite({
-    fn: getCurrentUser,
-  });
 
-  const isLogged = !!user;
+  const refetch = useCallback(async () => {
+    setLoading(true);
+    try {
+      const sessionUser = await getCurrentUser();
+      if (sessionUser) {
+        setUser(sessionUser);
+        setIsGuest(false);
+        return;
+      }
+      if (isGuest) {
+        setUser(await resolveGuestUser());
+      } else {
+        setUser(null);
+      }
+    } catch {
+      setUser(isGuest ? await resolveGuestUser() : null);
+    } finally {
+      setLoading(false);
+    }
+  }, [isGuest]);
+
+  useEffect(() => {
+    void refetch();
+  }, [refetch]);
+
+  useEffect(() => {
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange(() => {
+      if (!isGuest) void refetch();
+    });
+    return () => subscription.unsubscribe();
+  }, [isGuest, refetch]);
+
+  const enterAsGuest = useCallback(() => {
+    void (async () => {
+      setLoading(true);
+      try {
+        await supabaseLogout();
+        setIsGuest(true);
+        setUser(await resolveGuestUser());
+      } finally {
+        setLoading(false);
+      }
+    })();
+  }, []);
+
+  const isLogged = !isGuest && !!user && user.id !== "local";
 
   return (
     <GlobalContext.Provider
       value={{
         isLogged,
-        user: user ?? null,
+        user,
         loading,
         refetch,
         isGuest,
-        enterAsGuest: () => setIsGuest(true),
+        enterAsGuest,
       }}
     >
       {children}
@@ -55,9 +101,9 @@ export const GlobalProvider = ({ children }: GlobalProviderProps) => {
 
 export const useGlobalContext = (): GlobalContextType => {
   const context = useContext(GlobalContext);
-  if (!context)
+  if (!context) {
     throw new Error("useGlobalContext must be used within a GlobalProvider");
-
+  }
   return context;
 };
 

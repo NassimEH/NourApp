@@ -4,37 +4,42 @@ export type AuthErrorKey =
   | "invalidEmail"
   | "weakPassword"
   | "network"
-  | "generic";
+  | "notConfigured"
+  | "unknown";
 
 export function resolveAuthErrorKey(error: unknown): AuthErrorKey {
-  const type =
-    error &&
-    typeof error === "object" &&
-    "type" in error &&
-    typeof (error as { type: unknown }).type === "string"
-      ? (error as { type: string }).type
-      : "";
+  const message =
+    error instanceof Error
+      ? error.message.toLowerCase()
+      : String(error).toLowerCase();
 
+  if (message.includes("not configured") || message.includes("placeholder")) {
+    return "notConfigured";
+  }
   if (
-    type.includes("user_invalid_credentials") ||
-    type.includes("invalid_credentials")
+    message.includes("invalid login credentials") ||
+    message.includes("invalid email or password")
   ) {
     return "invalidCredentials";
   }
   if (
-    type.includes("user_already_exists") ||
-    type.includes("user_email_already_exists")
+    message.includes("user already registered") ||
+    message.includes("already been registered")
   ) {
     return "emailExists";
   }
-  if (type.includes("password") && type.includes("short")) {
-    return "weakPassword";
-  }
-  if (type.includes("general_invalid_email") || type.includes("invalid_email")) {
+  if (message.includes("invalid email") || message.includes("unable to validate email")) {
     return "invalidEmail";
   }
-  if (type.includes("network") || type.includes("fetch")) {
+  if (message.includes("password") && message.includes("weak")) {
+    return "weakPassword";
+  }
+  if (
+    message.includes("network") ||
+    message.includes("fetch") ||
+    message.includes("failed to fetch")
+  ) {
     return "network";
   }
-  return "generic";
+  return "unknown";
 }

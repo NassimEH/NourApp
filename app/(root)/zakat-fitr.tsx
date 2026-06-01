@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { ScrollView } from "react-native";
 import {
   Pressable,
   StyleSheet,
@@ -10,6 +11,7 @@ import {
 import { PreferenceScreenLayout } from "@/components/PreferenceScreenLayout";
 import { useAppTheme } from "@/lib/app-theme";
 import { useTranslation } from "@/lib/i18n";
+import { ZAKAT_COUNTRY_PRESETS } from "@/lib/zakat/presets";
 
 function parseAmount(value: string): number {
   const normalized = value.replace(",", ".").trim();
@@ -63,6 +65,36 @@ export default function ZakatFitrScreen() {
           </Pressable>
         </View>
       </View>
+
+      <Text style={[styles.label, { color: colors.textMuted }, rtlTextStyle]}>
+        {t("zakatFitr.countrySection")}
+      </Text>
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={styles.presetRow}
+      >
+        {ZAKAT_COUNTRY_PRESETS.map((preset) => (
+          <Pressable
+            key={preset.id}
+            onPress={() => setAmountPerPerson(String(preset.amountPerPerson))}
+            style={[
+              styles.presetChip,
+              {
+                borderColor: colors.border,
+                backgroundColor: colors.backgroundSecondary,
+              },
+            ]}
+          >
+            <Text style={[styles.presetLabel, { color: colors.text }]}>
+              {t(preset.labelKey)}
+            </Text>
+            <Text style={[styles.presetAmount, { color: colors.accent }]}>
+              {preset.amountPerPerson} {preset.currency}
+            </Text>
+          </Pressable>
+        ))}
+      </ScrollView>
 
       <View style={styles.block}>
         <Text style={[styles.label, { color: colors.textMuted }, rtlTextStyle]}>
@@ -172,5 +204,26 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontFamily: "PlusJakartaSans-Regular",
     lineHeight: 20,
+  },
+  presetRow: {
+    gap: 10,
+    paddingBottom: 8,
+    marginBottom: 12,
+  },
+  presetChip: {
+    paddingVertical: 10,
+    paddingHorizontal: 14,
+    borderRadius: 12,
+    borderWidth: StyleSheet.hairlineWidth,
+    marginRight: 8,
+  },
+  presetLabel: {
+    fontSize: 13,
+    fontFamily: "PlusJakartaSans-SemiBold",
+  },
+  presetAmount: {
+    fontSize: 12,
+    fontFamily: "PlusJakartaSans-Medium",
+    marginTop: 2,
   },
 });

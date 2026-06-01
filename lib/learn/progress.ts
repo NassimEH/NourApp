@@ -1,5 +1,7 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
+import { incrementWeeklyLessonsDone } from "./weekly-goal";
+
 const KEY_PROGRESS = "@learn_completed_lessons";
 
 export async function getCompletedLessonIds(): Promise<string[]> {
@@ -21,6 +23,7 @@ export async function markLessonCompleted(lessonId: string): Promise<void> {
     KEY_PROGRESS,
     JSON.stringify([...current, lessonId])
   );
+  await incrementWeeklyLessonsDone();
 }
 
 export function getLessonStatus(

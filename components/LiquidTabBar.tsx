@@ -6,6 +6,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { BlurView } from "expo-blur";
 import { LinearGradient } from "expo-linear-gradient";
 import { GlassView, isGlassEffectAPIAvailable } from "expo-glass-effect";
 import * as Haptics from "expo-haptics";
@@ -66,11 +67,19 @@ export function LiquidTabBar({ state, descriptors, navigation }: BottomTabBarPro
     ],
   }));
 
-  const glassGradient = useMemo((): [string, string] => {
-    if (colors.isDark) {
-      return ["rgba(255, 255, 255, 0.14)", "rgba(255, 255, 255, 0.04)"];
+  const blurIntensity = useMemo(() => {
+    if (Platform.OS === "ios") {
+      return colors.isDark ? 72 : 88;
     }
-    return ["rgba(255, 255, 255, 0.22)", "rgba(255, 255, 255, 0.06)"];
+    return 110;
+  }, [colors.isDark]);
+
+  /** Voile léger par-dessus le flou (effet liquid glass, icônes claires) */
+  const liquidGlassOverlay = useMemo(() => {
+    if (colors.isDark) {
+      return "rgba(255, 255, 255, 0.08)";
+    }
+    return "rgba(0, 0, 0, 0.04)";
   }, [colors.isDark]);
 
   const bubbleGradient = useMemo((): [string, string] => {
@@ -79,7 +88,7 @@ export function LiquidTabBar({ state, descriptors, navigation }: BottomTabBarPro
 
   const inactiveIconColor = colors.isDark
     ? "rgba(255, 255, 255, 0.45)"
-    : "rgba(255, 255, 255, 0.55)";
+    : colors.iconMuted;
 
   const tabRow = (
     <>
@@ -136,7 +145,11 @@ export function LiquidTabBar({ state, descriptors, navigation }: BottomTabBarPro
             key={route.key}
             accessibilityRole="button"
             accessibilityState={isFocused ? { selected: true } : {}}
-            accessibilityLabel={options.tabBarAccessibilityLabel}
+            accessibilityLabel={
+              typeof options.tabBarLabel === "string"
+                ? options.tabBarLabel
+                : options.tabBarAccessibilityLabel
+            }
             onPress={onPress}
             onLongPress={onLongPress}
             style={styles.tabItem}
@@ -165,17 +178,42 @@ export function LiquidTabBar({ state, descriptors, navigation }: BottomTabBarPro
       {tabRow}
     </GlassView>
   ) : (
-    <LinearGradient
-      colors={glassGradient}
-      start={{ x: 0, y: 0 }}
-      end={{ x: 1, y: 1 }}
+    <View
       style={[
         styles.glassBackground,
-        { borderColor: colors.glassBorder },
+        {
+          borderColor: colors.glassBorder,
+          backgroundColor:
+            Platform.OS === "ios" ? undefined : colors.glassSurfaceAndroid,
+        },
       ]}
     >
+      {Platform.OS !== "web" ? (
+        <>
+          <BlurView
+            intensity={blurIntensity}
+            tint={colors.glassBlurTint}
+            style={StyleSheet.absoluteFill}
+          />
+          <View
+            pointerEvents="none"
+            style={[
+              StyleSheet.absoluteFillObject,
+              { backgroundColor: liquidGlassOverlay },
+            ]}
+          />
+        </>
+      ) : (
+        <View
+          pointerEvents="none"
+          style={[
+            StyleSheet.absoluteFillObject,
+            { backgroundColor: liquidGlassOverlay },
+          ]}
+        />
+      )}
       {tabRow}
-    </LinearGradient>
+    </View>
   );
 
   return (

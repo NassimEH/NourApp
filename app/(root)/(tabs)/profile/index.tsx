@@ -19,19 +19,26 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { router } from "expo-router";
 import { AppIcon, type AppIconName } from "@/components/AppIcon";
 
-import { logout } from "@/lib/appwrite";
 import { getProfileAvatarUri, setProfileAvatarUri } from "@/lib/profile-avatar";
 import { useGlobalContext } from "@/lib/global-provider";
+import { logout as supabaseLogout } from "@/lib/supabase/auth";
 import { useAppPreferences } from "@/lib/app-preferences";
 import { useTabBarPreference } from "@/lib/tab-bar-preference";
 import { useAppTheme } from "@/lib/app-theme";
 import { useAppTypography } from "@/lib/app-typography";
 import { useTranslation, getPreferenceSubtitle } from "@/lib/i18n";
+import {
+  arePrayerNotificationsEnabled,
+  rescheduleNextPrayerNotification,
+  setPrayerNotificationsEnabled,
+} from "@/lib/notifications/prayer-notifications";
+import { usePrayerTimes } from "@/lib/usePrayerTimes";
 import { ScreenBackground } from "@/components/ScreenBackground";
 import {
   screenPageHeaderSpacing,
   screenScrollContent,
 } from "@/constants/screen-layout";
+import { MIN_TOUCH_TARGET } from "@/lib/ui/spacing";
 import { ScreenPageHeader } from "@/components/ScreenPageHeader";
 
 const ICON_SIZE = 22;
@@ -58,7 +65,7 @@ const SettingsItem = ({
   return (
     <TouchableOpacity
       onPress={onPress}
-      className="flex flex-row items-center justify-between py-3"
+      style={styles.settingsRow}
       activeOpacity={0.7}
       disabled={!onPress}
     >
@@ -97,11 +104,24 @@ const SettingsItem = ({
 const PROFIL_SECTION_PRINCIPALE: {
   titleKey: string;
   iconName: AppIconName;
-  href?: "/qibla" | "/profile/favorites";
+  href?:
+    | "/qibla"
+    | "/profile/favorites"
+    | "/(root)/sadaqa-goal"
+    | "/(root)/offline-recitations";
 }[] = [
   { titleKey: "profile.prayerTimes", iconName: "calendar", href: "/qibla" },
   { titleKey: "profile.favorites", iconName: "heart", href: "/profile/favorites" },
-  { titleKey: "profile.sadaqa", iconName: "credit-card" },
+  {
+    titleKey: "profile.sadaqa",
+    iconName: "credit-card",
+    href: "/(root)/sadaqa-goal",
+  },
+  {
+    titleKey: "profile.offlineRecitations",
+    iconName: "download",
+    href: "/(root)/offline-recitations",
+  },
 ];
 
 const PROFIL_SECTION_PERSONNALISATION: {
@@ -114,6 +134,11 @@ const PROFIL_SECTION_PERSONNALISATION: {
   { titleKey: "profile.iconStyle", iconName: "star", key: "icon-style" },
   { titleKey: "profile.textSize", iconName: "type", key: "text-size" },
   { titleKey: "profile.accentColor", iconName: "droplet", key: "accent" },
+  {
+    titleKey: "preferences.prayerMethodTitle",
+    iconName: "clock",
+    key: "prayer-method",
+  },
 ];
 
 const PROFIL_SECTION_PARAMETRES: {
@@ -180,7 +205,7 @@ const PermissionRow = ({
 };
 
 export default function ProfileScreen() {
-  const { user, refetch } = useGlobalContext();
+  const { user, refetch, isLogged, enterAsGuest } = useGlobalContext();
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const [localAvatarUri, setLocalAvatarUri] = useState<string | null>(null);
 
@@ -196,6 +221,7 @@ export default function ProfileScreen() {
   const colors = useAppTheme();
   const typography = useAppTypography();
   const { t, rtlTextStyle, rtlViewStyle } = useTranslation();
+  const { timings: prayerTimes } = usePrayerTimes();
 
   const handleShareApp = async () => {
     try {
@@ -221,6 +247,7 @@ export default function ProfileScreen() {
     useCallback(() => {
       refreshLocationPermission();
       getProfileAvatarUri().then(setLocalAvatarUri);
+      arePrayerNotificationsEnabled().then(setNotificationsEnabled);
     }, [])
   );
 
@@ -244,10 +271,21 @@ export default function ProfileScreen() {
     }
   };
 
-  const handleNotificationsToggle = (value: boolean) => {
-    setNotificationsEnabled(value);
+  const handleNotificationsToggle = async (value: boolean) => {
     if (value) {
-      Linking.openSettings();
+      const ok = await setPrayerNotificationsEnabled(true);
+      setNotificationsEnabled(ok);
+      if (!ok) {
+        Alert.alert(
+          t("profile.notificationsDeniedTitle"),
+          t("profile.notificationsDeniedBody")
+        );
+      } else if (prayerTimes) {
+        await rescheduleNextPrayerNotification(prayerTimes);
+      }
+    } else {
+      await setPrayerNotificationsEnabled(false);
+      setNotificationsEnabled(false);
     }
   };
 
@@ -273,6 +311,7 @@ export default function ProfileScreen() {
       const savedUri = await setProfileAvatarUri(result.assets[0].uri);
       if (savedUri) {
         setLocalAvatarUri(savedUri);
+        await refetch();
       } else {
         Alert.alert(t("profile.logoutError"), t("profile.photoSaveError"));
       }
@@ -285,10 +324,11 @@ export default function ProfileScreen() {
   };
 
   const handleLogout = async () => {
-    const result = await logout();
-    if (result) {
+    const ok = await supabaseLogout();
+    if (ok) {
+      enterAsGuest();
       Alert.alert(t("profile.logoutSuccess"), t("profile.logoutSuccessBody"));
-      refetch();
+      await refetch();
     } else {
       Alert.alert(t("profile.logoutError"), t("profile.logoutErrorBody"));
     }
@@ -427,7 +467,13 @@ export default function ProfileScreen() {
                   iconName={item.iconName}
                   title={t(item.titleKey)}
                   subtitle={subtitle}
-                  onPress={() => router.push(`/profile/${item.key}`)}
+                  onPress={() => {
+                    if (item.key === "prayer-method") {
+                      router.push("/(root)/prayer-method");
+                      return;
+                    }
+                    router.push(`/profile/${item.key}`);
+                  }}
                 />
               );
             })}
@@ -490,17 +536,20 @@ export default function ProfileScreen() {
             ))}
           </View>
 
-          <View
-            style={[styles.section, styles.sectionBorder, { borderTopColor: colors.border }]}
-          >
-            <SettingsItem
-              iconName="log-out"
-              title={t("profile.logout")}
-              textStyle="text-danger"
-              showArrow={false}
-              onPress={handleLogout}
-            />
-          </View>
+          {isLogged ? (
+            <View
+              style={[styles.section, styles.sectionBorder, { borderTopColor: colors.border }]}
+            >
+              <SettingsItem
+                iconName="log-out"
+                title={t("profile.logout")}
+                textStyle="text-danger"
+                showArrow={false}
+                onPress={handleLogout}
+              />
+            </View>
+          ) : null}
+
         </ScrollView>
       </SafeAreaView>
     </ScreenBackground>
@@ -579,11 +628,19 @@ const styles = StyleSheet.create({
     marginBottom: 8,
     letterSpacing: 0.5,
   },
+  settingsRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    minHeight: MIN_TOUCH_TARGET,
+    paddingVertical: 10,
+  },
   permissionRow: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    paddingVertical: 12,
+    minHeight: MIN_TOUCH_TARGET,
+    paddingVertical: 10,
   },
   permissionRowLeft: {
     flexDirection: "row",

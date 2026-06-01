@@ -1,11 +1,13 @@
-export const MIN_PASSWORD_LENGTH = 8;
-
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export function isValidEmail(email: string): boolean {
   return EMAIL_RE.test(email.trim());
 }
 
-export function isValidPassword(password: string): boolean {
-  return password.trim().length >= MIN_PASSWORD_LENGTH;
+export function isValidPassword(password: string, minLength = 8): boolean {
+  return password.length >= minLength;
+}
+
+export function passwordsMatch(a: string, b: string): boolean {
+  return a === b;
 }

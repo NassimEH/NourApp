@@ -6,6 +6,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { useMemo } from "react";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router } from "expo-router";
 
@@ -16,6 +17,7 @@ import {
   screenPageHeaderSpacing,
   screenScrollContent,
 } from "@/constants/screen-layout";
+import { SectionHeader } from "@/components/SectionHeader";
 import { ScreenPageHeader } from "@/components/ScreenPageHeader";
 import { useTranslation } from "@/lib/i18n";
 import { useAppTheme } from "@/lib/app-theme";
@@ -49,30 +51,6 @@ interface LibraryCardItem {
 
 const quranImage = require("@/assets/images/islamic-new-year-quran-book-with-dates-photo.jpg");
 
-/** Coran : grande carte Sourates à gauche, petite Récitateurs à droite */
-const CORAN_HERO_ITEMS: { sourates: LibraryCardItem; recitateurs: LibraryCardItem } = {
-  sourates: { $id: "sourates", name: "Sourates", price: "114 sourates", image: null },
-  recitateurs: { $id: "recitateurs", name: "Récitateurs", price: "Écoute en audio" },
-};
-
-/** Invocations : deux petites à gauche, une grande à droite (inverse de Coran) */
-const INVOCATIONS_HERO_ITEMS: { topLeft: LibraryCardItem; bottomLeft: LibraryCardItem; right: LibraryCardItem } = {
-  topLeft: { $id: "invocations", name: "Toutes les invocations", price: "Du'as et adhkar" },
-  bottomLeft: { $id: "invocations-meteo", name: "Invocations météo", price: "Pluie, orage, vent" },
-  right: { $id: "invocations-matin-soir", name: "Matin et soir", price: "Sabah et Massa" },
-};
-
-/** Hadiths : deux petites en haut côte à côte, une grande en bas */
-const HADITHS_HERO_ITEMS: {
-  topLeft: LibraryCardItem;
-  topRight: LibraryCardItem;
-  bottom: LibraryCardItem;
-} = {
-  topLeft: { $id: "hadith-jour", name: "Hadith du jour", price: "Parole du jour" },
-  topRight: { $id: "hadiths-theme", name: "Hadiths par thème", price: "Foi, prière, etc." },
-  bottom: { $id: "hadiths", name: "Tous les hadiths", price: "Par recueil" },
-};
-
 const { width: screenWidth } = Dimensions.get("window");
 const contentWidth = screenWidth - 2 * H_PADDING;
 const coranColWidth = (contentWidth - CORAN_GAP) / 2;
@@ -89,7 +67,23 @@ const SOURATES_CARD_WIDTH = contentWidth * 0.65;
 const RECITATEURS_CARD_WIDTH = contentWidth - SOURATES_CARD_WIDTH - CORAN_GAP;
 
 function CoranHeroBlock() {
-  const { sourates, recitateurs } = CORAN_HERO_ITEMS;
+  const { t } = useTranslation();
+  const { sourates, recitateurs } = useMemo(
+    () => ({
+      sourates: {
+        $id: "sourates" as const,
+        name: t("library.sourates"),
+        price: t("library.souratesCount"),
+        image: null,
+      },
+      recitateurs: {
+        $id: "recitateurs" as const,
+        name: t("library.reciters"),
+        price: t("library.recitersListen"),
+      },
+    }),
+    [t]
+  );
   const souratesItem = {
     ...sourates,
     image: quranImage,
@@ -100,7 +94,7 @@ function CoranHeroBlock() {
         <FeaturedCard
           item={souratesItem}
           onPress={() => pushLibraryRoute(sourates.$id)}
-          actionLabel="Lire"
+          actionLabel={t("library.actionRead")}
           cardWidth={SOURATES_CARD_WIDTH}
           cardHeight={BLOCK_HEIGHT}
           noMargin
@@ -110,7 +104,7 @@ function CoranHeroBlock() {
         <FeaturedCard
           item={recitateurs as Parameters<typeof FeaturedCard>[0]["item"]}
           onPress={() => pushLibraryRoute(recitateurs.$id)}
-          actionLabel="Écouter"
+          actionLabel={t("library.actionListen")}
           cardWidth={RECITATEURS_CARD_WIDTH}
           cardHeight={BLOCK_HEIGHT}
           noMargin
@@ -122,14 +116,34 @@ function CoranHeroBlock() {
 
 /** Invocations : deux petites à gauche empilées, une grande à droite */
 function InvocationsHeroBlock() {
-  const { topLeft, bottomLeft, right } = INVOCATIONS_HERO_ITEMS;
+  const { t } = useTranslation();
+  const { topLeft, bottomLeft, right } = useMemo(
+    () => ({
+      topLeft: {
+        $id: "invocations" as const,
+        name: t("library.invocationsAll"),
+        price: t("library.invocationsAllSub"),
+      },
+      bottomLeft: {
+        $id: "invocations-meteo" as const,
+        name: t("library.invocationsWeather"),
+        price: t("library.invocationsWeatherSub"),
+      },
+      right: {
+        $id: "invocations-matin-soir" as const,
+        name: t("library.invocationsMorning"),
+        price: t("library.invocationsMorningSub"),
+      },
+    }),
+    [t]
+  );
   return (
     <View style={styles.heroBlock}>
       <View style={styles.heroLeft}>
         <FeaturedCard
           item={topLeft as Parameters<typeof FeaturedCard>[0]["item"]}
           onPress={() => pushLibraryRoute(topLeft.$id)}
-          actionLabel="Ouvrir"
+          actionLabel={t("library.actionOpen")}
           cardWidth={coranColWidth}
           cardHeight={smallCardHeight}
           noMargin
@@ -138,7 +152,7 @@ function InvocationsHeroBlock() {
         <FeaturedCard
           item={bottomLeft as Parameters<typeof FeaturedCard>[0]["item"]}
           onPress={() => pushLibraryRoute(bottomLeft.$id)}
-          actionLabel="Ouvrir"
+          actionLabel={t("library.actionOpen")}
           cardWidth={coranColWidth}
           cardHeight={smallCardHeight}
           noMargin
@@ -148,7 +162,7 @@ function InvocationsHeroBlock() {
         <FeaturedCard
           item={right as Parameters<typeof FeaturedCard>[0]["item"]}
           onPress={() => pushLibraryRoute(right.$id)}
-          actionLabel="Ouvrir"
+          actionLabel={t("library.actionOpen")}
           cardWidth={coranColWidth}
           cardHeight={BLOCK_HEIGHT}
           noMargin
@@ -160,14 +174,34 @@ function InvocationsHeroBlock() {
 
 /** Hadiths : deux petites en haut côte à côte, une grande en bas pleine largeur */
 function HadithsHeroBlock() {
-  const { topLeft, topRight, bottom } = HADITHS_HERO_ITEMS;
+  const { t } = useTranslation();
+  const { topLeft, topRight, bottom } = useMemo(
+    () => ({
+      topLeft: {
+        $id: "hadith-jour" as const,
+        name: t("library.hadithDay"),
+        price: t("library.hadithDaySub"),
+      },
+      topRight: {
+        $id: "hadiths-theme" as const,
+        name: t("library.hadithThemes"),
+        price: t("library.hadithThemesSub"),
+      },
+      bottom: {
+        $id: "hadiths" as const,
+        name: t("library.hadithAll"),
+        price: t("library.hadithAllSub"),
+      },
+    }),
+    [t]
+  );
   return (
     <View style={[styles.heroBlock, styles.hadithsBlock]}>
       <View style={styles.hadithsTopRow}>
         <FeaturedCard
           item={topLeft as Parameters<typeof FeaturedCard>[0]["item"]}
           onPress={() => pushLibraryRoute(topLeft.$id)}
-          actionLabel="Ouvrir"
+          actionLabel={t("library.actionOpen")}
           cardWidth={coranColWidth}
           cardHeight={smallCardHeight}
           noMargin
@@ -176,7 +210,7 @@ function HadithsHeroBlock() {
         <FeaturedCard
           item={topRight as Parameters<typeof FeaturedCard>[0]["item"]}
           onPress={() => pushLibraryRoute(topRight.$id)}
-          actionLabel="Ouvrir"
+          actionLabel={t("library.actionOpen")}
           cardWidth={coranColWidth}
           cardHeight={smallCardHeight}
           noMargin
@@ -187,7 +221,7 @@ function HadithsHeroBlock() {
         <FeaturedCard
           item={bottom as Parameters<typeof FeaturedCard>[0]["item"]}
           onPress={() => pushLibraryRoute(bottom.$id)}
-          actionLabel="Ouvrir"
+          actionLabel={t("library.actionOpen")}
           cardWidth={contentWidth}
           cardHeight={smallCardHeight}
           noMargin
@@ -216,30 +250,24 @@ export default function BibliothequeScreen() {
           showsVerticalScrollIndicator={false}
         >
           <View style={styles.section}>
-            <View style={styles.sectionHeader}>
-              <Text style={[styles.sectionTitle, { color: colors.text }]}>Coran</Text>
-              <TouchableOpacity style={styles.seeAllTouch} activeOpacity={0.7}>
-                <Text style={[styles.seeAllLink, { color: colors.accent }]}>Tout voir</Text>
-              </TouchableOpacity>
-            </View>
+            <SectionHeader
+              title={t("library.sectionQuran")}
+              seeAllLabel={t("library.seeAll")}
+            />
             <CoranHeroBlock />
           </View>
           <View style={styles.section}>
-            <View style={styles.sectionHeader}>
-              <Text style={[styles.sectionTitle, { color: colors.text }]}>Invocations</Text>
-              <TouchableOpacity style={styles.seeAllTouch} activeOpacity={0.7}>
-                <Text style={[styles.seeAllLink, { color: colors.accent }]}>Tout voir</Text>
-              </TouchableOpacity>
-            </View>
+            <SectionHeader
+              title={t("library.sectionInvocations")}
+              seeAllLabel={t("library.seeAll")}
+            />
             <InvocationsHeroBlock />
           </View>
           <View style={styles.section}>
-            <View style={styles.sectionHeader}>
-              <Text style={[styles.sectionTitle, { color: colors.text }]}>Hadiths</Text>
-              <TouchableOpacity style={styles.seeAllTouch} activeOpacity={0.7}>
-                <Text style={[styles.seeAllLink, { color: colors.accent }]}>Tout voir</Text>
-              </TouchableOpacity>
-            </View>
+            <SectionHeader
+              title={t("library.sectionHadiths")}
+              seeAllLabel={t("library.seeAll")}
+            />
             <HadithsHeroBlock />
           </View>
         </ScrollView>
@@ -258,27 +286,6 @@ const styles = StyleSheet.create({
   },
   section: {
     marginTop: 32,
-  },
-  sectionHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    marginBottom: 16,
-  },
-  sectionTitle: {
-    fontSize: 20,
-    fontFamily: "PlusJakartaSans-Bold",
-    color: "#191D31",
-    letterSpacing: 0.3,
-  },
-  seeAllTouch: {
-    paddingVertical: 6,
-    paddingLeft: 10,
-  },
-  seeAllLink: {
-    fontSize: 15,
-    fontFamily: "PlusJakartaSans-SemiBold",
-    color: "#3d6b47",
   },
   cardsContent: {
     paddingRight: H_PADDING,

@@ -1,6 +1,4 @@
 ﻿import {
-  ActivityIndicator,
-  Dimensions,
   Image,
   ScrollView,
   StyleSheet,
@@ -8,8 +6,7 @@
   TouchableOpacity,
   View,
 } from "react-native";
-import { AppIcon } from "@/components/AppIcon";
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo } from "react";
 import { router } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { toHijri } from "hijri-converter";
@@ -26,8 +23,6 @@ const HIJRI_MONTHS = [
   "Ramadan", "Shawwal", "Dhu al-Qi'dah", "Dhu al-Hijjah",
 ];
 
-const DAY_PILL_ACTIVE = "#3d6b47";
-const DAY_PILL_EMPTY_BORDER = "#c4c1c9";
 
 function useTodayDates(locale: "fr" | "en" | "ar") {
   return useMemo(() => {
@@ -46,27 +41,14 @@ function useTodayDates(locale: "fr" | "en" | "ar") {
   }, [locale]);
 }
 
-const mosqueImage = require("@/assets/images/mosquee.png");
-
-import { weatherImages, WEATHER_DOU3A } from "@/constants/weather";
-
-const MosqueImage = React.memo(function MosqueImage({ compact }: { compact?: boolean }) {
-  const sizeStyle = compact ? styles.mosqueImageCompact : styles.mosqueImage;
-  return (
-    <View style={[styles.mosqueWrap, compact && styles.mosqueWrapCompact]}>
-      <Image
-        source={mosqueImage}
-        style={sizeStyle}
-        resizeMode="contain"
-      />
-    </View>
-  );
-});
-
 const HeaderAvatarBell = React.memo(function HeaderAvatarBell({
   avatarUri,
+  onBellPress,
+  bellLabel,
 }: {
   avatarUri: string | undefined;
+  onBellPress: () => void;
+  bellLabel: string;
 }) {
   return (
     <View className="flex flex-row items-center gap-4 mt-2">
@@ -74,17 +56,26 @@ const HeaderAvatarBell = React.memo(function HeaderAvatarBell({
         source={{ uri: avatarUri }}
         className="size-14 rounded-full"
       />
-      <Image source={icons.bell} className="size-8" />
+      <TouchableOpacity
+        onPress={onBellPress}
+        accessibilityRole="button"
+        accessibilityLabel={bellLabel}
+        hitSlop={12}
+      >
+        <Image source={icons.bell} className="size-8" />
+      </TouchableOpacity>
     </View>
   );
 });
 
-import { HomeToolsSection } from "@/components/home/HomeToolsSection";
 import { HomeContinueSection } from "@/components/home/HomeContinueSection";
+import { HomePrayerWeatherCarousel } from "@/components/home/HomePrayerWeatherCarousel";
+import { HomeToolsSection } from "@/components/home/HomeToolsSection";
+import { HomeRamadanBanner } from "@/components/home/HomeRamadanBanner";
+import { useMosqueName } from "@/lib/home/hooks/useMosqueName";
+import { rescheduleNextPrayerNotification } from "@/lib/notifications/prayer-notifications";
 import { useGlobalContext } from "@/lib/global-provider";
 import { usePrayerTimes, type PrayerTimes } from "@/lib/usePrayerTimes";
-import { useWeather, type WeatherImageKey } from "@/lib/useWeather";
-import { useMawaqitPrayerTimes, MAWAQIT_MOSQUEE_EVRY } from "@/lib/useMawaqit";
 import { ScreenBackground } from "@/components/ScreenBackground";
 import { SCREEN_EDGE_PADDING } from "@/constants/screen-layout";
 import { ScreenPageHeader } from "@/components/ScreenPageHeader";
@@ -103,6 +94,10 @@ type HomeListHeaderProps = {
   prayerCity: string | null;
   prayerCoords: { latitude: number; longitude: number } | null;
   onRequestLocation: () => void;
+  mosqueDisplayName: string;
+  onEditMosque: () => void;
+  onBellPress: () => void;
+  bellLabel: string;
 };
 
 const HomeListHeader = React.memo(function HomeListHeader({
@@ -115,24 +110,19 @@ const HomeListHeader = React.memo(function HomeListHeader({
   prayerCity,
   prayerCoords,
   onRequestLocation,
+  mosqueDisplayName,
+  onEditMosque,
+  onBellPress,
+  bellLabel,
 }: HomeListHeaderProps) {
-  const { data: weatherData, loading: weatherLoading, error: weatherError } =
-    useWeather(prayerCoords?.latitude, prayerCoords?.longitude);
-  const { data: mawaqitTimes, loading: mawaqitLoading } =
-    useMawaqitPrayerTimes(MAWAQIT_MOSQUEE_EVRY);
-  const [carouselIndex, setCarouselIndex] = useState(0);
-  const screenWidth = Dimensions.get("window").width;
   const vendredi = isVendredi();
   const hadithVendredi = getHadithVendrediDuJour();
-  const slideWidth = screenWidth;
 
   const typography = useAppTypography();
   const colors = useAppTheme();
   const themed = useMemo(() => createHomeStyles(colors), [colors]);
   const { t, locale, rtlTextStyle, rtlViewStyle } = useTranslation();
   const weekDays = TRANSLATIONS[locale].home.weekDays;
-  const dayPillEmptyBorder = colors.isDark ? "#4B5563" : "#c4c1c9";
-
   return (
     <View>
       <View style={[styles.homeHeaderBlock, rtlViewStyle]}>
@@ -143,7 +133,13 @@ const HomeListHeader = React.memo(function HomeListHeader({
               ? `${t("home.goodFriday")} · ${t("screens.homeSubtitle")}`
               : t("screens.homeSubtitle")
           }
-          rightElement={<HeaderAvatarBell avatarUri={user?.avatar} />}
+          rightElement={
+            <HeaderAvatarBell
+              avatarUri={user?.avatar}
+              onBellPress={onBellPress}
+              bellLabel={bellLabel}
+            />
+          }
         />
       </View>
       <View style={[styles.homeBody, rtlViewStyle]}>
@@ -208,7 +204,7 @@ const HomeListHeader = React.memo(function HomeListHeader({
                     : {
                         backgroundColor: "transparent",
                         borderWidth: 2,
-                        borderColor: dayPillEmptyBorder,
+                        borderColor: colors.border,
                       },
                 ]}
               />
@@ -216,149 +212,20 @@ const HomeListHeader = React.memo(function HomeListHeader({
           );
         })}
       </View>
-      <View style={[styles.carouselWrap, { width: screenWidth }]}>
-        <ScrollView
-          horizontal
-          pagingEnabled
-          showsHorizontalScrollIndicator={false}
-          onMomentumScrollEnd={(e) => {
-            const i = Math.round(e.nativeEvent.contentOffset.x / slideWidth);
-            setCarouselIndex(i);
-          }}
-          style={[styles.carouselScroll, { width: screenWidth }]}
-          contentContainerStyle={styles.carouselContent}
-          decelerationRate="fast"
-        >
-          <View style={[styles.carouselSlide, { width: slideWidth }]}>
-            <View style={styles.carouselSlideInner}>
-              <View style={styles.carouselSlideHeader}>
-                <Text style={themed.carouselSlideTitle}>Ma mosquée</Text>
-                <TouchableOpacity onPress={() => router.push("/mosquee")} activeOpacity={0.7}>
-                  <Text style={themed.seeAllLink}>Voir tout</Text>
-                </TouchableOpacity>
-              </View>
-              {prayerLoading ? (
-                <ActivityIndicator size="small" color={colors.accent} style={{ paddingVertical: 20 }} />
-              ) : prayerTimes ? (
-                <View style={styles.mosqueSlideRow}>
-                  <View style={styles.mosquePrayerColumnFull}>
-                    {[
-                      { key: "Fajr", icon: "sunrise" as const, time: prayerTimes.Fajr },
-                      { key: "Dhuhr", icon: "sun" as const, time: prayerTimes.Dhuhr },
-                      { key: "Asr", icon: "cloud" as const, time: prayerTimes.Asr },
-                      { key: "Maghrib", icon: "sunset" as const, time: prayerTimes.Maghrib },
-                      { key: "Isha", icon: "moon" as const, time: prayerTimes.Isha },
-                    ].map(({ key, icon, time }) => (
-                      <View key={key} style={styles.mosquePrayerRow}>
-                        <AppIcon name={icon} size={14} color={colors.iconMuted} />
-                        <View style={styles.mosquePrayerCell}>
-                          <Text style={themed.mosquePrayerLabel}>{key}</Text>
-                          <Text style={themed.mosquePrayerTime}>{time}</Text>
-                        </View>
-                      </View>
-                    ))}
-                  </View>
-                  <View style={styles.mosqueRightBlock}>
-                    <MosqueImage />
-                    <Text style={[themed.mosqueTitleText, { marginTop: 10 }]}>Mosquée de Crosne</Text>
-                  </View>
-                </View>
-              ) : (
-                <Text style={themed.weatherError}>Horaires non disponibles</Text>
-              )}
-            </View>
-          </View>
-          <View style={[styles.carouselSlide, { width: slideWidth }]}>
-            <View style={styles.carouselSlideInner}>
-              <View style={styles.carouselSlideHeader}>
-                <Text style={themed.carouselSlideTitle}>La météo chez moi</Text>
-                <TouchableOpacity onPress={() => router.push("/meteo")} activeOpacity={0.7}>
-                  <Text style={themed.seeAllLink}>Voir tout</Text>
-                </TouchableOpacity>
-              </View>
-              {!prayerCoords && prayerLoading ? (
-                <ActivityIndicator size="small" color={colors.accent} style={{ paddingVertical: 20 }} />
-              ) : weatherLoading ? (
-                <ActivityIndicator size="small" color={colors.accent} style={{ paddingVertical: 20 }} />
-              ) : weatherError ? (
-                <View style={styles.weatherEmpty}>
-                  <Text style={themed.weatherError}>{weatherError}</Text>
-                  <TouchableOpacity
-                    style={themed.weatherLocationButton}
-                    onPress={onRequestLocation}
-                    activeOpacity={0.7}
-                  >
-                    <AppIcon name="refresh-cw" size={18} color="#fff" />
-                    <Text style={themed.weatherLocationButtonText}>Réessayer</Text>
-                  </TouchableOpacity>
-                </View>
-              ) : weatherData ? (
-                <>
-                  <View style={styles.weatherRow}>
-                    <View style={styles.weatherInfoSide}>
-                      <Text style={themed.weatherTemp}>{Math.round(weatherData.temperature)}°</Text>
-                      <Text style={themed.weatherCondition}>{weatherData.conditionLabel}</Text>
-                      <View style={styles.weatherDetailRow}>
-                        <AppIcon name="droplet" size={14} color={colors.iconMuted} />
-                        <Text style={themed.weatherDetailText}>{weatherData.humidity} % humidité</Text>
-                      </View>
-                      <View style={styles.weatherDetailRow}>
-                        <AppIcon name="thermometer" size={14} color={colors.iconMuted} />
-                        <Text style={themed.weatherDetailText}>Ressenti {Math.round(weatherData.apparentTemperature)}°</Text>
-                      </View>
-                    </View>
-                    <View style={styles.weatherImageWrap}>
-                      <Image
-                        source={weatherImages[weatherData.imageKey]}
-                        style={styles.weatherImageStandalone}
-                        resizeMode="contain"
-                      />
-                    </View>
-                    <View style={styles.weatherInfoSide}>
-                      <View style={styles.weatherDetailRow}>
-                        <AppIcon name="wind" size={14} color={colors.iconMuted} />
-                        <Text style={themed.weatherDetailText}>{weatherData.windSpeed} km/h</Text>
-                      </View>
-                      <View style={styles.weatherDetailRow}>
-                        <AppIcon name="activity" size={14} color={colors.iconMuted} />
-                        <Text style={themed.weatherDetailText}>{Math.round(weatherData.surfacePressure)} hPa</Text>
-                      </View>
-                      <Text style={themed.weatherDetailText}>
-                        {weatherData.isDay === 1 ? "Jour" : "Nuit"}
-                      </Text>
-                    </View>
-                  </View>
-                  <View style={themed.weatherDou3a}>
-                    <Text style={themed.weatherDou3aLabel}>Invocation</Text>
-                    <Text style={themed.weatherDou3aText}>{WEATHER_DOU3A[weatherData.imageKey].dou3a}</Text>
-                    <Text style={themed.weatherDou3aReason}>{WEATHER_DOU3A[weatherData.imageKey].reason}</Text>
-                  </View>
-                </>
-              ) : (
-                <View style={styles.weatherEmpty}>
-                  <Text style={themed.weatherError}>Active la localisation pour afficher la météo</Text>
-                  <TouchableOpacity
-                    style={themed.weatherLocationButton}
-                    onPress={onRequestLocation}
-                    activeOpacity={0.7}
-                  >
-                    <AppIcon name="map-pin" size={18} color="#fff" />
-                    <Text style={themed.weatherLocationButtonText}>Autoriser la localisation</Text>
-                  </TouchableOpacity>
-                </View>
-              )}
-            </View>
-          </View>
-        </ScrollView>
-        <View style={styles.carouselDots}>
-          <View style={[themed.carouselDot, carouselIndex === 0 && themed.carouselDotActive]} />
-          <View style={[themed.carouselDot, carouselIndex === 1 && themed.carouselDotActive]} />
-        </View>
-      </View>
+      <HomePrayerWeatherCarousel
+        prayerLoading={prayerLoading}
+        prayerTimes={prayerTimes}
+        prayerCoords={prayerCoords}
+        onRequestLocation={onRequestLocation}
+        mosqueDisplayName={mosqueDisplayName}
+        onEditMosque={onEditMosque}
+      />
+
+      <HomeRamadanBanner />
 
       {vendredi && hadithVendredi && (
         <View style={themed.hadithVendrediBlock}>
-          <Text style={themed.hadithVendrediLabel}>Hadith — La prière du vendredi</Text>
+          <Text style={themed.hadithVendrediLabel}>{t("home.hadithFridayLabel")}</Text>
           <Text style={themed.hadithVendrediText}>{hadithVendredi.text}</Text>
           <Text style={themed.hadithVendrediSource}>{hadithVendredi.source}</Text>
         </View>
@@ -383,6 +250,16 @@ const Home = () => {
     coords: prayerCoords,
     refetch: refetchLocation,
   } = usePrayerTimes();
+  const { mosqueName } = useMosqueName();
+  const { t: tHome } = useTranslation();
+
+  useEffect(() => {
+    if (prayerTimes) {
+      void rescheduleNextPrayerNotification(prayerTimes);
+    }
+  }, [prayerTimes]);
+
+  const mosqueDisplayName = mosqueName ?? tHome("home.defaultMosqueName");
 
   return (
     <ScreenBackground style={styles.background}>
@@ -401,6 +278,10 @@ const Home = () => {
             prayerCity={prayerCity}
             prayerCoords={prayerCoords}
             onRequestLocation={refetchLocation}
+            mosqueDisplayName={mosqueDisplayName}
+            onEditMosque={() => router.push("/(root)/mosque-settings")}
+            onBellPress={() => router.push("/(root)/reminders")}
+            bellLabel={tHome("reminders.title")}
           />
         </ScrollView>
       </SafeAreaView>
@@ -409,499 +290,15 @@ const Home = () => {
 };
 
 const styles = StyleSheet.create({
-  background: {
-    flex: 1,
-  },
-  homeHeaderBlock: {
-    paddingTop: 12,
-    marginTop: 8,
-  },
-  homeBody: {
-    paddingHorizontal: SCREEN_EDGE_PADDING,
-  },
-  scrollContent: {
-    paddingBottom: 120,
-  },
-  welcomeTitle: {
-    fontFamily: "PlusJakartaSans-Bold",
-    color: "#191D31",
-  },
-  welcomeDate: {
-    fontFamily: "PlusJakartaSans-Medium",
-    color: "#191D31",
-    marginTop: 6,
-  },
-  welcomeHijri: {
-    fontFamily: "PlusJakartaSans-Regular",
-    color: "rgba(0,0,0,0.55)",
-    marginTop: 4,
-  },
-  hadithVendrediBlock: {
-    marginTop: 20,
-    paddingTop: 14,
-    borderTopWidth: 1,
-    borderTopColor: "rgba(0,0,0,0.06)",
-  },
-  hadithVendrediLabel: {
-    fontSize: 11,
-    fontFamily: "PlusJakartaSans-SemiBold",
-    color: "rgba(61, 107, 71, 0.9)",
-    textTransform: "uppercase",
-    letterSpacing: 0.5,
-    marginBottom: 8,
-  },
-  hadithVendrediText: {
-    fontSize: 13,
-    fontFamily: "PlusJakartaSans-Medium",
-    color: "#191D31",
-    lineHeight: 20,
-    marginBottom: 6,
-  },
-  hadithVendrediSource: {
-    fontSize: 12,
-    fontFamily: "PlusJakartaSans-Regular",
-    color: "#5b5d5e",
-    lineHeight: 18,
-    fontStyle: "italic",
-  },
-  sectionDivider: {
-    height: 1,
-    backgroundColor: "rgba(0,0,0,0.06)",
-    marginVertical: 12,
-  },
-  seeAllLink: {
-    fontSize: 16,
-    fontFamily: "PlusJakartaSans-SemiBold",
-    color: "#3d6b47",
-  },
-  prayerCardRemaining: {
-    fontSize: 13,
-    fontFamily: "PlusJakartaSans-Medium",
-    color: "rgba(0,0,0,0.6)",
-    marginTop: 6,
-  },
-  prayerToggleTouchable: {
-    paddingVertical: 8,
-    paddingHorizontal: 4,
-    minHeight: 44,
-    justifyContent: "center",
-  },
+  background: { flex: 1 },
+  homeHeaderBlock: { paddingTop: 12, marginTop: 8 },
+  homeBody: { paddingHorizontal: SCREEN_EDGE_PADDING },
+  scrollContent: { paddingBottom: 120 },
   dayPill: {
     width: 24,
     height: 36,
     borderRadius: 12,
     marginTop: 6,
-  },
-  mosqueWrap: {
-    alignItems: "center",
-    marginTop: 16,
-    marginBottom: 8,
-  },
-  mosqueWrapCompact: {
-    marginTop: 0,
-    marginBottom: 0,
-  },
-  mosqueImage: {
-    width: 260,
-    height: 203,
-  },
-  mosqueImageCompact: {
-    width: 140,
-    height: 109,
-  },
-  mosqueSlideRow: {
-    flexDirection: "row",
-    alignItems: "flex-start",
-    justifyContent: "space-between",
-    gap: 20,
-  },
-  mosquePrayerColumnFull: {
-    flex: 1,
-    gap: 2,
-    minWidth: 0,
-  },
-  mosqueRightBlock: {
-    alignItems: "center",
-    justifyContent: "flex-start",
-  },
-  mosquePrayerRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-    paddingVertical: 6,
-  },
-  mosquePrayerCell: {
-    flex: 1,
-  },
-  mosquePrayerLabel: {
-    fontSize: 13,
-    fontFamily: "PlusJakartaSans-Medium",
-    color: "#5b5d5e",
-  },
-  mosquePrayerTime: {
-    fontSize: 14,
-    fontFamily: "PlusJakartaSans-Regular",
-    color: "#191D31",
-    marginTop: 1,
-  },
-  mosqueImageWrap: {
-    alignItems: "center",
-    justifyContent: "center",
-    paddingHorizontal: 8,
-  },
-  carouselWrap: {
-    marginTop: 28,
-    marginBottom: 12,
-    marginLeft: -20,
-    marginRight: -20,
-    overflow: "hidden",
-  },
-  carouselScroll: {
-    flexGrow: 0,
-  },
-  carouselContent: {
-    flexGrow: 1,
-  },
-  carouselSlide: {
-    flex: 1,
-  },
-  carouselSlideInner: {
-    paddingHorizontal: 24,
-  },
-  carouselSlideHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    marginBottom: 16,
-  },
-  carouselSlideTitle: {
-    fontSize: 20,
-    fontFamily: "PlusJakartaSans-Bold",
-    color: "#191D31",
-  },
-  carouselDots: {
-    flexDirection: "row",
-    justifyContent: "center",
-    alignItems: "center",
-    gap: 8,
-    marginTop: 14,
-  },
-  carouselDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: "rgba(0,0,0,0.15)",
-  },
-  carouselDotActive: {
-    backgroundColor: "rgba(61, 107, 71, 0.9)",
-    width: 10,
-    height: 10,
-    borderRadius: 5,
-  },
-  mosqueTitleBlock: {
-    marginTop: 14,
-    paddingTop: 12,
-    borderTopWidth: 1,
-    borderTopColor: "rgba(0,0,0,0.06)",
-  },
-  mosqueTitleText: {
-    fontSize: 15,
-    fontFamily: "PlusJakartaSans-SemiBold",
-    color: "#191D31",
-  },
-  mosqueBlock: {
-    alignItems: "center",
-    marginTop: 4,
-  },
-  mawaqitCard: {
-    marginTop: 14,
-    paddingVertical: 12,
-    paddingHorizontal: 18,
-    backgroundColor: "rgba(61, 107, 71, 0.08)",
-    borderRadius: 14,
-    borderWidth: 1,
-    borderColor: "rgba(61, 107, 71, 0.2)",
-    minWidth: 220,
-  },
-  mawaqitTitle: {
-    fontSize: 16,
-    fontFamily: "PlusJakartaSans-Bold",
-    color: "#191D31",
-    marginBottom: 2,
-  },
-  mawaqitSubtitle: {
-    fontSize: 11,
-    fontFamily: "PlusJakartaSans-Regular",
-    color: "#5b5d5e",
-    marginBottom: 10,
-  },
-  mawaqitRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    paddingVertical: 4,
-  },
-  mawaqitLabel: {
-    fontSize: 13,
-    fontFamily: "PlusJakartaSans-Medium",
-    color: "#191D31",
-  },
-  mawaqitTime: {
-    fontSize: 13,
-    fontFamily: "PlusJakartaSans-SemiBold",
-    color: "#3d6b47",
-  },
-  weatherSection: {
-    marginTop: 20,
-    marginBottom: 8,
-  },
-  weatherSectionTitle: {
-    fontSize: 20,
-    fontFamily: "PlusJakartaSans-Bold",
-    color: "#191D31",
-    marginBottom: 12,
-  },
-  weatherRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    gap: 16,
-  },
-  weatherInfoSide: {
-    flex: 1,
-    justifyContent: "center",
-    gap: 8,
-    minWidth: 0,
-  },
-  weatherImageWrap: {
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  weatherImageStandalone: {
-    width: 200,
-    height: 156,
-  },
-  weatherTemp: {
-    fontSize: 26,
-    fontFamily: "PlusJakartaSans-Bold",
-    color: "#191D31",
-  },
-  weatherCondition: {
-    fontSize: 13,
-    fontFamily: "PlusJakartaSans-Medium",
-    color: "#5b5d5e",
-  },
-  weatherDetailRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 6,
-  },
-  weatherDetailText: {
-    fontSize: 12,
-    fontFamily: "PlusJakartaSans-Medium",
-    color: "#5b5d5e",
-  },
-  weatherDou3a: {
-    marginTop: 16,
-    paddingTop: 14,
-    borderTopWidth: 1,
-    borderTopColor: "rgba(0,0,0,0.06)",
-    gap: 6,
-  },
-  weatherDou3aLabel: {
-    fontSize: 11,
-    fontFamily: "PlusJakartaSans-SemiBold",
-    color: "rgba(61, 107, 71, 0.9)",
-    textTransform: "uppercase",
-    letterSpacing: 0.5,
-  },
-  weatherDou3aText: {
-    fontSize: 13,
-    fontFamily: "PlusJakartaSans-Medium",
-    color: "#191D31",
-    lineHeight: 20,
-  },
-  weatherDou3aReason: {
-    fontSize: 12,
-    fontFamily: "PlusJakartaSans-Regular",
-    color: "#5b5d5e",
-    lineHeight: 18,
-    fontStyle: "italic",
-  },
-  weatherEmpty: {
-    paddingVertical: 12,
-    gap: 16,
-  },
-  weatherError: {
-    fontSize: 14,
-    fontFamily: "PlusJakartaSans-Regular",
-    color: "#5b5d5e",
-  },
-  weatherLocationButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 8,
-    backgroundColor: "rgba(61, 107, 71, 0.9)",
-    paddingVertical: 14,
-    paddingHorizontal: 20,
-    borderRadius: 12,
-    alignSelf: "flex-start",
-  },
-  weatherLocationButtonText: {
-    fontSize: 15,
-    fontFamily: "PlusJakartaSans-SemiBold",
-    color: "#fff",
-  },
-  prayerCard: {
-    backgroundColor: "transparent",
-    borderRadius: 20,
-    paddingVertical: 16,
-    paddingHorizontal: 20,
-    paddingLeft: 22,
-    borderLeftWidth: 3,
-    borderLeftColor: "rgba(61, 107, 71, 0.35)",
-  },
-  prayerCardHeader: {
-    marginBottom: 16,
-    paddingBottom: 14,
-    borderBottomWidth: 1,
-    borderBottomColor: "rgba(0, 0, 0, 0.08)",
-  },
-  prayerCardMethod: {
-    fontSize: 11,
-    fontFamily: "PlusJakartaSans-Medium",
-    color: "rgba(0,0,0,0.5)",
-    marginBottom: 4,
-  },
-  prayerCardHijri: {
-    fontSize: 14,
-    fontFamily: "PlusJakartaSans-SemiBold",
-    color: "rgba(0,0,0,0.85)",
-    marginBottom: 2,
-  },
-  prayerCardGregorian: {
-    fontSize: 12,
-    fontFamily: "PlusJakartaSans-Regular",
-    color: "rgba(0,0,0,0.6)",
-    marginBottom: 4,
-  },
-  prayerCardCoords: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 4,
-  },
-  prayerCardCoordsText: {
-    fontSize: 11,
-    fontFamily: "PlusJakartaSans-Regular",
-    color: "rgba(0,0,0,0.5)",
-  },
-  prayerRow: {
-    flexDirection: "row",
-    alignItems: "flex-start",
-    paddingVertical: 16,
-    paddingHorizontal: 8,
-    marginHorizontal: -6,
-    borderBottomWidth: 1,
-    borderBottomColor: "rgba(0, 0, 0, 0.06)",
-    position: "relative",
-  },
-  prayerRowCurrent: {
-    backgroundColor: "rgba(61, 107, 71, 0.12)",
-    borderRadius: 12,
-    marginHorizontal: 0,
-    paddingHorizontal: 14,
-    paddingVertical: 18,
-  },
-  prayerRowLeft: {
-    flex: 1,
-    marginRight: 44,
-  },
-  prayerRowTimeRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 6,
-    marginTop: 6,
-  },
-  prayerRowCheckboxWrap: {
-    position: "absolute",
-    right: 0,
-    top: 0,
-  },
-  prayerRowCurrentDot: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-    backgroundColor: "rgba(61, 107, 71, 0.9)",
-  },
-  prayerRowLast: {
-    borderBottomWidth: 0,
-  },
-  prayerRowPressed: {
-    opacity: 0.7,
-  },
-  prayerNextWidget: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    marginTop: 10,
-  },
-  prayerNextWidgetLeft: {
-    flex: 1,
-  },
-  prayerNextLabel: {
-    fontSize: 9,
-    fontFamily: "PlusJakartaSans-Medium",
-    color: "rgba(0,0,0,0.55)",
-    letterSpacing: 0.3,
-    marginBottom: 2,
-  },
-  prayerNextWidgetRow: {
-    flexDirection: "row",
-    alignItems: "center",
-  },
-  prayerNextCountdown: {
-    fontSize: 16,
-    fontFamily: "PlusJakartaSans-Bold",
-    color: "rgba(0,0,0,0.85)",
-    letterSpacing: 0.5,
-  },
-  prayerCardFooter: {
-    fontSize: 10,
-    fontFamily: "PlusJakartaSans-Regular",
-    color: "rgba(0,0,0,0.45)",
-    marginTop: 10,
-    textAlign: "center",
-  },
-  prayerCheckbox: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
-    borderWidth: 2,
-    borderColor: "rgba(61, 107, 71, 0.8)",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  prayerCheckboxChecked: {
-    backgroundColor: "rgba(61, 107, 71, 0.9)",
-    borderColor: "rgba(61, 107, 71, 0.9)",
-  },
-  prayerLabelDone: {
-    textDecorationLine: "line-through",
-  },
-  prayerFooter: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    alignItems: "center",
-    gap: 16,
-    marginTop: 14,
-    paddingTop: 12,
-    borderTopWidth: 1,
-    borderTopColor: "rgba(0, 0, 0, 0.06)",
-  },
-  prayerFooterItem: {
-    flexDirection: "row",
-    alignItems: "center",
   },
 });
 

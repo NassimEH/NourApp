@@ -27,15 +27,14 @@ import { ScreenBackground } from "@/components/ScreenBackground";
 import { ScreenPageHeader } from "@/components/ScreenPageHeader";
 import { useTranslation } from "@/lib/i18n";
 import { SCREEN_EDGE_PADDING } from "@/constants/screen-layout";
+import { useAppTheme } from "@/lib/app-theme";
+import { bodyLineHeight } from "@/lib/ui/typography";
 
 const H_PADDING = SCREEN_EDGE_PADDING;
-const ICON_COLOR = "#191D31";
-const ACCENT = "#3d6b47";
-const TEXT_MUTED = "rgba(0,0,0,0.5)";
-
 
 export default function HadithDetailScreen() {
   const { t } = useTranslation();
+  const colors = useAppTheme();
   const { name, hadithNumber } = useLocalSearchParams<{
     name: string;
     hadithNumber: string;
@@ -66,6 +65,7 @@ export default function HadithDetailScreen() {
 
   const arabicSize = typography.arabic;
   const transSize = typography.translation;
+  const transLh = bodyLineHeight(transSize);
 
   const arabicBody = hadith?.hadith?.find((h) => h.lang === "ar")?.body;
   const frenchBody = hadith?.hadith?.find((h) => h.lang === "fr")?.body;
@@ -131,7 +131,7 @@ export default function HadithDetailScreen() {
                 onPress={() => setLanguage(language === "fr" ? "en" : "fr")}
                 activeOpacity={0.7}
               >
-                <Text style={styles.langBtnText}>
+                <Text style={[styles.langBtnText, { color: colors.accent }]}>
                   {language === "fr" ? "EN" : "FR"}
                 </Text>
               </TouchableOpacity>
@@ -143,7 +143,7 @@ export default function HadithDetailScreen() {
                 <AppIcon
                   name="heart"
                   size={22}
-                  color={isFav ? ACCENT : ICON_COLOR}
+                  color={isFav ? colors.accent : colors.icon}
                 />
               </TouchableOpacity>
               <TouchableOpacity
@@ -151,14 +151,14 @@ export default function HadithDetailScreen() {
                 style={styles.iconBtn}
                 activeOpacity={0.7}
               >
-                <AppIcon name="share-2" size={22} color={ICON_COLOR} />
+                <AppIcon name="share-2" size={22} color={colors.icon} />
               </TouchableOpacity>
               <TouchableOpacity
                 onPress={handleCopy}
                 style={styles.iconBtn}
                 activeOpacity={0.7}
               >
-                <AppIcon name="copy" size={22} color={ICON_COLOR} />
+                <AppIcon name="copy" size={22} color={colors.icon} />
               </TouchableOpacity>
             </>
           }
@@ -166,7 +166,7 @@ export default function HadithDetailScreen() {
 
         {loading && !hadith ? (
           <View style={styles.loadingWrap}>
-            <ActivityIndicator size="large" color={ACCENT} />
+            <ActivityIndicator size="large" color={colors.accent} />
             <Text style={styles.loadingText}>Chargement…</Text>
           </View>
         ) : error && !hadith ? (
@@ -186,26 +186,37 @@ export default function HadithDetailScreen() {
             contentContainerStyle={styles.scrollContent}
             showsVerticalScrollIndicator={false}
           >
-            <View style={styles.metaCard}>
-              <Text style={styles.metaTitle}>
+            <View
+              style={[
+                styles.metaCard,
+                {
+                  backgroundColor: `${colors.accent}14`,
+                  borderLeftColor: colors.accent,
+                },
+              ]}
+            >
+              <Text style={[styles.metaTitle, { color: colors.text }]}>
                 {collectionDisplayName} · Hadith {hadith.hadithNumber}
               </Text>
               {hadith.hadith?.[0]?.chapterTitle ? (
-                <Text style={styles.metaSubtitle}>
+                <Text style={[styles.metaSubtitle, { color: colors.textMuted }]}>
                   {hadith.hadith[0].chapterTitle}
                 </Text>
               ) : null}
             </View>
 
             {arabicBody ? (
-              <View style={styles.block}>
-                <Text style={styles.blockLabel}>Texte arabe</Text>
+              <View style={[styles.block, { borderTopColor: colors.border }]}>
+                <Text style={[styles.blockLabel, { color: colors.accent }]}>
+                  Texte arabe
+                </Text>
                 <Text
                   style={[
                     styles.arabicText,
                     {
                       fontSize: arabicSize,
                       lineHeight: arabicSize * typography.lineHeightArabic,
+                      color: colors.text,
                     },
                   ]}
                   selectable
@@ -216,12 +227,19 @@ export default function HadithDetailScreen() {
             ) : null}
 
             {displayTranslation ? (
-              <View style={styles.block}>
-                <Text style={styles.blockLabel}>
+              <View style={[styles.block, { borderTopColor: colors.border }]}>
+                <Text style={[styles.blockLabel, { color: colors.accent }]}>
                   Traduction {language === "fr" ? "FR" : "EN"}
                 </Text>
                 <Text
-                  style={[styles.translationText, { fontSize: transSize }]}
+                  style={[
+                    styles.translationText,
+                    {
+                      fontSize: transSize,
+                      lineHeight: transLh,
+                      color: colors.text,
+                    },
+                  ]}
                   selectable
                 >
                   {displayTranslation}
@@ -274,7 +292,6 @@ const styles = StyleSheet.create({
     flex: 1,
     fontSize: 18,
     fontFamily: "PlusJakartaSans-SemiBold",
-    color: ICON_COLOR,
     textAlign: "center",
     marginHorizontal: 8,
   },
@@ -283,28 +300,23 @@ const styles = StyleSheet.create({
   langBtnText: {
     fontSize: 13,
     fontFamily: "PlusJakartaSans-SemiBold",
-    color: ACCENT,
   },
   iconBtn: { padding: 8 },
   scroll: { flex: 1 },
   scrollContent: { paddingHorizontal: H_PADDING, paddingBottom: 100 },
   metaCard: {
-    backgroundColor: "rgba(61, 107, 71, 0.08)",
     borderRadius: 12,
     padding: 16,
     marginBottom: 8,
     borderLeftWidth: 4,
-    borderLeftColor: ACCENT,
   },
   metaTitle: {
     fontSize: 15,
     fontFamily: "PlusJakartaSans-SemiBold",
-    color: ICON_COLOR,
   },
   metaSubtitle: {
     fontSize: 13,
     fontFamily: "PlusJakartaSans-Regular",
-    color: TEXT_MUTED,
     marginTop: 4,
   },
   block: {
@@ -316,26 +328,21 @@ const styles = StyleSheet.create({
   blockLabel: {
     fontSize: 11,
     fontFamily: "PlusJakartaSans-SemiBold",
-    color: "rgba(61, 107, 71, 0.9)",
     textTransform: "uppercase",
     letterSpacing: 0.5,
     marginBottom: 10,
   },
   arabicText: {
     fontFamily: "PlusJakartaSans-Regular",
-    color: ICON_COLOR,
     textAlign: "right",
     writingDirection: "rtl",
   },
   translationText: {
     fontFamily: "PlusJakartaSans-Regular",
-    color: ICON_COLOR,
-    lineHeight: 24,
   },
   gradeText: {
     fontSize: 14,
     fontFamily: "PlusJakartaSans-Regular",
-    color: TEXT_MUTED,
     fontStyle: "italic",
     marginTop: 4,
   },
@@ -352,7 +359,6 @@ const styles = StyleSheet.create({
   sourceText: {
     fontSize: 14,
     fontFamily: "PlusJakartaSans-Regular",
-    color: TEXT_MUTED,
     fontStyle: "italic",
   },
   bottomSpacer: { height: 24 },
@@ -365,7 +371,6 @@ const styles = StyleSheet.create({
   loadingText: {
     fontSize: 16,
     fontFamily: "PlusJakartaSans-Regular",
-    color: TEXT_MUTED,
   },
   errorWrap: {
     flex: 1,
@@ -376,7 +381,6 @@ const styles = StyleSheet.create({
   errorText: {
     fontSize: 16,
     fontFamily: "PlusJakartaSans-Regular",
-    color: ICON_COLOR,
     textAlign: "center",
     marginBottom: 20,
   },
@@ -384,7 +388,6 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
     paddingHorizontal: 28,
     borderRadius: 12,
-    backgroundColor: ACCENT,
   },
   retryText: {
     fontSize: 16,
@@ -400,6 +403,5 @@ const styles = StyleSheet.create({
   backLinkText: {
     fontSize: 16,
     fontFamily: "PlusJakartaSans-SemiBold",
-    color: ACCENT,
   },
 });

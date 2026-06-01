@@ -1,6 +1,11 @@
 import { useCallback, useEffect, useState } from "react";
 import * as Location from "expo-location";
 
+import {
+  getAladhanMethodId,
+  getPrayerCalculationMethod,
+} from "@/lib/prayer-method-preference";
+
 const ALADHAN_BY_ADDRESS = "https://api.aladhan.com/v1/timingsByAddress";
 const ALADHAN_BY_COORDS = "https://api.aladhan.com/v1/timings";
 
@@ -39,9 +44,10 @@ export function getPrayerLabel(key: PrayerKey): string {
 
 async function fetchTimingsByCoords(
   latitude: number,
-  longitude: number
+  longitude: number,
+  methodId: number
 ): Promise<PrayerTimes | null> {
-  const url = `${ALADHAN_BY_COORDS}?latitude=${latitude}&longitude=${longitude}`;
+  const url = `${ALADHAN_BY_COORDS}?latitude=${latitude}&longitude=${longitude}&method=${methodId}`;
   const res = await fetch(url);
   const data = await res.json();
   if (data.code !== 200 || !data.data?.timings) return null;
@@ -56,8 +62,11 @@ async function fetchTimingsByCoords(
   };
 }
 
-async function fetchTimingsByAddress(address: string): Promise<PrayerTimes | null> {
-  const url = `${ALADHAN_BY_ADDRESS}?address=${encodeURIComponent(address)}`;
+async function fetchTimingsByAddress(
+  address: string,
+  methodId: number
+): Promise<PrayerTimes | null> {
+  const url = `${ALADHAN_BY_ADDRESS}?address=${encodeURIComponent(address)}&method=${methodId}`;
   const res = await fetch(url);
   const data = await res.json();
   if (data.code !== 200 || !data.data?.timings) return null;
@@ -91,11 +100,13 @@ export function usePrayerTimes() {
 
     (async () => {
       try {
+        const calcMethod = await getPrayerCalculationMethod();
+        const methodId = getAladhanMethodId(calcMethod);
         const { status } = await Location.requestForegroundPermissionsAsync();
         if (cancelled) return;
 
         if (status !== "granted") {
-          const fallback = await fetchTimingsByAddress(FALLBACK_ADDRESS);
+          const fallback = await fetchTimingsByAddress(FALLBACK_ADDRESS, methodId);
           if (!cancelled && fallback) {
             setTimings(fallback);
             setCityName(FALLBACK_ADDRESS);
@@ -112,7 +123,11 @@ export function usePrayerTimes() {
         const { latitude, longitude } = position.coords;
         setCoords({ latitude, longitude });
 
-        const coordsTimings = await fetchTimingsByCoords(latitude, longitude);
+        const coordsTimings = await fetchTimingsByCoords(
+          latitude,
+          longitude,
+          methodId
+        );
         if (cancelled) return;
 
         if (coordsTimings) {
@@ -128,7 +143,7 @@ export function usePrayerTimes() {
             // ignore geocode failure, we still have timings
           }
         } else {
-          const fallback = await fetchTimingsByAddress(FALLBACK_ADDRESS);
+          const fallback = await fetchTimingsByAddress(FALLBACK_ADDRESS, methodId);
           if (!cancelled && fallback) {
             setTimings(fallback);
             setCityName(FALLBACK_ADDRESS);
@@ -138,7 +153,8 @@ export function usePrayerTimes() {
         if (!cancelled) {
           setError(err instanceof Error ? err.message : "Erreur de position");
           try {
-            const fallback = await fetchTimingsByAddress(FALLBACK_ADDRESS);
+            const methodId = getAladhanMethodId(await getPrayerCalculationMethod());
+            const fallback = await fetchTimingsByAddress(FALLBACK_ADDRESS, methodId);
             if (!cancelled && fallback) {
               setTimings(fallback);
               setCityName(FALLBACK_ADDRESS);

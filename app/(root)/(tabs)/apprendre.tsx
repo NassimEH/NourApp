@@ -35,9 +35,13 @@ import {
 } from "@/constants/screen-layout";
 import { ScreenBackground } from "@/components/ScreenBackground";
 
+import { SectionHeader } from "@/components/SectionHeader";
 import { ScreenPageHeader } from "@/components/ScreenPageHeader";
 
 import { useTranslation } from "@/lib/i18n";
+import { useAppTheme } from "@/lib/app-theme";
+import { useAppTypography } from "@/lib/app-typography";
+import { MIN_TOUCH_TARGET, SECTION_GAP } from "@/lib/ui/spacing";
 
 import { useSuraList, useRecentSuras } from "@/lib/quran/hooks";
 
@@ -47,29 +51,12 @@ import type { SuraMeta } from "@/lib/quran/types";
 
 const H_PADDING = SCREEN_EDGE_PADDING;
 
-const ICON_COLOR = "#191D31";
-
-const ACCENT = "#3d6b47";
-
-const TEXT_MUTED = "rgba(0,0,0,0.5)";
-
-const HAIRLINE_BORDER = {
-
-  borderWidth: 1,
-
-  borderColor: "rgba(0, 0, 0, 0.88)",
-
-} as const;
+function hairlineBorder(borderColor: string) {
+  return { borderWidth: StyleSheet.hairlineWidth, borderColor } as const;
+}
 
 
 
-const TABS = [
-
-  { id: "today" as const, label: "Aujourd'hui" },
-
-  { id: "plan" as const, label: "Parcours" },
-
-];
 
 
 
@@ -83,8 +70,14 @@ const LESSON_COLORS = [
 
 
 
-import { PROPHETS_COURSE } from "@/lib/learn/courses/prophets";
-import { useProphetsProgress } from "@/lib/learn/hooks/useProphetsProgress";
+import {
+  getLearnCourses,
+  PROPHETS_COURSE_ID,
+} from "@/lib/learn/courses";
+import { useAppPreferences } from "@/lib/app-preferences";
+import { useLearnProgress } from "@/lib/learn/hooks/useLearnProgress";
+import { useLearnCatalog } from "@/lib/learn/hooks/useLearnCatalog";
+import { useWeeklyGoal } from "@/lib/learn/hooks/useWeeklyGoal";
 import type { LessonStatus } from "@/lib/learn/types";
 
 
@@ -102,18 +95,13 @@ function RecentSuraCard({
   onPress: () => void;
 
 }) {
-
+  const colors = useAppTheme();
   const revelation =
-
     sura.revelationType === "Meccan" ? "Mecquoise" : "Médinoise";
 
-
-
   return (
-
     <TouchableOpacity
-
-      style={[styles.recentSuraCard, HAIRLINE_BORDER]}
+      style={[styles.recentSuraCard, hairlineBorder(colors.border)]}
 
       onPress={onPress}
 
@@ -121,19 +109,24 @@ function RecentSuraCard({
 
     >
 
-      <View style={[styles.recentSuraNumberWrap, HAIRLINE_BORDER]}>
+      <View style={[styles.recentSuraNumberWrap, hairlineBorder(colors.border)]}>
 
-        <Text style={styles.recentSuraNumber}>{sura.number}</Text>
+        <Text style={[styles.recentSuraNumber, { color: colors.text }]}>
+          {sura.number}
+        </Text>
 
       </View>
 
-      <Text style={styles.recentSuraTitle} numberOfLines={1}>
+      <Text style={[styles.recentSuraTitle, { color: colors.text }]} numberOfLines={1}>
 
         {sura.englishName}
 
       </Text>
 
-      <Text style={styles.recentSuraSubtitle} numberOfLines={2}>
+      <Text
+        style={[styles.recentSuraSubtitle, { color: colors.textMuted }]}
+        numberOfLines={2}
+      >
 
         {sura.numberOfAyahs} versets · {revelation}
 
@@ -152,14 +145,33 @@ export default function ApprendreScreen() {
   const { user } = useGlobalContext();
 
   const { t } = useTranslation();
+  const colors = useAppTheme();
+  const { locale } = useAppPreferences();
+  const courses = useMemo(() => getLearnCourses(locale), [locale]);
+  const [selectedCourseId, setSelectedCourseId] = useState(PROPHETS_COURSE_ID);
+  const activeCourse = useMemo(
+    () => courses.find((c) => c.id === selectedCourseId) ?? courses[0],
+    [courses, selectedCourseId]
+  );
 
   const [activeTab, setActiveTab] = useState<"today" | "plan">("today");
+
+  const tabs = useMemo(
+    () => [
+      { id: "today" as const, label: t("learn.tabToday") },
+      { id: "plan" as const, label: t("learn.tabPlan") },
+    ],
+    [t]
+  );
 
   const { list: suras } = useSuraList();
 
   const { recentSuraNumbers, refetch: refetchRecent } = useRecentSuras();
+  const { findNextLesson, totalCompleted, loading: catalogLoading } =
+    useLearnCatalog();
   const { getStatus, completedCount, totalLessons, loading: progressLoading } =
-    useProphetsProgress();
+    useLearnProgress(activeCourse?.id ?? PROPHETS_COURSE_ID);
+  const { goal: weeklyGoal, done: weeklyDone, cycleGoal } = useWeeklyGoal();
 
 
 
@@ -187,10 +199,15 @@ export default function ApprendreScreen() {
 
   }, [suras, recentSuraNumbers]);
 
+  const nextLesson = useMemo(() => {
+    if (catalogLoading) return null;
+    return findNextLesson();
+  }, [catalogLoading, findNextLesson]);
 
+  const typography = useAppTypography();
+  const cardBorder = hairlineBorder(colors.border);
 
   return (
-
     <ScreenBackground style={styles.background}>
 
       <SafeAreaView style={styles.safeArea} edges={["top", "left", "right"]}>
@@ -200,9 +217,11 @@ export default function ApprendreScreen() {
           style={screenPageHeaderSpacing}
           rightElement={
             <View style={styles.headerRight}>
-              <View style={[styles.streakBadge, HAIRLINE_BORDER]}>
-                <AppIcon name="zap" size={28} color={ACCENT} />
-                <Text style={styles.streakCount}>{completedCount}</Text>
+              <View style={[styles.streakBadge, cardBorder]}>
+                <AppIcon name="zap" size={28} color={colors.accent} />
+                <Text style={[styles.streakCount, { color: colors.text }]}>
+                  {totalCompleted}
+                </Text>
               </View>
               <TouchableOpacity
                 onPress={() => router.push("/apprendre-stats")}
@@ -215,7 +234,7 @@ export default function ApprendreScreen() {
                       user?.avatar ??
                       "https://ui-avatars.com/api/?name=U&size=80",
                   }}
-                  style={[styles.headerAvatar, HAIRLINE_BORDER]}
+                  style={[styles.headerAvatar, cardBorder]}
                 />
               </TouchableOpacity>
             </View>
@@ -225,9 +244,9 @@ export default function ApprendreScreen() {
           showsVerticalScrollIndicator={false}
           contentContainerStyle={styles.scrollContent}
         >
-          <View style={[styles.tabsRow, HAIRLINE_BORDER]}>
+          <View style={[styles.tabsRow, cardBorder]}>
 
-            {TABS.map((tab) => (
+            {tabs.map((tab) => (
 
               <TouchableOpacity
 
@@ -242,22 +261,26 @@ export default function ApprendreScreen() {
               >
 
                 <Text
-
                   style={[
-
                     styles.tabLabel,
-
+                    {
+                      color:
+                        activeTab === tab.id ? colors.text : colors.textMuted,
+                      fontSize: typography.body,
+                    },
                     activeTab === tab.id && styles.tabLabelActive,
-
                   ]}
-
                 >
 
                   {tab.label}
 
                 </Text>
 
-                {activeTab === tab.id && <View style={styles.tabUnderline} />}
+                {activeTab === tab.id ? (
+                  <View
+                    style={[styles.tabUnderline, { backgroundColor: colors.accent }]}
+                  />
+                ) : null}
 
               </TouchableOpacity>
 
@@ -267,50 +290,79 @@ export default function ApprendreScreen() {
 
 
 
-          <TouchableOpacity style={[styles.goalCard, HAIRLINE_BORDER]} activeOpacity={0.8}>
-
-            <View style={[styles.goalIconWrap, HAIRLINE_BORDER]}>
-
-              <AppIcon name="plus" size={24} color={TEXT_MUTED} />
-
+          {activeTab === "today" && (
+            <>
+          <TouchableOpacity
+            style={[styles.goalCard, cardBorder]}
+            activeOpacity={0.8}
+            onPress={cycleGoal}
+          >
+            <View style={[styles.goalIconWrap, cardBorder]}>
+              <AppIcon name="flag" size={24} color={colors.textMuted} />
             </View>
-
-            <Text style={styles.goalText}>Définir ton objectif hebdo</Text>
-
+            <View style={styles.goalTextWrap}>
+              <Text style={[styles.goalText, { color: colors.text }]}>
+                {t("learn.setWeeklyGoal")}
+              </Text>
+              {weeklyGoal > 0 ? (
+                <Text style={[styles.goalSub, { color: colors.textMuted }]}>
+                  {t("learn.weeklyGoalProgress", {
+                    done: weeklyDone,
+                    goal: weeklyGoal,
+                  })}
+                </Text>
+              ) : (
+                <Text style={[styles.goalSub, { color: colors.textMuted }]}>
+                  {t("learn.weeklyGoalTap")}
+                </Text>
+              )}
+            </View>
           </TouchableOpacity>
 
-
+          {completedCount < totalLessons && nextLesson ? (
+            <TouchableOpacity
+              style={[styles.nextLessonCard, cardBorder, { borderColor: colors.border }]}
+              activeOpacity={0.85}
+              onPress={() =>
+                router.push(`/(root)/apprendre/lecon/${nextLesson.id}` as const)
+              }
+            >
+              <Text style={[styles.nextLessonLabel, { color: colors.textMuted }]}>
+                {t("learn.todayNextLesson")}
+              </Text>
+              <Text style={[styles.nextLessonTitle, { color: colors.text }]}>
+                {nextLesson.title} — {nextLesson.subtitle}
+              </Text>
+              <View style={styles.nextLessonCta}>
+                <Text style={[styles.nextLessonCtaText, { color: colors.accent }]}>
+                  {t("learn.start")}
+                </Text>
+                <AppIcon name="chevron-right" size={18} color={colors.accent} />
+              </View>
+            </TouchableOpacity>
+          ) : completedCount >= totalLessons ? (
+            <View style={[styles.nextLessonCard, cardBorder, { borderColor: colors.border }]}>
+              <Text style={[styles.nextLessonTitle, { color: colors.text }]}>
+                {t("learn.todayAllDone")}
+              </Text>
+            </View>
+          ) : null}
 
           <View style={styles.recentSection}>
-
-            <View style={styles.recentSectionHeader}>
-
-              <Text style={styles.recentSectionTitle}>Mes dernières sourates</Text>
-
-              <TouchableOpacity
-
-                onPress={() => router.push("/(root)/(tabs)/coran/sourates")}
-
-                activeOpacity={0.7}
-
-              >
-
-                <Text style={styles.recentSeeAll}>Tout voir</Text>
-
-              </TouchableOpacity>
-
-            </View>
+            <SectionHeader
+              title={t("learn.recentSuras")}
+              onSeeAll={() => router.push("/(root)/(tabs)/coran/sourates")}
+              seeAllLabel={t("learn.recentSeeAll")}
+            />
 
             {recentSuras.length === 0 ? (
 
-              <View style={[styles.recentEmpty, HAIRLINE_BORDER]}>
+              <View style={[styles.recentEmpty, cardBorder]}>
 
-                <AppIcon name="book-open" size={22} color={TEXT_MUTED} />
+                <AppIcon name="book-open" size={22} color={colors.iconMuted} />
 
-                <Text style={styles.recentEmptyText}>
-
-                  Ouvre une sourate dans le Coran pour la retrouver ici.
-
+                <Text style={[styles.recentEmptyText, { color: colors.textMuted }]}>
+                  {t("learn.recentEmpty")}
                 </Text>
 
               </View>
@@ -350,16 +402,58 @@ export default function ApprendreScreen() {
             )}
 
           </View>
+            </>
+          )}
 
+          {activeTab === "plan" && (
+            <>
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.courseChips}
+          >
+            {courses.map((course) => {
+              const selected = course.id === activeCourse?.id;
+              return (
+                <TouchableOpacity
+                  key={course.id}
+                  style={[
+                    styles.courseChip,
+                    cardBorder,
+                    {
+                      backgroundColor: selected
+                        ? colors.accent
+                        : colors.card,
+                    },
+                  ]}
+                  onPress={() => setSelectedCourseId(course.id)}
+                  activeOpacity={0.8}
+                >
+                  <Text
+                    style={[
+                      styles.courseChipText,
+                      {
+                        color: selected ? "#fff" : colors.text,
+                      },
+                    ]}
+                    numberOfLines={1}
+                  >
+                    {course.title}
+                  </Text>
+                </TouchableOpacity>
+              );
+            })}
+          </ScrollView>
 
-
-          <Text style={styles.courseTitle}>{t("learn.courseProphets")}</Text>
-          <Text style={styles.courseSubtitle}>
-            {t("learn.courseProphetsSubtitle")} ·{" "}
+          <Text style={[styles.courseTitle, { color: colors.text }]}>
+            {activeCourse?.title}
+          </Text>
+          <Text style={[styles.courseSubtitle, { color: colors.textMuted }]}>
+            {activeCourse?.subtitle} ·{" "}
             {t("learn.progress", { done: completedCount, total: totalLessons })}
           </Text>
 
-          {PROPHETS_COURSE.lessons.map((lesson, index) => {
+          {(activeCourse?.lessons ?? []).map((lesson, index) => {
             const status: LessonStatus = progressLoading
               ? index === 0
                 ? "available"
@@ -382,12 +476,12 @@ export default function ApprendreScreen() {
                     style={[
                       styles.lessonCardRect,
                       styles.lessonCardLocked,
-                      HAIRLINE_BORDER,
+                      cardBorder,
                       { backgroundColor: cardColor },
                     ]}
                   >
-                    <View style={[styles.lockIconWrap, HAIRLINE_BORDER]}>
-                      <AppIcon name="lock" size={20} color={ICON_COLOR} />
+                    <View style={[styles.lockIconWrap, cardBorder]}>
+                      <AppIcon name="lock" size={20} color={colors.icon} />
                     </View>
                     <View style={styles.lessonCardLockedText}>
                       <Text style={styles.lessonLockedTitle} numberOfLines={1}>
@@ -403,7 +497,7 @@ export default function ApprendreScreen() {
                     style={[
                       styles.lessonCardRect,
                       styles.lessonCardActive,
-                      HAIRLINE_BORDER,
+                      cardBorder,
                       { backgroundColor: cardColor },
                     ]}
                   >
@@ -416,7 +510,7 @@ export default function ApprendreScreen() {
                         {lesson.title} — {lesson.subtitle}
                       </Text>
                       <View style={styles.lessonActiveVisual}>
-                        <View style={[styles.lessonVisualPlaceholder, HAIRLINE_BORDER]}>
+                        <View style={[styles.lessonVisualPlaceholder, cardBorder]}>
                           <AppIcon
                             name={completed ? "check-circle" : "star"}
                             size={36}
@@ -425,7 +519,7 @@ export default function ApprendreScreen() {
                         </View>
                       </View>
                       <TouchableOpacity
-                        style={[styles.startButton, HAIRLINE_BORDER]}
+                        style={[styles.startButton, cardBorder]}
                         activeOpacity={0.8}
                         onPress={openLesson}
                       >
@@ -440,8 +534,8 @@ export default function ApprendreScreen() {
               </View>
             );
           })}
-
-
+            </>
+          )}
 
           <View style={styles.bottomSpacer} />
 
@@ -502,8 +596,6 @@ const styles = StyleSheet.create({
 
     fontFamily: "PlusJakartaSans-Bold",
 
-    color: ICON_COLOR,
-
   },
 
   avatarTouchable: {},
@@ -539,26 +631,18 @@ const styles = StyleSheet.create({
   },
 
   tab: {
-
     paddingVertical: 8,
-
+    minHeight: MIN_TOUCH_TARGET,
+    justifyContent: "center",
   },
 
   tabLabel: {
-
     fontSize: 17,
-
     fontFamily: "PlusJakartaSans-Medium",
-
-    color: TEXT_MUTED,
-
   },
 
   tabLabelActive: {
-
     fontFamily: "PlusJakartaSans-Bold",
-
-    color: ICON_COLOR,
 
   },
 
@@ -574,7 +658,7 @@ const styles = StyleSheet.create({
 
     height: 3,
 
-    backgroundColor: ACCENT,
+    backgroundColor: "transparent",
 
     borderRadius: 2,
 
@@ -618,14 +702,22 @@ const styles = StyleSheet.create({
 
   },
 
+  goalTextWrap: {
+    flex: 1,
+    gap: 4,
+  },
   goalText: {
 
     fontSize: 16,
 
     fontFamily: "PlusJakartaSans-SemiBold",
 
-    color: ICON_COLOR,
 
+  },
+  goalSub: {
+    fontSize: 13,
+    fontFamily: "PlusJakartaSans-Regular",
+    lineHeight: 18,
   },
 
 
@@ -654,7 +746,6 @@ const styles = StyleSheet.create({
 
     fontFamily: "PlusJakartaSans-Bold",
 
-    color: ICON_COLOR,
 
   },
 
@@ -664,7 +755,6 @@ const styles = StyleSheet.create({
 
     fontFamily: "PlusJakartaSans-SemiBold",
 
-    color: TEXT_MUTED,
 
   },
 
@@ -714,7 +804,6 @@ const styles = StyleSheet.create({
 
     fontFamily: "PlusJakartaSans-Bold",
 
-    color: ACCENT,
 
   },
 
@@ -724,7 +813,6 @@ const styles = StyleSheet.create({
 
     fontFamily: "PlusJakartaSans-SemiBold",
 
-    color: ICON_COLOR,
 
     marginBottom: 4,
 
@@ -736,7 +824,6 @@ const styles = StyleSheet.create({
 
     fontFamily: "PlusJakartaSans-Regular",
 
-    color: TEXT_MUTED,
 
     lineHeight: 15,
 
@@ -766,7 +853,6 @@ const styles = StyleSheet.create({
 
     fontFamily: "PlusJakartaSans-Regular",
 
-    color: TEXT_MUTED,
 
     lineHeight: 20,
 
@@ -774,13 +860,28 @@ const styles = StyleSheet.create({
 
 
 
+  courseChips: {
+    flexDirection: "row",
+    gap: 10,
+    marginBottom: 16,
+    paddingRight: H_PADDING,
+  },
+  courseChip: {
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    borderRadius: 12,
+    maxWidth: 220,
+  },
+  courseChipText: {
+    fontSize: 14,
+    fontFamily: "PlusJakartaSans-SemiBold",
+  },
   courseTitle: {
 
     fontSize: 20,
 
     fontFamily: "PlusJakartaSans-Bold",
 
-    color: ICON_COLOR,
 
     marginBottom: 6,
 
@@ -792,7 +893,6 @@ const styles = StyleSheet.create({
 
     fontFamily: "PlusJakartaSans-Regular",
 
-    color: TEXT_MUTED,
 
     marginBottom: 20,
 
@@ -800,7 +900,33 @@ const styles = StyleSheet.create({
 
   },
 
-
+  nextLessonCard: {
+    padding: 18,
+    borderRadius: 16,
+    marginBottom: 24,
+    backgroundColor: "rgba(255,255,255,0.65)",
+    gap: 8,
+  },
+  nextLessonLabel: {
+    fontSize: 12,
+    fontFamily: "PlusJakartaSans-SemiBold",
+    textTransform: "uppercase",
+    letterSpacing: 0.4,
+  },
+  nextLessonTitle: {
+    fontSize: 17,
+    fontFamily: "PlusJakartaSans-Bold",
+  },
+  nextLessonCta: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    marginTop: 4,
+  },
+  nextLessonCtaText: {
+    fontSize: 15,
+    fontFamily: "PlusJakartaSans-SemiBold",
+  },
 
   lessonCardWrap: {
 
@@ -872,7 +998,6 @@ const styles = StyleSheet.create({
 
     fontFamily: "PlusJakartaSans-SemiBold",
 
-    color: ICON_COLOR,
 
   },
 
@@ -882,7 +1007,6 @@ const styles = StyleSheet.create({
 
     fontFamily: "PlusJakartaSans-Regular",
 
-    color: TEXT_MUTED,
 
     marginTop: 2,
 

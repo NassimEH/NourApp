@@ -103,6 +103,7 @@ export default function TabsLayout() {
           borderTopWidth: 0,
           elevation: 0,
           shadowOpacity: 0,
+          backgroundColor: "transparent",
         },
       };
 

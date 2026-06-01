@@ -17,11 +17,11 @@ import {
   screenScrollContent,
 } from "@/constants/screen-layout";
 import { useAppTheme } from "@/lib/app-theme";
+import { useAppTypography } from "@/lib/app-typography";
+import { bodyLineHeight } from "@/lib/ui/typography";
 import { useTranslation } from "@/lib/i18n";
-import {
-  getProphetsLesson,
-  PROPHETS_COURSE,
-} from "@/lib/learn/courses/prophets";
+import { getLearnLesson } from "@/lib/learn/courses";
+import { useAppPreferences } from "@/lib/app-preferences";
 import {
   getCompletedLessonIds,
   isLessonUnlocked,
@@ -33,8 +33,16 @@ type Phase = "content" | "quiz" | "result";
 export default function LearnLessonScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const colors = useAppTheme();
+  const typography = useAppTypography();
+  const { locale } = useAppPreferences();
   const { t, rtlTextStyle } = useTranslation();
-  const lesson = id ? getProphetsLesson(id) : undefined;
+  const paragraphLh = bodyLineHeight(typography.body);
+  const resolved = useMemo(
+    () => (id ? getLearnLesson(id, locale) : undefined),
+    [id, locale]
+  );
+  const course = resolved?.course;
+  const lesson = resolved?.lesson;
 
   const [phase, setPhase] = useState<Phase>("content");
   const [answers, setAnswers] = useState<Record<string, number>>({});
@@ -43,16 +51,16 @@ export default function LearnLessonScreen() {
   const [checking, setChecking] = useState(true);
 
   const lessonIndex = useMemo(
-    () => PROPHETS_COURSE.lessons.findIndex((l) => l.id === id),
-    [id]
+    () => course?.lessons.findIndex((l) => l.id === id) ?? -1,
+    [course?.lessons, id]
   );
 
   const nextLesson = useMemo(() => {
-    if (lessonIndex < 0 || lessonIndex >= PROPHETS_COURSE.lessons.length - 1) {
+    if (!course || lessonIndex < 0 || lessonIndex >= course.lessons.length - 1) {
       return null;
     }
-    return PROPHETS_COURSE.lessons[lessonIndex + 1];
-  }, [lessonIndex]);
+    return course.lessons[lessonIndex + 1];
+  }, [lessonIndex, course]);
 
   useFocusEffect(
     useCallback(() => {
@@ -62,7 +70,8 @@ export default function LearnLessonScreen() {
         const completed = await getCompletedLessonIds();
         if (cancelled || !lesson) return;
         const ok =
-          isLessonUnlocked(lessonIndex, PROPHETS_COURSE.lessons, completed) ||
+          !course ||
+          isLessonUnlocked(lessonIndex, course.lessons, completed) ||
           completed.includes(lesson.id);
         setUnlocked(ok);
         setChecking(false);
@@ -71,7 +80,7 @@ export default function LearnLessonScreen() {
       return () => {
         cancelled = true;
       };
-    }, [lesson, lessonIndex])
+    }, [lesson, lessonIndex, course?.lessons])
   );
 
   const score = useMemo(() => {
@@ -161,7 +170,11 @@ export default function LearnLessonScreen() {
                   <Text
                     style={[
                       styles.sectionBody,
-                      { color: colors.textMuted },
+                      {
+                        color: colors.textMuted,
+                        fontSize: typography.body,
+                        lineHeight: paragraphLh,
+                      },
                       rtlTextStyle,
                     ]}
                   >

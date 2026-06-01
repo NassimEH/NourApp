@@ -20,12 +20,11 @@ import { ScreenBackground } from "@/components/ScreenBackground";
 import { SCREEN_EDGE_PADDING } from "@/constants/screen-layout";
 import { ScreenPageHeader } from "@/components/ScreenPageHeader";
 import { useAppTheme } from "@/lib/app-theme";
+import { useAppTypography } from "@/lib/app-typography";
+import { bodyLineHeight } from "@/lib/ui/typography";
 import { useTranslation } from "@/lib/i18n";
 
 const H_PADDING = SCREEN_EDGE_PADDING;
-const ICON_COLOR = "#191D31";
-const ACCENT = "#3d6b47";
-const TEXT_MUTED = "rgba(0,0,0,0.5)";
 
 function filterSuras(list: SuraMeta[], query: string): SuraMeta[] {
   const q = query.trim().toLowerCase();
@@ -44,6 +43,8 @@ export default function SouratesScreen() {
   const [search, setSearch] = useState("");
   const [verseOfDayInArabic, setVerseOfDayInArabic] = useState(false);
   const colors = useAppTheme();
+  const typography = useAppTypography();
+  const bodyLh = bodyLineHeight(typography.body);
   const { t } = useTranslation();
 
   const filtered = useMemo(() => filterSuras(list, search), [list, search]);
@@ -75,26 +76,37 @@ export default function SouratesScreen() {
           <SuraListSkeleton />
         ) : error && list.length === 0 ? (
           <View style={styles.errorBlock}>
-            <Text style={styles.errorText}>{error}</Text>
-            <TouchableOpacity style={styles.retryButton} onPress={() => refetch()} activeOpacity={0.8}>
+            <Text style={[styles.errorText, { color: colors.text }]}>{error}</Text>
+            <TouchableOpacity
+              style={[styles.retryButton, { backgroundColor: colors.accent }]}
+              onPress={() => refetch()}
+              activeOpacity={0.8}
+            >
               <AppIcon name="refresh-cw" size={20} color="#fff" />
-              <Text style={styles.retryText}>Réessayer</Text>
+              <Text style={styles.retryText}>{t("home.retry")}</Text>
             </TouchableOpacity>
           </View>
         ) : (
           <>
-            <View style={styles.searchWrap}>
-              <AppIcon name="search" size={18} color={TEXT_MUTED} style={styles.searchIcon} />
+            <View
+              style={[styles.searchWrap, { borderBottomColor: colors.border }]}
+            >
+              <AppIcon
+                name="search"
+                size={18}
+                color={colors.textMuted}
+                style={styles.searchIcon}
+              />
               <TextInput
-                style={styles.searchInput}
+                style={[styles.searchInput, { color: colors.text }]}
                 placeholder="Rechercher…"
-                placeholderTextColor={TEXT_MUTED}
+                placeholderTextColor={colors.textMuted}
                 value={search}
                 onChangeText={setSearch}
               />
               {search.length > 0 && (
                 <TouchableOpacity onPress={() => setSearch("")} hitSlop={12}>
-                  <AppIcon name="x" size={18} color={TEXT_MUTED} />
+                  <AppIcon name="x" size={18} color={colors.textMuted} />
                 </TouchableOpacity>
               )}
             </View>
@@ -104,22 +116,40 @@ export default function SouratesScreen() {
               keyExtractor={(item) => String(item.number)}
               ListHeaderComponent={
                 randomAyah ? (
-                  <View style={styles.verseOfDayBlock}>
+                  <View
+                    style={[styles.verseOfDayBlock, { borderTopColor: colors.border }]}
+                  >
                     <TouchableOpacity
                       activeOpacity={0.7}
-                      onPress={() => router.push(`/(root)/(tabs)/coran/${randomAyah.suraNumber}` as const)}
+                      onPress={() =>
+                        router.push(
+                          `/(root)/(tabs)/coran/${randomAyah.suraNumber}` as const
+                        )
+                      }
                     >
-                      <Text style={styles.verseOfDayLabel}>Verset du jour</Text>
+                      <Text
+                        style={[styles.verseOfDayLabel, { color: colors.accent }]}
+                      >
+                        Verset du jour
+                      </Text>
                       <Text
                         style={[
                           styles.verseOfDayText,
+                          {
+                            color: colors.text,
+                            lineHeight: bodyLh,
+                          },
                           verseOfDayInArabic && styles.verseOfDayTextRtl,
                         ]}
                         numberOfLines={4}
                       >
-                        {verseOfDayInArabic ? randomAyah.textAr : randomAyah.textFr || randomAyah.textAr}
+                        {verseOfDayInArabic
+                          ? randomAyah.textAr
+                          : randomAyah.textFr || randomAyah.textAr}
                       </Text>
-                      <Text style={styles.verseOfDayRef}>
+                      <Text
+                        style={[styles.verseOfDayRef, { color: colors.textMuted }]}
+                      >
                         Sourate {randomAyah.suraNumber}, verset {randomAyah.ayahNumber}
                       </Text>
                     </TouchableOpacity>
@@ -128,7 +158,9 @@ export default function SouratesScreen() {
                       onPress={() => setVerseOfDayInArabic((v) => !v)}
                       activeOpacity={0.7}
                     >
-                      <Text style={styles.verseOfDayToggleText}>
+                      <Text
+                        style={[styles.verseOfDayToggleText, { color: colors.accent }]}
+                      >
                         {verseOfDayInArabic ? "Voir en français" : "Voir en arabe"}
                       </Text>
                     </TouchableOpacity>
@@ -142,7 +174,9 @@ export default function SouratesScreen() {
               showsVerticalScrollIndicator={false}
               ListEmptyComponent={
                 <View style={styles.empty}>
-                  <Text style={styles.emptyText}>Aucune sourate trouvée</Text>
+                  <Text style={[styles.emptyText, { color: colors.textMuted }]}>
+                    Aucune sourate trouvée
+                  </Text>
                 </View>
               }
             />
@@ -156,19 +190,6 @@ export default function SouratesScreen() {
 const styles = StyleSheet.create({
   background: { flex: 1 },
   safeArea: { flex: 1, backgroundColor: "transparent" },
-  header: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingHorizontal: H_PADDING,
-    paddingVertical: 12,
-  },
-  backButton: { paddingVertical: 8, paddingRight: 8 },
-  title: {
-    fontSize: 20,
-    fontFamily: "PlusJakartaSans-Bold",
-    color: ICON_COLOR,
-  },
   juzLink: {
     flexDirection: "row",
     alignItems: "center",
@@ -179,7 +200,6 @@ const styles = StyleSheet.create({
   juzLinkText: {
     fontSize: 15,
     fontFamily: "PlusJakartaSans-SemiBold",
-    color: ACCENT,
   },
   searchWrap: {
     flexDirection: "row",
@@ -188,41 +208,33 @@ const styles = StyleSheet.create({
     marginBottom: 20,
     paddingVertical: 10,
     borderBottomWidth: 1,
-    borderBottomColor: "rgba(0,0,0,0.08)",
   },
   searchIcon: { marginRight: 10 },
   searchInput: {
     flex: 1,
     fontSize: 15,
     fontFamily: "PlusJakartaSans-Regular",
-    color: ICON_COLOR,
     padding: 0,
   },
   verseOfDayBlock: {
     paddingTop: 20,
     marginBottom: 20,
     borderTopWidth: 1,
-    borderTopColor: "rgba(0,0,0,0.08)",
     gap: 8,
   },
   verseOfDayLabel: {
     fontSize: 11,
     fontFamily: "PlusJakartaSans-SemiBold",
-    color: "rgba(61, 107, 71, 0.9)",
     textTransform: "uppercase",
     letterSpacing: 0.5,
   },
   verseOfDayText: {
     fontSize: 15,
     fontFamily: "PlusJakartaSans-Medium",
-    color: ICON_COLOR,
-    lineHeight: 24,
   },
   verseOfDayRef: {
     fontSize: 13,
     fontFamily: "PlusJakartaSans-Regular",
-    color: "#5b5d5e",
-    lineHeight: 20,
     fontStyle: "italic",
   },
   verseOfDayTextRtl: {
@@ -236,7 +248,6 @@ const styles = StyleSheet.create({
   verseOfDayToggleText: {
     fontSize: 13,
     fontFamily: "PlusJakartaSans-SemiBold",
-    color: ACCENT,
   },
   listContent: {
     paddingHorizontal: H_PADDING,
@@ -251,7 +262,6 @@ const styles = StyleSheet.create({
   errorText: {
     fontSize: 16,
     fontFamily: "PlusJakartaSans-Regular",
-    color: ICON_COLOR,
     textAlign: "center",
     marginBottom: 20,
   },
@@ -262,7 +272,6 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
     paddingHorizontal: 24,
     borderRadius: 14,
-    backgroundColor: ACCENT,
   },
   retryText: {
     fontSize: 16,
@@ -273,6 +282,5 @@ const styles = StyleSheet.create({
   emptyText: {
     fontSize: 15,
     fontFamily: "PlusJakartaSans-Regular",
-    color: TEXT_MUTED,
   },
 });

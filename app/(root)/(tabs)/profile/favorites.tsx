@@ -1,131 +1,218 @@
-import {
-  FlatList,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
-} from "react-native";
+import { FlatList, StyleSheet, Text, View } from "react-native";
+
 import { SafeAreaView } from "react-native-safe-area-context";
-import { router } from "expo-router";
-import { AppIcon } from "@/components/AppIcon";
-import { useFocusEffect } from "expo-router";
+
+import { router, useFocusEffect } from "expo-router";
+
 import { useCallback } from "react";
 
-import { useDuaFavorites } from "@/lib/dua";
+
+
+import { AppIcon } from "@/components/AppIcon";
+
+import { ListRow } from "@/components/ListRow";
+
 import { ScreenBackground } from "@/components/ScreenBackground";
+
 import { SCREEN_EDGE_PADDING } from "@/constants/screen-layout";
+
 import { ScreenPageHeader } from "@/components/ScreenPageHeader";
+
 import { useTranslation } from "@/lib/i18n";
 
+import { useAppTheme } from "@/lib/app-theme";
+
+import {
+
+  useUnifiedFavorites,
+
+  type UnifiedFavoriteKind,
+
+} from "@/lib/favorites/useUnifiedFavorites";
+
 const H_PADDING = SCREEN_EDGE_PADDING;
-const ICON_COLOR = "#191D31";
-const TEXT_MUTED = "rgba(0,0,0,0.5)";
+
+
+
+function kindIcon(kind: UnifiedFavoriteKind) {
+
+  switch (kind) {
+
+    case "dua":
+
+      return "book-open" as const;
+
+    case "hadith":
+
+      return "file-text" as const;
+
+    case "quran":
+
+      return "bookmark" as const;
+
+  }
+
+}
+
+
+
+function kindLabel(
+
+  kind: UnifiedFavoriteKind,
+
+  t: (key: string) => string
+
+): string {
+
+  switch (kind) {
+
+    case "dua":
+
+      return t("favorites.kindDua");
+
+    case "hadith":
+
+      return t("favorites.kindHadith");
+
+    case "quran":
+
+      return t("favorites.kindQuran");
+
+  }
+
+}
+
+
 
 export default function FavoritesScreen() {
+
   const { t } = useTranslation();
-  const { favorites, refetch } = useDuaFavorites();
+
+  const colors = useAppTheme();
+
+  const { items, loading, refetch } = useUnifiedFavorites();
+
+
 
   useFocusEffect(useCallback(() => { refetch(); }, [refetch]));
 
+
+
   return (
+
     <ScreenBackground style={styles.background}>
+
       <SafeAreaView style={styles.safeArea} edges={["top", "left", "right"]}>
+
         <ScreenPageHeader
+
           title={t("screens.favoritesTitle")}
+
           subtitle={t("screens.favoritesSubtitle")}
+
           onBack={() => router.back()}
+
         />
 
-        {favorites.length === 0 ? (
+
+
+        {!loading && items.length === 0 ? (
+
           <View style={styles.empty}>
-            <AppIcon name="heart" size={48} color={TEXT_MUTED} />
-            <Text style={styles.emptyText}>
-              Aucune invocation en favori. Ajoutez-en depuis la section Invocations.
+
+            <AppIcon name="heart" size={48} color={colors.iconMuted} />
+
+            <Text style={[styles.emptyText, { color: colors.textMuted }]}>
+
+              {t("favorites.empty")}
+
             </Text>
+
           </View>
+
         ) : (
+
           <FlatList
-            data={favorites}
-            keyExtractor={(item) => `${item.categorySlug}-${item.duaId}`}
+
+            data={items}
+
+            keyExtractor={(item) => item.id}
+
             contentContainerStyle={styles.listContent}
+
             renderItem={({ item }) => (
-              <TouchableOpacity
-                style={styles.row}
+
+              <ListRow
+
+                icon={kindIcon(item.kind)}
+
+                title={item.title}
+
+                subtitle={`${kindLabel(item.kind, t)}${item.subtitle ? ` · ${item.subtitle}` : ""}`}
+
                 onPress={() =>
+
                   router.push({
-                    pathname: "/(root)/(tabs)/coran/invocations/dua/[slug]/[id]",
-                    params: { slug: item.categorySlug, id: String(item.duaId) },
+
+                    pathname: item.route as never,
+
+                    params: item.params as never,
+
                   })
+
                 }
-                activeOpacity={0.7}
-              >
-                <AppIcon name="book-open" size={22} color={ICON_COLOR} />
-                <View style={styles.rowText}>
-                  <Text style={styles.rowTitle} numberOfLines={1}>
-                    {item.title}
-                  </Text>
-                  <Text style={styles.rowSubtitle} numberOfLines={1}>
-                    {item.translation || item.arabic || ""}
-                  </Text>
-                </View>
-                <AppIcon name="chevron-right" size={20} color={ICON_COLOR} />
-              </TouchableOpacity>
+
+              />
+
             )}
+
           />
+
         )}
+
       </SafeAreaView>
+
     </ScreenBackground>
+
   );
+
 }
 
+
+
 const styles = StyleSheet.create({
+
   background: { flex: 1 },
+
   safeArea: { flex: 1, backgroundColor: "transparent" },
-  header: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingHorizontal: H_PADDING,
-    paddingVertical: 12,
-  },
-  backBtn: { padding: 8 },
-  title: {
-    fontSize: 20,
-    fontFamily: "PlusJakartaSans-Bold",
-    color: ICON_COLOR,
-  },
-  placeholder: { width: 44 },
+
   listContent: { paddingHorizontal: H_PADDING, paddingBottom: 120 },
-  row: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingVertical: 12,
-    gap: 12,
-  },
-  rowText: { flex: 1 },
-  rowTitle: {
-    fontSize: 17,
-    fontFamily: "PlusJakartaSans-Medium",
-    color: ICON_COLOR,
-  },
-  rowSubtitle: {
-    fontSize: 14,
-    fontFamily: "PlusJakartaSans-Regular",
-    color: TEXT_MUTED,
-    marginTop: 2,
-  },
+
   empty: {
+
     flex: 1,
+
     justifyContent: "center",
+
     alignItems: "center",
+
     paddingHorizontal: 40,
+
   },
+
   emptyText: {
+
     fontSize: 15,
+
     fontFamily: "PlusJakartaSans-Regular",
-    color: TEXT_MUTED,
+
     textAlign: "center",
+
     marginTop: 16,
+
     lineHeight: 22,
+
   },
+
 });
+

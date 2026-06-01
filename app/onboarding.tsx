@@ -22,7 +22,6 @@ import {
 import { SCREEN_EDGE_PADDING } from "@/constants/screen-layout";
 import { ONBOARDING_SLIDES } from "@/constants/onboarding-slides";
 import { useAppTheme } from "@/lib/app-theme";
-import { useGlobalContext } from "@/lib/global-provider";
 import { useTranslation } from "@/lib/i18n";
 import { useOnboardingGate } from "@/lib/onboarding-gate";
 
@@ -31,7 +30,6 @@ const { width: SLIDE_WIDTH } = Dimensions.get("window");
 export default function OnboardingScreen() {
   const colors = useAppTheme();
   const { t, rtlTextStyle, rtlViewStyle } = useTranslation();
-  const { loading, isLogged } = useGlobalContext();
   const { markComplete, isComplete } = useOnboardingGate();
   const listRef = useRef<FlatList<(typeof ONBOARDING_SLIDES)[number]>>(null);
   const [index, setIndex] = useState(0);
@@ -69,7 +67,6 @@ export default function OnboardingScreen() {
     });
   }, [index, finish]);
 
-  if (!loading && isLogged) return <Redirect href="/" />;
   if (isComplete) return <Redirect href="/sign-in" />;
 
   return (

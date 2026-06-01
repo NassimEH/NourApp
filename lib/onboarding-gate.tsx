@@ -12,7 +12,7 @@ import {
   persistOnboardingComplete,
 } from "@/lib/onboarding-storage";
 
-/** Évite la boucle sign-in ↔ onboarding dans la même session */
+/** Évite de réafficher l'onboarding dans la même session après complétion */
 let sessionOnboardingComplete = false;
 
 type OnboardingGateContextValue = {

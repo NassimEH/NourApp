@@ -12,6 +12,7 @@ import { SCREEN_EDGE_PADDING } from "@/constants/screen-layout";
 import { useAppTheme } from "@/lib/app-theme";
 import { useAppTypography } from "@/lib/app-typography";
 import { useTranslation } from "@/lib/i18n";
+import { MIN_TOUCH_TARGET } from "@/lib/ui/spacing";
 
 /** Hauteur minimale réservée au bloc sous-titre (2 lignes) */
 export const SCREEN_HEADER_SUBTITLE_MIN_HEIGHT = 44;
@@ -35,7 +36,8 @@ export function ScreenPageHeader({
 }: ScreenPageHeaderProps) {
   const colors = useAppTheme();
   const typography = useAppTypography();
-  const { rtlTextStyle, rtlViewStyle } = useTranslation();
+  const { isRTL, rtlTextStyle, rtlViewStyle } = useTranslation();
+  const backIcon = isRTL ? "chevron-right" : "chevron-left";
 
   const titleSize = typography.pageTitle;
   const subtitleSize = typography.subtitle;
@@ -52,7 +54,7 @@ export function ScreenPageHeader({
             activeOpacity={0.7}
             hitSlop={8}
           >
-            <AppIcon name="chevron-left" size={28} color={colors.icon} />
+            <AppIcon name={backIcon} size={28} color={colors.icon} />
           </TouchableOpacity>
         ) : null}
       </View>
@@ -99,7 +101,7 @@ export function ScreenPageHeader({
 const styles = StyleSheet.create({
   header: {
     flexDirection: "row",
-    alignItems: "flex-start",
+    alignItems: "center",
     justifyContent: "space-between",
     minHeight: 96,
     paddingHorizontal: SCREEN_EDGE_PADDING,
@@ -125,10 +127,13 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 4,
-    paddingTop: 2,
+    minHeight: MIN_TOUCH_TARGET,
+    justifyContent: "center",
   },
   backButton: {
-    paddingVertical: 4,
-    paddingLeft: 4,
+    minWidth: MIN_TOUCH_TARGET,
+    minHeight: MIN_TOUCH_TARGET,
+    alignItems: "center",
+    justifyContent: "center",
   },
 });

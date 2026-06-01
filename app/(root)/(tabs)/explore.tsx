@@ -26,9 +26,11 @@ import {
   screenPageHeaderSpacing,
   screenScrollContent,
 } from "@/constants/screen-layout";
+import { SectionHeader } from "@/components/SectionHeader";
 import { ScreenPageHeader } from "@/components/ScreenPageHeader";
 import { useTranslation } from "@/lib/i18n";
 import { useAppTheme, type AppThemeColors } from "@/lib/app-theme";
+import { MIN_TOUCH_TARGET, SECTION_GAP } from "@/lib/ui/spacing";
 
 const quranImage = require("@/assets/images/islamic-new-year-quran-book-with-dates-photo.jpg");
 const H_PADDING = SCREEN_EDGE_PADDING;
@@ -49,13 +51,20 @@ const FEATURED_CARD_WIDTH = 150;
 const FEATURED_CARD_HEIGHT = 200;
 
 type TabId = "tout" | "sourates" | "recitateurs" | "juz" | "invocations";
-const TABS: { id: TabId; label: string }[] = [
-  { id: "tout", label: "Tout" },
-  { id: "sourates", label: "Sourates" },
-  { id: "recitateurs", label: "Récitateurs" },
-  { id: "juz", label: "Juz'" },
-  { id: "invocations", label: "Invocations" },
-];
+
+function useExploreTabs(): { id: TabId; label: string }[] {
+  const { t } = useTranslation();
+  return useMemo(
+    () => [
+      { id: "tout", label: t("explore.tabAll") },
+      { id: "sourates", label: t("explore.tabSuras") },
+      { id: "recitateurs", label: t("explore.tabReciters") },
+      { id: "juz", label: t("explore.tabJuz") },
+      { id: "invocations", label: t("explore.tabInvocations") },
+    ],
+    [t]
+  );
+}
 
 const RECITERS = [
   { id: "ar.abdulbasitmurattal", name: "Abdul Basit", tag: "Murattal" },
@@ -73,26 +82,6 @@ function usePlaySuraOnExplore() {
   };
 }
 
-function SectionHeader({
-  title,
-  onSeeAll,
-}: {
-  title: string;
-  onSeeAll?: () => void;
-}) {
-  const styles = useExploreStyles();
-  return (
-    <View style={styles.sectionHeader}>
-      <Text style={styles.sectionTitle}>{title}</Text>
-      {onSeeAll && (
-        <TouchableOpacity onPress={onSeeAll} activeOpacity={0.7}>
-          <Text style={styles.seeAllLink}>Tout voir</Text>
-        </TouchableOpacity>
-      )}
-    </View>
-  );
-}
-
 function CompactCard({
   title,
   imageSource,
@@ -104,7 +93,11 @@ function CompactCard({
 }) {
   const styles = useExploreStyles();
   return (
-    <TouchableOpacity style={styles.compactCard} onPress={onPress} activeOpacity={0.8}>
+    <TouchableOpacity
+      style={[styles.compactCard, { minHeight: MIN_TOUCH_TARGET }]}
+      onPress={onPress}
+      activeOpacity={0.8}
+    >
       <Image source={imageSource || quranImage} style={styles.compactCardImage} />
       <Text style={styles.compactCardTitle} numberOfLines={2}>
         {title}
@@ -166,6 +159,7 @@ export default function ExploreScreen() {
   const { t } = useTranslation();
   const colors = useAppTheme();
   const styles = useExploreStyles();
+  const tabs = useExploreTabs();
   const [activeTab, setActiveTab] = useState<TabId>("tout");
   const { list: suras, loading } = useSuraList();
   const playSura = usePlaySuraOnExplore();
@@ -193,7 +187,7 @@ export default function ExploreScreen() {
             showsHorizontalScrollIndicator={false}
             contentContainerStyle={styles.tabsContent}
           >
-            {TABS.map((tab) => {
+            {tabs.map((tab) => {
               const isActive = activeTab === tab.id;
               return (
                 <TouchableOpacity
@@ -234,8 +228,9 @@ export default function ExploreScreen() {
 
               <View style={styles.section}>
                 <SectionHeader
-                  title="Sourates populaires"
+                  title={t("explore.popularSuras")}
                   onSeeAll={() => router.push("/(root)/(tabs)/coran/sourates")}
+                  seeAllLabel={t("library.seeAll")}
                 />
                 <ScrollView
                   horizontal
@@ -258,8 +253,9 @@ export default function ExploreScreen() {
           {showRecitateurs && (
             <View style={styles.section}>
               <SectionHeader
-                title="Récitateurs"
+                title={t("explore.recitersSection")}
                 onSeeAll={() => router.push("/(root)/(tabs)/coran/recitateurs")}
+                seeAllLabel={t("library.seeAll")}
               />
               <ScrollView
                 horizontal
@@ -280,7 +276,7 @@ export default function ExploreScreen() {
 
           {showJuz && (
             <View style={styles.section}>
-              <SectionHeader title="Par Juz'" />
+              <SectionHeader title={t("explore.juzSection")} />
               <ScrollView
                 horizontal
                 showsHorizontalScrollIndicator={false}
@@ -306,8 +302,9 @@ export default function ExploreScreen() {
           {showInvocations && (
             <View style={styles.section}>
               <SectionHeader
-                title="Invocations"
+                title={t("explore.invocationsSection")}
                 onSeeAll={() => router.push("/(root)/(tabs)/coran/invocations")}
+                seeAllLabel={t("library.seeAll")}
               />
               <ScrollView
                 horizontal
@@ -402,6 +399,8 @@ function createExploreStyles(c: AppThemeColors) {
   tab: {
     paddingHorizontal: 16,
     paddingVertical: 8,
+    minHeight: MIN_TOUCH_TARGET,
+    justifyContent: "center",
     borderRadius: 20,
     backgroundColor: c.accentSurface,
     borderWidth: 1.5,
@@ -461,23 +460,7 @@ function createExploreStyles(c: AppThemeColors) {
     paddingHorizontal: 10,
   },
   section: {
-    marginTop: 28,
-  },
-  sectionHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    marginBottom: 16,
-  },
-  sectionTitle: {
-    fontSize: 22,
-    fontFamily: "PlusJakartaSans-Bold",
-    color: c.text,
-  },
-  seeAllLink: {
-    fontSize: 13,
-    fontFamily: "PlusJakartaSans-SemiBold",
-    color: c.accent,
+    marginTop: SECTION_GAP,
   },
   horizontalScroll: {
     flexDirection: "row",

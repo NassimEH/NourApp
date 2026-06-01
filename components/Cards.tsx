@@ -6,10 +6,7 @@
   TouchableOpacity,
   View,
 } from "react-native";
-import { useRouter } from "expo-router";
 import { AppIcon } from "@/components/AppIcon";
-import { Models } from "react-native-appwrite";
-
 import Colors from "@/constants/Colors";
 import { ITEM_HEIGHT, ITEM_WIDTH } from "@/constants";
 import Spacing from "@/constants/Spacing";
@@ -52,8 +49,14 @@ export const ReadingCard = ({ item, onPress }: ReadingCardProps) => {
   );
 };
 
+export type FeaturedCardItem = {
+  image?: string | number | null;
+  name?: string;
+  price?: number | string;
+};
+
 interface Props {
-  item: Models.Document & { image?: string | number | null; name?: string; price?: number | string };
+  item: FeaturedCardItem;
   onPress?: () => void;
   /** Libellé du bouton d’action (ex: "Lire" pour la section lecture) */
   actionLabel?: string;
@@ -69,24 +72,27 @@ const defaultImage = images.background;
 export const FeaturedCard = ({
   item,
   onPress,
-  actionLabel = "Voir le bien",
+  actionLabel = "Ouvrir",
   cardWidth,
   cardHeight,
   noMargin,
 }: Props) => {
-  const router = useRouter();
   const imageSource =
     typeof item.image === "number"
       ? item.image
       : item.image
         ? { uri: item.image }
         : defaultImage;
-  const title = item.name ?? "Bien immobilier";
-  const price = item.price != null ? (typeof item.price === "number" ? `$${item.price}` : String(item.price)) : "—";
+  const title = item.name ?? "";
+  const price =
+    item.price != null
+      ? typeof item.price === "number"
+        ? String(item.price)
+        : String(item.price)
+      : "—";
 
   const handlePress = () => {
     if (onPress) onPress();
-    else if (item.$id && item.$id !== "_placeholder") router.push(`/properties/${item.$id}`);
   };
 
   const width = cardWidth ?? ITEM_WIDTH;
