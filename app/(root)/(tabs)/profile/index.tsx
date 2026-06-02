@@ -27,6 +27,8 @@ import { useTabBarPreference } from "@/lib/tab-bar-preference";
 import { useAppTheme } from "@/lib/app-theme";
 import { useAppTypography } from "@/lib/app-typography";
 import { useTranslation, getPreferenceSubtitle } from "@/lib/i18n";
+import { AVAILABLE_RECITERS } from "@/lib/quran/types";
+import { useQuranAudioContextOptional } from "@/lib/quran/QuranAudioContext";
 import {
   arePrayerNotificationsEnabled,
   rescheduleNextPrayerNotification,
@@ -217,11 +219,15 @@ export default function ProfileScreen() {
   const [locationGranted, setLocationGranted] = useState(false);
   const [notificationsEnabled, setNotificationsEnabled] = useState(false);
   const { tabBarVariant } = useTabBarPreference();
-  const { theme, iconStyle, textSize, accentColor, locale } = useAppPreferences();
+  const { theme, iconStyle, textSize, accentColor, locale, quranReciter, setQuranReciter } =
+    useAppPreferences();
+  const quranAudio = useQuranAudioContextOptional();
   const colors = useAppTheme();
   const typography = useAppTypography();
   const { t, rtlTextStyle, rtlViewStyle } = useTranslation();
   const { timings: prayerTimes } = usePrayerTimes();
+  const currentReciterName =
+    AVAILABLE_RECITERS.find((r) => r.id === quranReciter)?.name ?? "—";
 
   const handleShareApp = async () => {
     try {
@@ -332,6 +338,25 @@ export default function ProfileScreen() {
     } else {
       Alert.alert(t("profile.logoutError"), t("profile.logoutErrorBody"));
     }
+  };
+
+  const handleSelectFavoriteReciter = () => {
+    Alert.alert(
+      t("profile.favoriteReciter"),
+      t("profile.favoriteReciterSubtitle"),
+      [
+        ...AVAILABLE_RECITERS.map((reciter) => ({
+          text: reciter.id === quranReciter ? `✓ ${reciter.name}` : reciter.name,
+          onPress: () => {
+            setQuranReciter(reciter.id);
+            if (quranAudio) {
+              void quranAudio.setReciter(reciter.id);
+            }
+          },
+        })),
+        { text: t("common.cancel"), style: "cancel" as const },
+      ]
+    );
   };
 
   return (
@@ -477,6 +502,12 @@ export default function ProfileScreen() {
                 />
               );
             })}
+            <SettingsItem
+              iconName="mic"
+              title={t("profile.favoriteReciter")}
+              subtitle={currentReciterName}
+              onPress={handleSelectFavoriteReciter}
+            />
           </View>
 
           <View

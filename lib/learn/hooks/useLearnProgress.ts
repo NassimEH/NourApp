@@ -22,12 +22,12 @@ export function useLearnProgress(courseId: string) {
   const refresh = useCallback(async () => {
     setLoading(true);
     try {
-      const ids = await getCompletedLessonIds();
+      const ids = await getCompletedLessonIds(courseId);
       setCompletedIds(ids);
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [courseId]);
 
   useFocusEffect(
     useCallback(() => {
@@ -48,11 +48,11 @@ export function useLearnProgress(courseId: string) {
   );
 
   const completeLesson = useCallback(async (lessonId: string) => {
-    await markLessonCompleted(lessonId);
+    await markLessonCompleted(courseId, lessonId);
     setCompletedIds((prev) =>
       prev.includes(lessonId) ? prev : [...prev, lessonId]
     );
-  }, []);
+  }, [courseId]);
 
   const completedCount = course
     ? course.lessons.filter((l) => completedIds.includes(l.id)).length

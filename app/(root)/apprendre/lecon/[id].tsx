@@ -67,7 +67,7 @@ export default function LearnLessonScreen() {
       let cancelled = false;
       (async () => {
         setChecking(true);
-        const completed = await getCompletedLessonIds();
+        const completed = await getCompletedLessonIds(course?.id ?? "prophets-life");
         if (cancelled || !lesson) return;
         const ok =
           !course ||
@@ -102,9 +102,9 @@ export default function LearnLessonScreen() {
     setPassed(success);
     setPhase("result");
     if (success) {
-      await markLessonCompleted(lesson.id);
+      await markLessonCompleted(course?.id ?? "prophets-life", lesson.id);
     }
-  }, [lesson, allAnswered, score]);
+  }, [lesson, course?.id, allAnswered, score]);
 
   if (!lesson) {
     return null;

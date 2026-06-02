@@ -3,7 +3,6 @@
  */
 
 import {
-  Image,
   ScrollView,
   StyleSheet,
   Text,
@@ -14,7 +13,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router } from "expo-router";
-import { AppIcon } from "@/components/AppIcon";
+import { AppIcon, type AppIconName } from "@/components/AppIcon";
 import { useMemo, useState } from "react";
 
 import { useSuraList } from "@/lib/quran/hooks/useSuraList";
@@ -32,7 +31,6 @@ import { useTranslation } from "@/lib/i18n";
 import { useAppTheme, type AppThemeColors } from "@/lib/app-theme";
 import { MIN_TOUCH_TARGET, SECTION_GAP } from "@/lib/ui/spacing";
 
-const quranImage = require("@/assets/images/islamic-new-year-quran-book-with-dates-photo.jpg");
 const H_PADDING = SCREEN_EDGE_PADDING;
 const GAP = 8;
 const SCROLL_PADDING_BOTTOM = 120;
@@ -84,13 +82,14 @@ function usePlaySuraOnExplore() {
 
 function CompactCard({
   title,
-  imageSource,
+  icon,
   onPress,
 }: {
   title: string;
-  imageSource?: any;
+  icon: AppIconName;
   onPress: () => void;
 }) {
+  const colors = useAppTheme();
   const styles = useExploreStyles();
   return (
     <TouchableOpacity
@@ -98,7 +97,9 @@ function CompactCard({
       onPress={onPress}
       activeOpacity={0.8}
     >
-      <Image source={imageSource || quranImage} style={styles.compactCardImage} />
+      <View style={styles.compactCardIconWrap}>
+        <AppIcon name={icon} size={20} color={colors.accent} />
+      </View>
       <Text style={styles.compactCardTitle} numberOfLines={2}>
         {title}
       </Text>
@@ -109,18 +110,21 @@ function CompactCard({
 function FeaturedCardSpotify({
   title,
   subtitle,
-  imageSource,
+  icon,
   onPress,
 }: {
   title: string;
   subtitle: string;
-  imageSource?: any;
+  icon: AppIconName;
   onPress: () => void;
 }) {
+  const colors = useAppTheme();
   const styles = useExploreStyles();
   return (
     <TouchableOpacity style={styles.featuredCard} onPress={onPress} activeOpacity={0.8}>
-      <Image source={imageSource || quranImage} style={styles.featuredCardImage} />
+      <View style={styles.featuredCardIconWrap}>
+        <AppIcon name={icon} size={28} color={colors.accent} />
+      </View>
       <Text style={styles.featuredCardTitle} numberOfLines={1}>
         {title}
       </Text>
@@ -220,6 +224,7 @@ export default function ExploreScreen() {
                     <CompactCard
                       key={sura.number}
                       title={sura.englishName}
+                      icon="book-open"
                       onPress={() => playSura(sura.number)}
                     />
                   ))}
@@ -242,6 +247,7 @@ export default function ExploreScreen() {
                       key={sura.number}
                       title={sura.englishName}
                       subtitle={`${sura.numberOfAyahs} versets • ${sura.revelationType === "Meccan" ? "Mecquoise" : "Médinoise"}`}
+                      icon="book-open"
                       onPress={() => playSura(sura.number)}
                     />
                   ))}
@@ -336,7 +342,7 @@ export default function ExploreScreen() {
           {showSourates && discoverSuras.length > 0 && (
             <View style={styles.section}>
               <SectionHeader
-                title="À découvrir"
+                title={t("explore.discoverSection")}
                 onSeeAll={() => router.push("/(root)/(tabs)/coran/sourates")}
               />
               <ScrollView
@@ -349,6 +355,7 @@ export default function ExploreScreen() {
                     key={sura.number}
                     title={sura.englishName}
                     subtitle={`Sourate ${sura.number} • ${sura.numberOfAyahs} versets`}
+                    icon="book-open"
                     onPress={() => playSura(sura.number)}
                   />
                 ))}
@@ -446,11 +453,16 @@ function createExploreStyles(c: AppThemeColors) {
     borderWidth: 1,
     borderColor: c.border,
   },
-  compactCardImage: {
+  compactCardIconWrap: {
     width: GRID_IMAGE_SIZE,
     height: GRID_IMAGE_SIZE,
     borderTopLeftRadius: 5,
     borderBottomLeftRadius: 5,
+    backgroundColor: c.accentSurface,
+    borderRightWidth: 1,
+    borderRightColor: c.accentBorder,
+    alignItems: "center",
+    justifyContent: "center",
   },
   compactCardTitle: {
     flex: 1,
@@ -469,11 +481,21 @@ function createExploreStyles(c: AppThemeColors) {
   },
   featuredCard: {
     width: FEATURED_CARD_WIDTH,
+    padding: 12,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: c.border,
+    backgroundColor: c.cardElevated,
   },
-  featuredCardImage: {
-    width: FEATURED_CARD_WIDTH,
-    height: FEATURED_CARD_WIDTH,
-    borderRadius: 8,
+  featuredCardIconWrap: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: c.accentSurface,
+    borderWidth: 1,
+    borderColor: c.accentBorder,
+    alignItems: "center",
+    justifyContent: "center",
     marginBottom: 10,
   },
   featuredCardTitle: {

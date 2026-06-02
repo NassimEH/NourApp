@@ -1,7 +1,10 @@
 import { StyleSheet, Text, View } from "react-native";
+import { useCallback, useState } from "react";
+import { useFocusEffect } from "expo-router";
 
 import { AppIcon } from "@/components/AppIcon";
 import { PreferenceScreenLayout } from "@/components/PreferenceScreenLayout";
+import { getRecentActivityLogs, type ActivityLogEntry } from "@/lib/activity-log";
 import { useAppTheme } from "@/lib/app-theme";
 import { useTranslation } from "@/lib/i18n";
 
@@ -15,6 +18,19 @@ const REMINDER_KEYS = [
 export default function RemindersScreen() {
   const colors = useAppTheme();
   const { t, rtlTextStyle } = useTranslation();
+  const [activityLogs, setActivityLogs] = useState<ActivityLogEntry[]>([]);
+
+  useFocusEffect(
+    useCallback(() => {
+      let cancelled = false;
+      void getRecentActivityLogs().then((logs) => {
+        if (!cancelled) setActivityLogs(logs);
+      });
+      return () => {
+        cancelled = true;
+      };
+    }, [])
+  );
 
   return (
     <PreferenceScreenLayout
@@ -24,6 +40,23 @@ export default function RemindersScreen() {
       <Text style={[styles.intro, { color: colors.textMuted }, rtlTextStyle]}>
         {t("reminders.intro")}
       </Text>
+      {activityLogs.length > 0 ? (
+        <View
+          style={[
+            styles.logsCard,
+            { borderColor: colors.border, backgroundColor: colors.backgroundSecondary },
+          ]}
+        >
+          <Text style={[styles.logsTitle, { color: colors.text }, rtlTextStyle]}>
+            {t("reminders.recentActions")}
+          </Text>
+          {activityLogs.slice(0, 4).map((entry) => (
+            <Text key={entry.id} style={[styles.logLine, { color: colors.textMuted }, rtlTextStyle]}>
+              {`• ${entry.label}`}
+            </Text>
+          ))}
+        </View>
+      ) : null}
       {REMINDER_KEYS.map((key) => (
         <View
           key={key}
@@ -69,6 +102,22 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   rowText: { flex: 1, gap: 4 },
+  logsCard: {
+    borderWidth: StyleSheet.hairlineWidth,
+    borderRadius: 12,
+    padding: 12,
+    marginBottom: 12,
+    gap: 6,
+  },
+  logsTitle: {
+    fontSize: 14,
+    fontFamily: "PlusJakartaSans-SemiBold",
+  },
+  logLine: {
+    fontSize: 13,
+    lineHeight: 18,
+    fontFamily: "PlusJakartaSans-Regular",
+  },
   rowTitle: {
     fontSize: 15,
     fontFamily: "PlusJakartaSans-SemiBold",

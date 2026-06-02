@@ -11,13 +11,13 @@ import { router } from "expo-router";
 import { AppIcon } from "@/components/AppIcon";
 import { ScreenPageHeader } from "@/components/ScreenPageHeader";
 import { ScreenBackground } from "@/components/ScreenBackground";
+import { useAppTheme } from "@/lib/app-theme";
 import { useTranslation } from "@/lib/i18n";
-
-const ICON_COLOR = "#191D31";
 
 export default function RechercheCoranScreen() {
   const [query, setQuery] = useState("");
-  const { t, rtlViewStyle } = useTranslation();
+  const { t, rtlTextStyle, rtlViewStyle } = useTranslation();
+  const colors = useAppTheme();
 
   return (
     <ScreenBackground style={styles.background}>
@@ -34,18 +34,18 @@ export default function RechercheCoranScreen() {
           keyboardShouldPersistTaps="handled"
         >
           <View style={styles.searchWrap}>
-            <AppIcon name="search" size={20} color="rgba(0,0,0,0.45)" />
+            <AppIcon name="search" size={20} color={colors.iconMuted} />
             <TextInput
-              style={styles.searchInput}
+              style={[styles.searchInput, { color: colors.text }]}
               value={query}
               onChangeText={setQuery}
-              placeholder="Rechercher un verset, un mot..."
-              placeholderTextColor="rgba(0,0,0,0.4)"
+              placeholder={t("screens.searchPlaceholder")}
+              placeholderTextColor={colors.textMuted}
               returnKeyType="search"
             />
           </View>
-          <Text style={styles.hint}>
-            Recherchez dans tout le Coran par mot-clé, numéro de verset ou sourate.
+          <Text style={[styles.hint, rtlTextStyle, { color: colors.textMuted }]}>
+            {t("screens.searchHint")}
           </Text>
         </ScrollView>
       </SafeAreaView>
@@ -73,13 +73,11 @@ const styles = StyleSheet.create({
     flex: 1,
     fontSize: 16,
     fontFamily: "PlusJakartaSans-Regular",
-    color: ICON_COLOR,
     paddingVertical: 0,
   },
   hint: {
     fontSize: 14,
     fontFamily: "PlusJakartaSans-Regular",
-    color: "rgba(0,0,0,0.6)",
     marginTop: 12,
     lineHeight: 20,
   },

@@ -1,4 +1,5 @@
 ﻿import {
+  Alert,
   Image,
   ScrollView,
   StyleSheet,
@@ -17,13 +18,6 @@ import {
   getHadithVendrediDuJour,
 } from "@/constants/hadithsVendredi";
 
-const HIJRI_MONTHS = [
-  "Muharram", "Safar", "Rabi al-Awwal", "Rabi al-Thani",
-  "Jumada al-Awwal", "Jumada al-Thani", "Rajab", "Sha'ban",
-  "Ramadan", "Shawwal", "Dhu al-Qi'dah", "Dhu al-Hijjah",
-];
-
-
 function useTodayDates(locale: "fr" | "en" | "ar") {
   return useMemo(() => {
     const now = new Date();
@@ -31,9 +25,10 @@ function useTodayDates(locale: "fr" | "en" | "ar") {
     const gm = now.getMonth() + 1;
     const gd = now.getDate();
     const gregorian = getLocaleDateString(locale, now);
+    const hijriMonths = TRANSLATIONS[locale].home.hijriMonths;
     try {
       const { hy, hm, hd } = toHijri(gy, gm, gd);
-      const hijri = `${HIJRI_MONTHS[hm - 1]} ${hd}, ${hy}`;
+      const hijri = `${hijriMonths[hm - 1] ?? ""} ${hd}, ${hy}`;
       return { gregorian, hijri };
     } catch {
       return { gregorian, hijri: "" };
@@ -82,6 +77,7 @@ import { ScreenPageHeader } from "@/components/ScreenPageHeader";
 import { useAppTypography } from "@/lib/app-typography";
 import { useAppTheme } from "@/lib/app-theme";
 import { createHomeStyles } from "@/lib/home-screen-styles";
+import { addActivityLog } from "@/lib/activity-log";
 import { useTranslation, getLocaleDateString, TRANSLATIONS } from "@/lib/i18n";
 
 type HomeListHeaderProps = {
@@ -260,6 +256,29 @@ const Home = () => {
   }, [prayerTimes]);
 
   const mosqueDisplayName = mosqueName ?? tHome("home.defaultMosqueName");
+  const handleBellPress = () => {
+    Alert.alert(
+      tHome("home.bellMenuTitle"),
+      tHome("home.bellMenuBody"),
+      [
+        { text: tHome("common.cancel"), style: "cancel" },
+        {
+          text: tHome("home.bellMenuReminders"),
+          onPress: () => {
+            void addActivityLog(tHome("home.bellMenuReminders"));
+            router.push("/(root)/reminders");
+          },
+        },
+        {
+          text: tHome("home.bellMenuNotifications"),
+          onPress: () => {
+            void addActivityLog(tHome("home.bellMenuNotifications"));
+            router.push("/(root)/(tabs)/profile");
+          },
+        },
+      ]
+    );
+  };
 
   return (
     <ScreenBackground style={styles.background}>
@@ -280,7 +299,7 @@ const Home = () => {
             onRequestLocation={refetchLocation}
             mosqueDisplayName={mosqueDisplayName}
             onEditMosque={() => router.push("/(root)/mosque-settings")}
-            onBellPress={() => router.push("/(root)/reminders")}
+            onBellPress={handleBellPress}
             bellLabel={tHome("reminders.title")}
           />
         </ScrollView>

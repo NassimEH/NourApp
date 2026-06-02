@@ -23,9 +23,7 @@ import { SCREEN_EDGE_PADDING } from "@/constants/screen-layout";
 
 const H_PADDING = SCREEN_EDGE_PADDING;
 const ICON_SIZE = 22;
-const ICON_COLOR = "#191D31";
 const ACCENT = "#3d6b47";
-const TEXT_MUTED = "rgba(0,0,0,0.5)";
 
 export default function QuranReaderScreen() {
   const { number, autoplay } = useLocalSearchParams<{ number: string; autoplay?: string }>();
@@ -135,9 +133,13 @@ export default function QuranReaderScreen() {
   if (suraNumber == null) {
     return (
       <View style={styles.centered}>
-        <Text style={styles.errorText}>Sourate invalide</Text>
+        <Text style={[styles.errorText, { color: colors.text }]}>
+          {t("screens.quranInvalidSura")}
+        </Text>
         <TouchableOpacity onPress={() => router.back()} style={styles.backLink} activeOpacity={0.7}>
-          <Text style={styles.backLinkText}>Retour</Text>
+          <Text style={[styles.backLinkText, { color: colors.accent }]}>
+            {t("screens.back")}
+          </Text>
         </TouchableOpacity>
       </View>
     );
@@ -176,14 +178,16 @@ export default function QuranReaderScreen() {
 
         {loading && !data ? (
           <View style={styles.loadingWrap}>
-            <ActivityIndicator size="large" color={ACCENT} />
-            <Text style={styles.loadingText}>Chargement…</Text>
+            <ActivityIndicator size="large" color={colors.accent} />
+            <Text style={[styles.loadingText, { color: colors.textMuted }]}>
+              {t("screens.loading")}
+            </Text>
           </View>
         ) : error && !data ? (
           <View style={styles.errorWrap}>
-            <Text style={styles.errorText}>{error}</Text>
+            <Text style={[styles.errorText, { color: colors.text }]}>{error}</Text>
             <TouchableOpacity onPress={() => refetch()} style={styles.retryBtn} activeOpacity={0.8}>
-              <Text style={styles.retryText}>Réessayer</Text>
+              <Text style={styles.retryText}>{t("home.retry")}</Text>
             </TouchableOpacity>
           </View>
         ) : data && ayah ? (
@@ -203,7 +207,10 @@ export default function QuranReaderScreen() {
                 {ayah.text}
               </Text>
               {showTranslation && trans?.text ? (
-                <Text style={[styles.transVerse, { fontSize: transSize }]} selectable>
+                <Text
+                  style={[styles.transVerse, { color: colors.textMuted, fontSize: transSize }]}
+                  selectable
+                >
                   {trans.text}
                 </Text>
               ) : null}
@@ -220,7 +227,7 @@ export default function QuranReaderScreen() {
                 <AppIcon
                   name="chevron-left"
                   size={28}
-                  color={currentIndex === 0 ? TEXT_MUTED : ICON_COLOR}
+                  color={currentIndex === 0 ? colors.iconMuted : colors.icon}
                 />
               </TouchableOpacity>
               <TouchableOpacity
@@ -229,7 +236,9 @@ export default function QuranReaderScreen() {
                 activeOpacity={0.7}
               >
                 <AppIcon name="play-circle" size={24} color={ACCENT} />
-                <Text style={styles.playSuraLabel}>Écouter la sourate</Text>
+                <Text style={[styles.playSuraLabel, { color: colors.text }]}>
+                  {t("screens.listenSura")}
+                </Text>
               </TouchableOpacity>
               <TouchableOpacity
                 onPress={goNext}
@@ -240,7 +249,7 @@ export default function QuranReaderScreen() {
                 <AppIcon
                   name="chevron-right"
                   size={28}
-                  color={currentIndex >= total - 1 ? TEXT_MUTED : ICON_COLOR}
+                  color={currentIndex >= total - 1 ? colors.iconMuted : colors.icon}
                 />
               </TouchableOpacity>
             </View>
@@ -268,18 +277,15 @@ const styles = StyleSheet.create({
   suraName: {
     fontSize: 18,
     fontFamily: "PlusJakartaSans-SemiBold",
-    color: ICON_COLOR,
   },
   suraNameFr: {
     fontSize: 13,
     fontFamily: "PlusJakartaSans-Regular",
-    color: TEXT_MUTED,
     marginTop: 2,
   },
   verseCounter: {
     fontSize: 13,
     fontFamily: "PlusJakartaSans-Regular",
-    color: TEXT_MUTED,
     marginTop: 2,
   },
   iconBtn: { padding: 8 },
@@ -291,13 +297,11 @@ const styles = StyleSheet.create({
   },
   arabicVerse: {
     fontFamily: "PlusJakartaSans-Regular",
-    color: ICON_COLOR,
     textAlign: "right",
     writingDirection: "rtl",
   },
   transVerse: {
     fontFamily: "PlusJakartaSans-Regular",
-    color: TEXT_MUTED,
     lineHeight: 24,
     marginTop: 20,
     fontStyle: "italic",
@@ -324,7 +328,6 @@ const styles = StyleSheet.create({
   playSuraLabel: {
     fontSize: 15,
     fontFamily: "PlusJakartaSans-Medium",
-    color: ICON_COLOR,
   },
   loadingWrap: {
     flex: 1,
@@ -332,14 +335,14 @@ const styles = StyleSheet.create({
     alignItems: "center",
     gap: 16,
   },
-  loadingText: { fontSize: 16, fontFamily: "PlusJakartaSans-Regular", color: TEXT_MUTED },
+  loadingText: { fontSize: 16, fontFamily: "PlusJakartaSans-Regular" },
   errorWrap: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
     paddingHorizontal: 32,
   },
-  errorText: { fontSize: 16, textAlign: "center", marginBottom: 16, color: ICON_COLOR },
+  errorText: { fontSize: 16, textAlign: "center", marginBottom: 16 },
   retryBtn: {
     paddingVertical: 14,
     paddingHorizontal: 28,
@@ -349,5 +352,5 @@ const styles = StyleSheet.create({
   retryText: { fontSize: 16, fontFamily: "PlusJakartaSans-SemiBold", color: "#fff" },
   centered: { flex: 1, justifyContent: "center", alignItems: "center" },
   backLink: { marginTop: 12 },
-  backLinkText: { fontSize: 16, fontFamily: "PlusJakartaSans-SemiBold", color: ACCENT },
+  backLinkText: { fontSize: 16, fontFamily: "PlusJakartaSans-SemiBold" },
 });

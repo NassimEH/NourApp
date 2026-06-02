@@ -1,34 +1,21 @@
-import {
-  Dimensions,
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
-} from "react-native";
+import { StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router } from "expo-router";
 import { AppIcon } from "@/components/AppIcon";
 import { useMemo, useState } from "react";
 
 import { useCollections, getCollectionDisplayName } from "@/lib/hadith";
-import { FeaturedCard } from "@/components/Cards";
+import { ListRow } from "@/components/ListRow";
 import { HadithCollectionSkeleton } from "@/components/hadith/HadithCollectionSkeleton";
 import type { HadithCollection } from "@/lib/hadith/types";
 import { ScreenBackground } from "@/components/ScreenBackground";
 import { SCREEN_EDGE_PADDING } from "@/constants/screen-layout";
 import { ScreenPageHeader } from "@/components/ScreenPageHeader";
 import { useTranslation } from "@/lib/i18n";
+import { useAppTheme } from "@/lib/app-theme";
 
 const H_PADDING = SCREEN_EDGE_PADDING;
-const GAP = 12;
-const { width: screenWidth } = Dimensions.get("window");
-const contentWidth = screenWidth - 2 * H_PADDING;
-const cardWidth = (contentWidth - GAP) / 2;
-const cardHeight = 160;
-const ICON_COLOR = "#191D31";
 const ACCENT = "#3d6b47";
-const TEXT_MUTED = "rgba(0,0,0,0.5)";
 
 function filterCollections(
   list: HadithCollection[],
@@ -46,14 +33,13 @@ function filterCollections(
 
 export default function HadithsCollectionsScreen() {
   const { t } = useTranslation();
+  const colors = useAppTheme();
   const { collections, loading, error, refetch } = useCollections();
   const [search, setSearch] = useState("");
 
   const filtered = useMemo(
     () =>
-      filterCollections(collections, search, (c) =>
-        getCollectionDisplayName(c, "en")
-      ),
+      filterCollections(collections, search, (c) => getCollectionDisplayName(c, "fr")),
     [collections, search]
   );
 
@@ -77,7 +63,7 @@ export default function HadithsCollectionsScreen() {
               activeOpacity={0.8}
             >
               <AppIcon name="refresh-cw" size={20} color="#fff" />
-              <Text style={styles.retryText}>Réessayer</Text>
+              <Text style={styles.retryText}>{t("home.retry")}</Text>
             </TouchableOpacity>
           </View>
         ) : (
@@ -86,13 +72,13 @@ export default function HadithsCollectionsScreen() {
               <AppIcon
                 name="search"
                 size={18}
-                color={TEXT_MUTED}
+                color={colors.textMuted}
                 style={styles.searchIcon}
               />
               <TextInput
-                style={styles.searchInput}
-                placeholder="Rechercher une collection…"
-                placeholderTextColor={TEXT_MUTED}
+                style={[styles.searchInput, { color: colors.text }]}
+                placeholder={t("library.searchCollectionPlaceholder")}
+                placeholderTextColor={colors.textMuted}
                 value={search}
                 onChangeText={setSearch}
               />
@@ -101,7 +87,7 @@ export default function HadithsCollectionsScreen() {
                   onPress={() => setSearch("")}
                   hitSlop={12}
                 >
-                  <AppIcon name="x" size={18} color={TEXT_MUTED} />
+                  <AppIcon name="x" size={18} color={colors.textMuted} />
                 </TouchableOpacity>
               )}
             </View>
@@ -109,27 +95,23 @@ export default function HadithsCollectionsScreen() {
             <View style={styles.listWrap}>
               {filtered.length === 0 ? (
                 <View style={styles.empty}>
-                  <Text style={styles.emptyText}>
-                    Aucune collection trouvée
+                  <Text style={[styles.emptyText, { color: colors.textMuted }]}>
+                    {t("library.searchNoResults")}
                   </Text>
                 </View>
               ) : (
-                <View style={styles.grid}>
+                <View style={styles.list}>
                   {filtered.map((col) => {
                     const displayName = getCollectionDisplayName(col, "fr");
                     const totalHadith =
                       col.collection?.[0]?.totalAvailableHadith ??
                       col.collection?.[0]?.totalHadith ?? 0;
-                    const item = {
-                      $id: col.name,
-                      name: displayName,
-                      price: `${totalHadith} hadiths`,
-                      image: null as string | null,
-                    };
                     return (
-                      <FeaturedCard
+                      <ListRow
                         key={col.name}
-                        item={item as Parameters<typeof FeaturedCard>[0]["item"]}
+                        icon="book-open"
+                        title={displayName}
+                        subtitle={`${totalHadith} ${t("screens.hadithsTitle").toLowerCase()}`}
                         onPress={() =>
                           router.push({
                             pathname:
@@ -137,10 +119,8 @@ export default function HadithsCollectionsScreen() {
                             params: { name: col.name },
                           })
                         }
-                        actionLabel="Ouvrir"
-                        cardWidth={cardWidth}
-                        cardHeight={cardHeight}
-                        noMargin
+                        showChevron
+                        style={styles.row}
                       />
                     );
                   })}
@@ -168,7 +148,6 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 20,
     fontFamily: "PlusJakartaSans-Bold",
-    color: ICON_COLOR,
   },
   headerRight: { width: 42 },
   searchWrap: {
@@ -185,7 +164,6 @@ const styles = StyleSheet.create({
     flex: 1,
     fontSize: 15,
     fontFamily: "PlusJakartaSans-Regular",
-    color: ICON_COLOR,
     padding: 0,
   },
   listWrap: {
@@ -193,11 +171,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: H_PADDING,
     paddingBottom: 120,
   },
-  grid: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: GAP,
-  },
+  list: { gap: 2 },
+  row: { paddingVertical: 8 },
   errorWrap: {
     flex: 1,
     justifyContent: "center",
@@ -207,7 +182,6 @@ const styles = StyleSheet.create({
   errorText: {
     fontSize: 16,
     fontFamily: "PlusJakartaSans-Regular",
-    color: ICON_COLOR,
     textAlign: "center",
     marginBottom: 20,
   },
@@ -229,6 +203,5 @@ const styles = StyleSheet.create({
   emptyText: {
     fontSize: 15,
     fontFamily: "PlusJakartaSans-Regular",
-    color: TEXT_MUTED,
   },
 });

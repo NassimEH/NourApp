@@ -7,6 +7,7 @@ import {
   type ThemeMode,
   type IconStyleMode,
   type TextSizeMode,
+  type TextColorMode,
   type AccentColorKey,
 } from "@/lib/app-preferences";
 import type { TabBarVariant } from "@/lib/tab-bar-preference";
@@ -107,6 +108,11 @@ export function getPreferenceSubtitle(
       medium: translate(locale, "preferences.textMedium"),
       large: translate(locale, "preferences.textLarge"),
     },
+    "text-color": {
+      black: translate(locale, "preferences.textColorBlack"),
+      slate: translate(locale, "preferences.textColorSlate"),
+      brown: translate(locale, "preferences.textColorBrown"),
+    },
     accent: {
       green: translate(locale, "preferences.accentGreen"),
       blue: translate(locale, "preferences.accentBlue"),
@@ -161,6 +167,13 @@ export function getTextSizeLabelI18n(
   size: TextSizeMode
 ): string {
   return getPreferenceSubtitle(locale, "text-size", size);
+}
+
+export function getTextColorLabelI18n(
+  locale: LanguageLocale,
+  color: TextColorMode
+): string {
+  return getPreferenceSubtitle(locale, "text-color", color);
 }
 
 export function getAccentLabelI18n(

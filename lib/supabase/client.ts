@@ -8,6 +8,7 @@ const supabaseAnonKey = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY ?? "";
 
 /** `true` lorsque URL + clé anon sont renseignées dans `.env.local`. */
 export const isSupabaseConfigured = Boolean(supabaseUrl && supabaseAnonKey);
+const isBrowser = typeof window !== "undefined";
 
 /**
  * Client Supabase (Auth + API).
@@ -18,10 +19,10 @@ export const supabase = createClient(
   supabaseAnonKey || "placeholder-anon-key",
   {
     auth: {
-      storage: AsyncStorage,
-      autoRefreshToken: true,
-      persistSession: true,
-      detectSessionInUrl: false,
+      storage: isBrowser ? AsyncStorage : undefined,
+      autoRefreshToken: isBrowser,
+      persistSession: isBrowser,
+      detectSessionInUrl: isBrowser,
     },
   }
 );

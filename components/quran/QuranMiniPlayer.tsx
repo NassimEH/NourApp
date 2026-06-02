@@ -1,6 +1,7 @@
 ﻿import {
   Animated,
   Image,
+  Modal,
   Platform,
   Pressable,
   StyleSheet,
@@ -9,7 +10,9 @@
   View,
 } from "react-native";
 import { AppIcon } from "@/components/AppIcon";
-import { useMemo, useRef } from "react";
+import { useMemo, useRef, useState } from "react";
+import type { Reciter } from "@/lib/quran/types";
+import { useTranslation } from "@/lib/i18n";
 
 import { ThemedGlassSurface } from "@/components/ThemedGlassSurface";
 import { useAppTheme } from "@/lib/app-theme";
@@ -25,6 +28,9 @@ interface QuranMiniPlayerProps {
   progress: number;
   durationMs?: number;
   onPlayPause: () => void;
+  currentReciter: string;
+  availableReciters: Reciter[];
+  onReciterChange: (reciterId: string) => void;
   onClose?: () => void;
   onPress?: () => void;
 }
@@ -45,12 +51,17 @@ export function QuranMiniPlayer({
   progress,
   durationMs = 0,
   onPlayPause,
+  currentReciter,
+  availableReciters,
+  onReciterChange,
   onClose,
   onPress,
 }: QuranMiniPlayerProps) {
+  const { t } = useTranslation();
   const colors = useAppTheme();
   const styles = useMemo(() => createStyles(colors), [colors]);
   const scale = useRef(new Animated.Value(1)).current;
+  const [reciterModalVisible, setReciterModalVisible] = useState(false);
 
   const onPressIn = () => {
     Animated.spring(scale, {
@@ -120,6 +131,13 @@ export function QuranMiniPlayer({
                     />
                   )}
                 </TouchableOpacity>
+                <TouchableOpacity
+                  style={styles.moreButton}
+                  onPress={() => setReciterModalVisible(true)}
+                  activeOpacity={0.7}
+                >
+                  <AppIcon name="more-vertical" size={18} color={colors.iconMuted} />
+                </TouchableOpacity>
 
                 {onClose ? (
                   <TouchableOpacity
@@ -136,6 +154,52 @@ export function QuranMiniPlayer({
           </View>
         </ThemedGlassSurface>
       </Pressable>
+      <Modal
+        visible={reciterModalVisible}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setReciterModalVisible(false)}
+      >
+        <Pressable
+          style={styles.modalBackdrop}
+          onPress={() => setReciterModalVisible(false)}
+        >
+          <Pressable
+            style={[styles.modalCard, { backgroundColor: colors.cardElevated, borderColor: colors.border }]}
+            onPress={(e) => e.stopPropagation()}
+          >
+            <Text style={[styles.modalTitle, { color: colors.text }]}>
+              {t("profile.reciterModalTitle")}
+            </Text>
+            {availableReciters.map((reciter) => {
+              const selected = reciter.id === currentReciter;
+              return (
+                <TouchableOpacity
+                  key={reciter.id}
+                  style={[
+                    styles.reciterRow,
+                    { borderColor: colors.border },
+                    selected && { backgroundColor: colors.accentSurface, borderColor: colors.accentBorder },
+                  ]}
+                  onPress={() => {
+                    onReciterChange(reciter.id);
+                    setReciterModalVisible(false);
+                  }}
+                  activeOpacity={0.8}
+                >
+                  <View style={styles.reciterInfo}>
+                    <Text style={[styles.reciterName, { color: colors.text }]}>{reciter.name}</Text>
+                    <Text style={[styles.reciterStyle, { color: colors.textMuted }]}>
+                      {reciter.style}
+                    </Text>
+                  </View>
+                  {selected ? <AppIcon name="check" size={18} color={colors.accent} /> : null}
+                </TouchableOpacity>
+              );
+            })}
+          </Pressable>
+        </Pressable>
+      </Modal>
     </Animated.View>
   );
 }
@@ -225,6 +289,56 @@ function createStyles(colors: ReturnType<typeof useAppTheme>) {
       borderRadius: 18,
       alignItems: "center",
       justifyContent: "center",
+    },
+    moreButton: {
+      width: 32,
+      height: 32,
+      borderRadius: 16,
+      alignItems: "center",
+      justifyContent: "center",
+    },
+    modalBackdrop: {
+      flex: 1,
+      backgroundColor: "rgba(0,0,0,0.35)",
+      alignItems: "center",
+      justifyContent: "center",
+      paddingHorizontal: 20,
+    },
+    modalCard: {
+      width: "100%",
+      borderRadius: 14,
+      borderWidth: 1,
+      padding: 14,
+      gap: 8,
+      maxWidth: 420,
+    },
+    modalTitle: {
+      fontSize: 16,
+      fontFamily: "PlusJakartaSans-SemiBold",
+      marginBottom: 4,
+    },
+    reciterRow: {
+      borderWidth: 1,
+      borderRadius: 10,
+      paddingVertical: 10,
+      paddingHorizontal: 12,
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "space-between",
+    },
+    reciterInfo: {
+      flex: 1,
+      minWidth: 0,
+      marginRight: 8,
+    },
+    reciterName: {
+      fontSize: 14,
+      fontFamily: "PlusJakartaSans-SemiBold",
+    },
+    reciterStyle: {
+      fontSize: 12,
+      fontFamily: "PlusJakartaSans-Regular",
+      marginTop: 2,
     },
   });
 }

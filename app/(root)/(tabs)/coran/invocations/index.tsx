@@ -16,16 +16,16 @@ import {
   getCategoryNameForDisplay,
   type DuaCategory,
 } from "@/lib/dua";
+import { ListRow } from "@/components/ListRow";
 import { DuaCategorySkeleton } from "@/components/dua/DuaCategorySkeleton";
 import { ScreenBackground } from "@/components/ScreenBackground";
 import { SCREEN_EDGE_PADDING } from "@/constants/screen-layout";
 import { ScreenPageHeader } from "@/components/ScreenPageHeader";
 import { useTranslation } from "@/lib/i18n";
+import { useAppTheme } from "@/lib/app-theme";
 
 const H_PADDING = SCREEN_EDGE_PADDING;
-const ICON_COLOR = "#191D31";
 const ACCENT = "#3d6b47";
-const TEXT_MUTED = "rgba(0,0,0,0.5)";
 
 function filterCategories(
   list: DuaCategory[],
@@ -45,7 +45,8 @@ function filterCategories(
 
 export default function InvocationsCategoriesScreen() {
   const { t } = useTranslation();
-  const { language, setLanguage } = useDuaLanguage();
+  const colors = useAppTheme();
+  const { language } = useDuaLanguage();
   const { categories, loading, error, refetch } = useDuaCategories(language);
   const [search, setSearch] = useState("");
 
@@ -70,23 +71,23 @@ export default function InvocationsCategoriesScreen() {
             <Text style={styles.errorText}>{error}</Text>
             <TouchableOpacity onPress={() => refetch()} style={styles.retryBtn} activeOpacity={0.8}>
               <AppIcon name="refresh-cw" size={20} color="#fff" />
-              <Text style={styles.retryText}>Rùessayer</Text>
+              <Text style={styles.retryText}>{t("home.retry")}</Text>
             </TouchableOpacity>
           </View>
         ) : (
           <>
             <View style={styles.searchWrap}>
-              <AppIcon name="search" size={18} color={TEXT_MUTED} style={styles.searchIcon} />
+              <AppIcon name="search" size={18} color={colors.textMuted} style={styles.searchIcon} />
               <TextInput
-                style={styles.searchInput}
-                placeholder="Rechercher une catùgorieù"
-                placeholderTextColor={TEXT_MUTED}
+                style={[styles.searchInput, { color: colors.text }]}
+                placeholder={t("screens.searchPlaceholder")}
+                placeholderTextColor={colors.textMuted}
                 value={search}
                 onChangeText={setSearch}
               />
               {search.length > 0 && (
                 <TouchableOpacity onPress={() => setSearch("")} hitSlop={12}>
-                  <AppIcon name="x" size={18} color={TEXT_MUTED} />
+                  <AppIcon name="x" size={18} color={colors.textMuted} />
                 </TouchableOpacity>
               )}
             </View>
@@ -94,28 +95,24 @@ export default function InvocationsCategoriesScreen() {
             <View style={styles.listWrap}>
               {filtered.length === 0 ? (
                 <View style={styles.empty}>
-                  <Text style={styles.emptyText}>Aucune catùgorie trouvùe</Text>
+                  <Text style={[styles.emptyText, { color: colors.textMuted }]}>
+                    {t("library.searchNoResults")}
+                  </Text>
                 </View>
               ) : (
                 filtered.map((cat) => (
-                  <TouchableOpacity
+                  <ListRow
                     key={cat.slug}
                     style={styles.row}
+                    icon="bookmark"
+                    title={getCategoryNameForDisplay(cat, language)}
+                    showChevron
                     onPress={() =>
                       router.push(
                         `/(root)/(tabs)/coran/invocations/category/${encodeURIComponent(cat.slug)}` as const
                       )
                     }
-                    activeOpacity={0.7}
-                  >
-                    <View style={styles.rowLeft}>
-                      <AppIcon name="bookmark" size={22} color={ICON_COLOR} />
-                        <Text style={styles.rowTitle} numberOfLines={1}>
-                          {getCategoryNameForDisplay(cat, language)}
-                        </Text>
-                    </View>
-                    <AppIcon name="chevron-right" size={20} color={ICON_COLOR} />
-                  </TouchableOpacity>
+                  />
                 ))
               )}
             </View>
@@ -140,7 +137,6 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 20,
     fontFamily: "PlusJakartaSans-Bold",
-    color: ICON_COLOR,
   },
   langBtn: { paddingVertical: 8, paddingHorizontal: 10 },
   langBtnText: {
@@ -162,7 +158,6 @@ const styles = StyleSheet.create({
     flex: 1,
     fontSize: 15,
     fontFamily: "PlusJakartaSans-Regular",
-    color: ICON_COLOR,
     padding: 0,
   },
   listWrap: {
@@ -170,23 +165,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: H_PADDING,
     paddingBottom: 120,
   },
-  row: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingVertical: 12,
-  },
-  rowLeft: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 12,
-    flex: 1,
-  },
-  rowTitle: {
-    fontSize: 17,
-    fontFamily: "PlusJakartaSans-Medium",
-    color: ICON_COLOR,
-  },
+  row: { paddingVertical: 8 },
   errorWrap: {
     flex: 1,
     justifyContent: "center",
@@ -196,7 +175,6 @@ const styles = StyleSheet.create({
   errorText: {
     fontSize: 16,
     fontFamily: "PlusJakartaSans-Regular",
-    color: ICON_COLOR,
     textAlign: "center",
     marginBottom: 20,
   },
@@ -218,6 +196,5 @@ const styles = StyleSheet.create({
   emptyText: {
     fontSize: 15,
     fontFamily: "PlusJakartaSans-Regular",
-    color: TEXT_MUTED,
   },
 });

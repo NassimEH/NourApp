@@ -29,12 +29,13 @@ import {
 export default function SignInScreen() {
   const colors = useAppTheme();
   const { t } = useTranslation();
-  const { refetch, loading, isLogged, enterAsGuest } = useGlobalContext();
+  const { refetch, loading, isLogged, isGuest, enterAsGuest } = useGlobalContext();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
 
   if (!loading && isLogged) return <Redirect href="/" />;
+  if (!loading && isGuest) return <Redirect href="/(root)/(tabs)/explore" />;
 
   const showAuthError = (key: AuthErrorKey) => {
     Alert.alert(
@@ -158,7 +159,10 @@ export default function SignInScreen() {
           </TouchableOpacity>
 
           <Pressable
-            onPress={() => enterAsGuest()}
+            onPress={() => {
+              enterAsGuest();
+              router.replace("/(root)/(tabs)/explore");
+            }}
             disabled={busy}
             style={styles.guestLink}
           >

@@ -1,16 +1,14 @@
 ﻿import {
-  Image,
-  ImageBackground,
   StyleSheet,
   Text,
   TouchableOpacity,
   View,
 } from "react-native";
-import { AppIcon } from "@/components/AppIcon";
+import { AppIcon, type AppIconName } from "@/components/AppIcon";
 import Colors from "@/constants/Colors";
 import { ITEM_HEIGHT, ITEM_WIDTH } from "@/constants";
 import Spacing from "@/constants/Spacing";
-import images from "@/constants/images";
+import { useAppTheme } from "@/lib/app-theme";
 
 const READING_CARD_HEIGHT = 200;
 const READING_CARD_WIDTH = 160;
@@ -55,6 +53,9 @@ export type FeaturedCardItem = {
   price?: number | string;
   rating?: string | number;
   address?: string;
+  icon?: AppIconName;
+  soon?: boolean;
+  disabled?: boolean;
 };
 
 interface Props {
@@ -69,8 +70,6 @@ interface Props {
   noMargin?: boolean;
 }
 
-const defaultImage = images.background;
-
 export const FeaturedCard = ({
   item,
   onPress,
@@ -79,12 +78,7 @@ export const FeaturedCard = ({
   cardHeight,
   noMargin,
 }: Props) => {
-  const imageSource =
-    typeof item.image === "number"
-      ? item.image
-      : item.image
-        ? { uri: item.image }
-        : defaultImage;
+  const colors = useAppTheme();
   const title = item.name ?? "";
   const price =
     item.price != null
@@ -99,10 +93,12 @@ export const FeaturedCard = ({
 
   const width = cardWidth ?? ITEM_WIDTH;
   const height = cardHeight ?? ITEM_HEIGHT;
+  const isDisabled = item.disabled === true;
 
   return (
     <TouchableOpacity
       onPress={handlePress}
+      disabled={isDisabled}
       style={[
         styles.card,
         styles.featuredCardAccent,
@@ -111,26 +107,41 @@ export const FeaturedCard = ({
           width,
           marginRight: noMargin ? 0 : Spacing * 2,
           borderRadius: Spacing * 3,
+          borderColor: colors.border,
+          backgroundColor: colors.cardElevated,
         },
+        isDisabled && { opacity: 0.6 },
       ]}
       activeOpacity={0.9}
     >
-      <ImageBackground
-        style={styles.imageBg}
-        source={imageSource}
-        resizeMode="cover"
-      >
-        <View style={styles.imageDivider} />
-        <View style={styles.contentOverlay} />
-        <View style={styles.content}>
-          <View style={styles.topRow}>
-            <Text style={styles.title} numberOfLines={2}>
-              {title}
-            </Text>
-            <Text style={styles.price} numberOfLines={2}>
-              {price}
-            </Text>
+      <View style={styles.content}>
+        {item.soon ? (
+          <View
+            style={[
+              styles.soonBadge,
+              { backgroundColor: colors.accentSurface, borderColor: colors.accentBorder },
+            ]}
+          >
+            <Text style={[styles.soonBadgeText, { color: colors.accent }]}>Bientot</Text>
           </View>
+        ) : null}
+        <View style={styles.topRow}>
+          <View
+            style={[
+              styles.featuredCardIconWrap,
+              { backgroundColor: colors.accentSurface, borderColor: colors.accentBorder },
+            ]}
+          >
+            <AppIcon name={item.icon ?? "book-open"} size={24} color={colors.accent} />
+          </View>
+          <Text style={[styles.title, { color: colors.text }]} numberOfLines={2}>
+            {title}
+          </Text>
+          <Text style={[styles.price, { color: colors.textMuted }]} numberOfLines={2}>
+            {price}
+          </Text>
+        </View>
+        {!isDisabled ? (
           <TouchableOpacity
             onPress={(e) => {
               e.stopPropagation();
@@ -139,10 +150,10 @@ export const FeaturedCard = ({
             style={styles.arrowCorner}
             activeOpacity={0.8}
           >
-            <AppIcon name="chevron-right" size={24} color={Colors.text} />
+            <AppIcon name="chevron-right" size={24} color={colors.icon} />
           </TouchableOpacity>
-        </View>
-      </ImageBackground>
+        ) : null}
+      </View>
     </TouchableOpacity>
   );
 };
@@ -189,60 +200,54 @@ const styles = StyleSheet.create({
   },
   featuredCardAccent: {
     borderWidth: 1.5,
-    borderColor: "rgba(0, 0, 0, 0.12)",
     shadowColor: "#000",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.12,
-    shadowRadius: 12,
-    elevation: 6,
-  },
-  contentOverlay: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: "rgba(255, 255, 255, 0.08)",
-    zIndex: 1,
-  },
-  imageBg: {
-    height: "100%",
-    width: "100%",
-  },
-  imageDivider: {
-    position: "absolute",
-    left: 0,
-    right: 0,
-    top: "50%",
-    height: 1,
-    backgroundColor: "rgba(255, 255, 255, 0.35)",
-    zIndex: 0,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
+    elevation: 3,
   },
   content: {
     padding: Spacing * 3,
     justifyContent: "space-between",
     height: "100%",
-    zIndex: 2,
   },
   topRow: {
     flexDirection: "column",
     alignItems: "flex-start",
-    gap: 4,
+    gap: 8,
     flex: 1,
     minHeight: 0,
   },
+  soonBadge: {
+    position: "absolute",
+    right: 14,
+    top: 14,
+    borderRadius: 999,
+    borderWidth: 1,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    zIndex: 2,
+  },
+  soonBadgeText: {
+    fontFamily: "PlusJakartaSans-SemiBold",
+    fontSize: 11,
+  },
+  featuredCardIconWrap: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    borderWidth: 1,
+    alignItems: "center",
+    justifyContent: "center",
+  },
   title: {
-    color: "#191D31",
     fontFamily: "PlusJakartaSans-Bold",
-    fontSize: 18,
-    textShadowColor: "rgba(255, 255, 255, 0.9)",
-    textShadowOffset: { width: 0, height: 0 },
-    textShadowRadius: 8,
+    fontSize: 17,
     width: "100%",
   },
   price: {
-    color: "#191D31",
     fontFamily: "PlusJakartaSans-SemiBold",
-    fontSize: 14,
-    textShadowColor: "rgba(255, 255, 255, 0.9)",
-    textShadowOffset: { width: 0, height: 0 },
-    textShadowRadius: 8,
+    fontSize: 13,
     width: "100%",
   },
   arrowCorner: {

@@ -15,10 +15,10 @@ import { LocaleSync } from "@/components/LocaleSync";
 import { ScreenBackground } from "@/components/ScreenBackground";
 
 function RootNavigation() {
-  const { theme, accentColor } = useAppPreferences();
+  const { theme, accentColor, textColor } = useAppPreferences();
   const colors = useMemo(
-    () => getAppThemeColors(theme, accentColor),
-    [theme, accentColor]
+    () => getAppThemeColors(theme, accentColor, textColor),
+    [theme, accentColor, textColor]
   );
 
   return (

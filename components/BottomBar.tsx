@@ -590,6 +590,11 @@ export default function BottomBar({ state }: BottomTabBarProps) {
               progress={audio.progress}
               durationMs={audio.durationMs}
               onPlayPause={audio.togglePlayPause}
+              currentReciter={audio.currentReciter}
+              availableReciters={audio.availableReciters}
+              onReciterChange={(id) => {
+                void audio.setReciter(id);
+              }}
               onClose={audio.unload}
               onPress={openFullPlayer}
             />

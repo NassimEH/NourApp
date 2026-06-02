@@ -47,9 +47,14 @@ interface LibraryCardItem {
   name: string;
   price: string;
   image?: string | null;
+  icon?:
+    | "book-open"
+    | "mic"
+    | "bookmark"
+    | "cloud"
+    | "sun"
+    | "message-circle";
 }
-
-const quranImage = require("@/assets/images/islamic-new-year-quran-book-with-dates-photo.jpg");
 
 const { width: screenWidth } = Dimensions.get("window");
 const contentWidth = screenWidth - 2 * H_PADDING;
@@ -74,25 +79,22 @@ function CoranHeroBlock() {
         $id: "sourates" as const,
         name: t("library.sourates"),
         price: t("library.souratesCount"),
-        image: null,
+        icon: "book-open" as const,
       },
       recitateurs: {
         $id: "recitateurs" as const,
         name: t("library.reciters"),
         price: t("library.recitersListen"),
+        icon: "mic" as const,
       },
     }),
     [t]
   );
-  const souratesItem = {
-    ...sourates,
-    image: quranImage,
-  } as Parameters<typeof FeaturedCard>[0]["item"];
   return (
     <View style={styles.heroBlock}>
       <View style={styles.souratesCardWrap}>
         <FeaturedCard
-          item={souratesItem}
+          item={sourates as Parameters<typeof FeaturedCard>[0]["item"]}
           onPress={() => pushLibraryRoute(sourates.$id)}
           actionLabel={t("library.actionRead")}
           cardWidth={SOURATES_CARD_WIDTH}
@@ -123,16 +125,23 @@ function InvocationsHeroBlock() {
         $id: "invocations" as const,
         name: t("library.invocationsAll"),
         price: t("library.invocationsAllSub"),
+        icon: "bookmark" as const,
       },
       bottomLeft: {
         $id: "invocations-meteo" as const,
         name: t("library.invocationsWeather"),
         price: t("library.invocationsWeatherSub"),
+        icon: "cloud" as const,
+        soon: true,
+        disabled: true,
       },
       right: {
         $id: "invocations-matin-soir" as const,
         name: t("library.invocationsMorning"),
         price: t("library.invocationsMorningSub"),
+        icon: "sun" as const,
+        soon: true,
+        disabled: true,
       },
     }),
     [t]
@@ -181,16 +190,23 @@ function HadithsHeroBlock() {
         $id: "hadith-jour" as const,
         name: t("library.hadithDay"),
         price: t("library.hadithDaySub"),
+        icon: "message-circle" as const,
+        soon: true,
+        disabled: true,
       },
       topRight: {
         $id: "hadiths-theme" as const,
         name: t("library.hadithThemes"),
         price: t("library.hadithThemesSub"),
+        icon: "bookmark" as const,
+        soon: true,
+        disabled: true,
       },
       bottom: {
         $id: "hadiths" as const,
         name: t("library.hadithAll"),
         price: t("library.hadithAllSub"),
+        icon: "book-open" as const,
       },
     }),
     [t]

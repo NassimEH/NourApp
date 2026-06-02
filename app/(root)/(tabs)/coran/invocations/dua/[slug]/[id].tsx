@@ -16,11 +16,13 @@ import { useCallback } from "react";
 
 import { useDuaDetail, useDuaFavorites, useDuaLanguage } from "@/lib/dua";
 import type { DuaDetail } from "@/lib/dua/types";
+import { useAppTheme } from "@/lib/app-theme";
 import { ScreenBackground } from "@/components/ScreenBackground";
 import { ScreenPageHeader } from "@/components/ScreenPageHeader";
 import { useAppTypography } from "@/lib/app-typography";
 import { useTranslation } from "@/lib/i18n";
 import { SCREEN_EDGE_PADDING } from "@/constants/screen-layout";
+import { bodyLineHeight } from "@/lib/ui/typography";
 
 const H_PADDING = SCREEN_EDGE_PADDING;
 const ICON_COLOR = "#191D31";
@@ -35,11 +37,13 @@ export default function InvocationDetailScreen() {
   const { language, setLanguage } = useDuaLanguage();
   const { detail, loading, error, refetch } = useDuaDetail(slugDecoded, idNum ?? null, language);
   const typography = useAppTypography();
+  const colors = useAppTheme();
   const { isFavorite, toggleFavorite } = useDuaFavorites();
 
   const isFav = slugDecoded != null && idNum != null && isFavorite(slugDecoded, idNum);
   const arabicSize = typography.arabic;
   const transSize = typography.translation;
+  const transLh = bodyLineHeight(transSize);
 
   const handleShare = useCallback(() => {
     if (!detail) return;
@@ -153,7 +157,7 @@ export default function InvocationDetailScreen() {
               <View style={styles.block}>
                 <Text style={styles.blockLabel}>Translittération</Text>
                 <Text
-                  style={[styles.latinText, { fontSize: transSize }]}
+                  style={[styles.latinText, { color: colors.text, fontSize: transSize, lineHeight: transLh }]}
                   selectable
                 >
                   {detail.latin}
@@ -165,7 +169,7 @@ export default function InvocationDetailScreen() {
               <View style={styles.block}>
                 <Text style={styles.blockLabel}>Traduction</Text>
                 <Text
-                  style={[styles.translationText, { fontSize: transSize }]}
+                  style={[styles.translationText, { color: colors.textMuted, fontSize: transSize, lineHeight: transLh }]}
                   selectable
                 >
                   {detail.translation}

@@ -15,6 +15,8 @@ const storage = jest.requireMock("@react-native-async-storage/async-storage");
 const lessons = [{ id: "a" }, { id: "b" }, { id: "c" }];
 
 describe("learn progress", () => {
+  const courseId = "prophets-life";
+
   beforeEach(() => {
     jest.clearAllMocks();
     storage.getItem.mockResolvedValue(null);
@@ -33,15 +35,15 @@ describe("learn progress", () => {
 
   it("marks lesson completed once", async () => {
     storage.getItem.mockResolvedValue(JSON.stringify(["a"]));
-    await markLessonCompleted("b");
+    await markLessonCompleted(courseId, "b");
     expect(storage.setItem).toHaveBeenCalledWith(
-      "@learn_completed_lessons",
+      `@learn_completed_${courseId}`,
       JSON.stringify(["a", "b"])
     );
   });
 
   it("returns empty list when storage empty", async () => {
-    const ids = await getCompletedLessonIds();
+    const ids = await getCompletedLessonIds(courseId);
     expect(ids).toEqual([]);
   });
 });

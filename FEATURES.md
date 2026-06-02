@@ -12,19 +12,20 @@ Dernière revue produit : juin 2026.
 
 ### UI / thème / i18n
 
-- [ ] Remplacer couleurs en dur sur écrans Coran restants (`recitateurs`, `recherche`, placeholders…) → `useAppTheme()`
-- [ ] `bodyLineHeight` sur détail invocations (`coran/invocations/dua/[slug]/[id].tsx`)
-- [ ] Migrer listes hadith / invocations vers `ListRow` (comme favoris profil)
-- [ ] i18n : écran **Recherche** (`recherche.tsx` — placeholder, hint)
-- [ ] i18n : libellés durs sur lecteur sourate (`Chargement…`, `Réessayer`, etc.)
-- [ ] i18n : sous-titres favoris unifiés (`useUnifiedFavorites.ts` — « Verset favori », etc.)
-- [ ] i18n : noms des mois hijri sur accueil et onglet Mes prières (`HIJRI_MONTHS`)
+- [OK] Remplacer couleurs en dur sur écrans Coran restants (`recitateurs`, `recherche`, placeholders…) → `useAppTheme()`
+- [OK] `bodyLineHeight` sur détail invocations (`coran/invocations/dua/[slug]/[id].tsx`)
+- [OK] Migrer listes hadith / invocations vers `ListRow` (comme favoris profil)
+- [OK] i18n : écran **Recherche** (`recherche.tsx` — placeholder, hint)
+- [OK] i18n : libellés durs sur lecteur sourate (`Chargement…`, `Réessayer`, etc.)
+- [OK] i18n : sous-titres favoris unifiés (`useUnifiedFavorites.ts` — « Verset favori », etc.)
+- [OK] i18n : noms des mois hijri sur accueil et onglet Mes prières (`HIJRI_MONTHS`)
+- [OK] Uniformiser l’UI des accès Coran/Hadith/Invocations/Récitateurs avec un design system unique : listes et cards **flat**, fines, élégantes, espacements cohérents, hiérarchie typographique stable, bordures/rayons standardisés et composants réutilisables (`ListRow`, `SectionHeader`, cards) appliqués de manière homogène dans toute l’app
 
 ### Produit / données
 
-- [ ] Progression Apprendre par parcours : clé `@learn_completed_{courseId}` (au lieu d’une liste globale unique)
-- [ ] Clarifier ou fusionner écran **Traduction** (doublon avec lecteur `[number].tsx`)
-- [ ] Cloche accueil : lien explicite vers rappels ou réglages notifications
+- [OK] Progression Apprendre par parcours : clé `@learn_completed_{courseId}` (au lieu d’une liste globale unique)
+- [OK] Clarifier ou fusionner écran **Traduction** (doublon avec lecteur `[number].tsx`)
+- [OK] Cloche accueil : lien explicite vers rappels ou réglages notifications (système de logs avec dernières actions faites)
 
 ---
 
@@ -32,8 +33,8 @@ Dernière revue produit : juin 2026.
 
 ### Visibilité & attentes utilisateur
 
-- [ ] Badge **« Bientôt »** sur tuiles Bibliothèque non implémentées
-- [ ] Masquer ou désactiver les entrées sans contenu (alternative au badge)
+- [OK] Badge **« Bientôt »** sur tuiles Bibliothèque non implémentées
+- [OK] Masquer ou désactiver les entrées sans contenu (alternative au badge)
 
 ### Écrans placeholder → contenu ou redirection
 

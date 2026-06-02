@@ -3,7 +3,7 @@ import { useFocusEffect } from "expo-router";
 
 import { useAppPreferences } from "@/lib/app-preferences";
 import { getLearnCourses } from "../courses";
-import { getCompletedLessonIds, isLessonUnlocked } from "../progress";
+import { getAllCompletedLessonIds, isLessonUnlocked } from "../progress";
 import type { LearnLesson } from "../types";
 
 export function useLearnCatalog() {
@@ -15,11 +15,11 @@ export function useLearnCatalog() {
   const refresh = useCallback(async () => {
     setLoading(true);
     try {
-      setCompletedIds(await getCompletedLessonIds());
+      setCompletedIds(await getAllCompletedLessonIds(courses.map((c) => c.id)));
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [courses]);
 
   useFocusEffect(
     useCallback(() => {

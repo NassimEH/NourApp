@@ -13,15 +13,13 @@ import React, {
   useState,
 } from "react";
 import { Audio } from "expo-av";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import { getSuraAudioUrl, getAyahAudioUrl } from "./api";
 import { persistLastListen } from "./persistLastListen";
 import { getLastListen } from "./storage";
 import { DEFAULT_AUDIO_RECITER, AVAILABLE_RECITERS, type Reciter } from "./types";
+import { useAppPreferences } from "@/lib/app-preferences";
 
 export type PlaybackMode = "sura" | "ayah";
-
-const RECITER_STORAGE_KEY = "@quran_reciter";
 
 export interface QuranAudioState {
   isPlaying: boolean;
@@ -71,6 +69,7 @@ async function setAudioMode() {
 }
 
 export function QuranAudioProvider({ children }: { children: React.ReactNode }) {
+  const { quranReciter, setQuranReciter } = useAppPreferences();
   const [state, setState] = useState<QuranAudioState>(initialState);
   const soundRef = useRef<Audio.Sound | null>(null);
   const positionRef = useRef(0);
@@ -85,14 +84,9 @@ export function QuranAudioProvider({ children }: { children: React.ReactNode }) 
   }, [state.currentSura, state.mode]);
 
   useEffect(() => {
-    AsyncStorage.getItem(RECITER_STORAGE_KEY)
-      .then((savedReciter) => {
-        if (savedReciter && AVAILABLE_RECITERS.some((r) => r.id === savedReciter)) {
-          setState((s) => ({ ...s, currentReciter: savedReciter }));
-        }
-      })
-      .catch(() => {});
-  }, []);
+    if (!AVAILABLE_RECITERS.some((r) => r.id === quranReciter)) return;
+    setState((s) => ({ ...s, currentReciter: quranReciter }));
+  }, [quranReciter]);
 
   const unload = useCallback(async () => {
     if (intervalRef.current) {
@@ -221,9 +215,7 @@ export function QuranAudioProvider({ children }: { children: React.ReactNode }) 
   const setReciter = useCallback(
     async (reciterId: string) => {
       if (!AVAILABLE_RECITERS.some((r) => r.id === reciterId)) return;
-      try {
-        await AsyncStorage.setItem(RECITER_STORAGE_KEY, reciterId);
-      } catch {}
+      setQuranReciter(reciterId);
       const currentSura = state.currentSura;
       const currentMode = state.mode;
       setState((s) => ({ ...s, currentReciter: reciterId }));
@@ -234,7 +226,7 @@ export function QuranAudioProvider({ children }: { children: React.ReactNode }) 
         }, 100);
       }
     },
-    [state.currentSura, state.mode, unload, playSuraWithReciter]
+    [setQuranReciter, state.currentSura, state.mode, unload, playSuraWithReciter]
   );
 
   const playSura = useCallback(

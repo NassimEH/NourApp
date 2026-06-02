@@ -136,7 +136,7 @@ Au premier lancement : **onboarding** → **connexion** (ou mode invité). Voir 
 ## Variables d’environnement
 
 Copier `.env.example` vers `.env.local` :
-
+   
 ```bash
 cp .env.example .env.local
 ```

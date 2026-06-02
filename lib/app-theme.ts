@@ -4,7 +4,7 @@ import {
   ACCENT_ON_DARK,
   type AccentColorKey,
 } from "@/lib/accent-colors";
-import type { ThemeMode } from "@/lib/app-preferences";
+import type { TextColorMode, ThemeMode } from "@/lib/app-preferences";
 import { useAppPreferences } from "@/lib/app-preferences";
 
 export { ACCENT_HEX } from "@/lib/accent-colors";
@@ -63,10 +63,47 @@ function hexToRgba(hex: string, alpha: number): string {
   return `rgba(${r},${g},${b},${alpha})`;
 }
 
-function buildTheme(mode: ThemeMode, accentKey: AccentColorKey): AppThemeColors {
+function getLightTextBase(textColor: TextColorMode): {
+  text: string;
+  textMuted: string;
+  icon: string;
+  iconMuted: string;
+} {
+  switch (textColor) {
+    case "slate":
+      return {
+        text: "#1F2937",
+        textMuted: "rgba(31,41,55,0.58)",
+        icon: "#1F2937",
+        iconMuted: "rgba(31,41,55,0.45)",
+      };
+    case "brown":
+      return {
+        text: "#3B2F2F",
+        textMuted: "rgba(59,47,47,0.58)",
+        icon: "#3B2F2F",
+        iconMuted: "rgba(59,47,47,0.45)",
+      };
+    case "black":
+    default:
+      return {
+        text: "#000000",
+        textMuted: "rgba(0,0,0,0.55)",
+        icon: "#000000",
+        iconMuted: "rgba(0,0,0,0.45)",
+      };
+  }
+}
+
+function buildTheme(
+  mode: ThemeMode,
+  accentKey: AccentColorKey,
+  textColor: TextColorMode
+): AppThemeColors {
   const accentBase = ACCENT_HEX[accentKey];
   const accent =
     mode === "dark" ? ACCENT_ON_DARK[accentKey] : accentBase;
+  const lightText = getLightTextBase(textColor);
 
   if (mode === "light") {
     const lightBg = "#F0EEE6";
@@ -75,10 +112,10 @@ function buildTheme(mode: ThemeMode, accentKey: AccentColorKey): AppThemeColors 
       isDark: false,
       background: lightBg,
       backgroundSecondary: "#E8E4DC",
-      text: "#000000",
-      textMuted: "rgba(0,0,0,0.55)",
-      icon: "#000000",
-      iconMuted: "rgba(0,0,0,0.45)",
+      text: lightText.text,
+      textMuted: lightText.textMuted,
+      icon: lightText.icon,
+      iconMuted: lightText.iconMuted,
       accent,
       onAccent: "#FFFFFF",
       accentSurface: hexToRgba(accentBase, 0.12),
@@ -148,10 +185,10 @@ function buildTheme(mode: ThemeMode, accentKey: AccentColorKey): AppThemeColors 
     isDark: false,
     background: "transparent",
     backgroundSecondary: "rgba(255,255,255,0.88)",
-    text: "#191D31",
-    textMuted: "#5B5D5E",
-    icon: "#191D31",
-    iconMuted: "#6B7280",
+    text: lightText.text,
+    textMuted: lightText.textMuted,
+    icon: lightText.icon,
+    iconMuted: lightText.iconMuted,
     accent: accentBase,
     onAccent: "#FFFFFF",
     accentSurface: hexToRgba(accentBase, 0.1),
@@ -180,15 +217,16 @@ function buildTheme(mode: ThemeMode, accentKey: AccentColorKey): AppThemeColors 
 
 export function getAppThemeColors(
   mode: ThemeMode,
-  accentKey: AccentColorKey
+  accentKey: AccentColorKey,
+  textColor: TextColorMode
 ): AppThemeColors {
-  return buildTheme(mode, accentKey);
+  return buildTheme(mode, accentKey, textColor);
 }
 
 export function useAppTheme(): AppThemeColors {
-  const { theme, accentColor } = useAppPreferences();
+  const { theme, accentColor, textColor } = useAppPreferences();
   return useMemo(
-    () => buildTheme(theme, accentColor),
-    [theme, accentColor]
+    () => buildTheme(theme, accentColor, textColor),
+    [theme, accentColor, textColor]
   );
 }

@@ -36,38 +36,35 @@ import {
   screenScrollContent,
 } from "@/constants/screen-layout";
 import { ScreenPageHeader } from "@/components/ScreenPageHeader";
-import { useTranslation } from "@/lib/i18n";
+import { TRANSLATIONS, useTranslation } from "@/lib/i18n";
 import { useAppTheme } from "@/lib/app-theme";
 import { createQiblaStyles } from "@/lib/qibla-screen-styles";
-
-const HIJRI_MONTHS = [
-  "Muharram", "Safar", "Rabi al-Awwal", "Rabi al-Thani",
-  "Jumada al-Awwal", "Jumada al-Thani", "Rajab", "Sha'ban",
-  "Ramadan", "Shawwal", "Dhu al-Qi'dah", "Dhu al-Hijjah",
-];
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 const COMPASS_SIZE = Math.min(SCREEN_WIDTH - 64, 260);
 
-function useTodayDates() {
+function useTodayDates(locale: "fr" | "en" | "ar", hijriMonths: readonly string[]) {
   return useMemo(() => {
     const now = new Date();
     const gy = now.getFullYear();
     const gm = now.getMonth() + 1;
     const gd = now.getDate();
-    const gregorian = now.toLocaleDateString("fr-FR", {
-      day: "numeric",
-      month: "short",
-      year: "numeric",
-    });
+    const gregorian = now.toLocaleDateString(
+      locale === "ar" ? "ar-SA" : locale === "en" ? "en-US" : "fr-FR",
+      {
+        day: "numeric",
+        month: "short",
+        year: "numeric",
+      }
+    );
     try {
       const { hy, hm, hd } = toHijri(gy, gm, gd);
-      const hijri = `${HIJRI_MONTHS[hm - 1]} ${hd}, ${hy}`;
+      const hijri = `${hijriMonths[hm - 1] ?? ""} ${hd}, ${hy}`;
       return { gregorian, hijri };
     } catch {
       return { gregorian, hijri: "" };
     }
-  }, []);
+  }, [hijriMonths, locale]);
 }
 
 function getDirection(degree: number): string {
@@ -82,10 +79,11 @@ function getDirection(degree: number): string {
 }
 
 export default function MesPrièresScreen() {
-  const { t } = useTranslation();
+  const { t, locale } = useTranslation();
   const colors = useAppTheme();
   const styles = useMemo(() => createQiblaStyles(colors), [colors]);
-  const { gregorian, hijri } = useTodayDates();
+  const hijriMonths = TRANSLATIONS[locale].home.hijriMonths;
+  const { gregorian, hijri } = useTodayDates(locale, hijriMonths);
   const { timings: prayerTimes, loading: prayerLoading, cityName: prayerCity, coords: prayerCoords } = usePrayerTimes();
   const { toggle: togglePrayerChecked, isChecked: isPrayerChecked } = usePrayersChecked();
 

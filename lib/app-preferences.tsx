@@ -12,12 +12,14 @@ import {
   isAccentColorKey,
   type AccentColorKey,
 } from "@/lib/accent-colors";
+import { AVAILABLE_RECITERS, DEFAULT_AUDIO_RECITER } from "@/lib/quran/types";
 
 const STORAGE_KEY = "@nour_app_preferences";
 
 export type ThemeMode = "spiritual" | "light" | "dark";
 export type IconStyleMode = "outline" | "filled";
 export type TextSizeMode = "small" | "medium" | "large";
+export type TextColorMode = "black" | "slate" | "brown";
 export type { AccentColorKey } from "@/lib/accent-colors";
 export type LanguageLocale = "fr" | "en" | "ar";
 
@@ -25,24 +27,30 @@ export interface AppPreferencesState {
   theme: ThemeMode;
   iconStyle: IconStyleMode;
   textSize: TextSizeMode;
+  textColor: TextColorMode;
   accentColor: AccentColorKey;
   locale: LanguageLocale;
+  quranReciter: string;
 }
 
 const DEFAULT_PREFS: AppPreferencesState = {
   theme: "spiritual",
   iconStyle: "outline",
   textSize: "medium",
+  textColor: "black",
   accentColor: "green",
   locale: "fr",
+  quranReciter: DEFAULT_AUDIO_RECITER,
 };
 
 interface AppPreferencesContextType extends AppPreferencesState {
   setTheme: (v: ThemeMode) => void;
   setIconStyle: (v: IconStyleMode) => void;
   setTextSize: (v: TextSizeMode) => void;
+  setTextColor: (v: TextColorMode) => void;
   setAccentColor: (v: AccentColorKey) => void;
   setLocale: (v: LanguageLocale) => void;
+  setQuranReciter: (v: string) => void;
 }
 
 const AppPreferencesContext = createContext<AppPreferencesContextType | undefined>(undefined);
@@ -57,10 +65,14 @@ async function loadStored(): Promise<Partial<AppPreferencesState>> {
       theme: normalizeThemeMode(parsed.theme),
       iconStyle: ["outline", "filled"].includes(parsed.iconStyle ?? "") ? parsed.iconStyle : undefined,
       textSize: ["small", "medium", "large"].includes(parsed.textSize ?? "") ? parsed.textSize : undefined,
+      textColor: ["black", "slate", "brown"].includes(parsed.textColor ?? "") ? parsed.textColor : undefined,
       accentColor: isAccentColorKey(parsed.accentColor)
         ? parsed.accentColor
         : undefined,
       locale: ["fr", "en", "ar"].includes(parsed.locale ?? "") ? parsed.locale : undefined,
+      quranReciter: AVAILABLE_RECITERS.some((r) => r.id === parsed.quranReciter)
+        ? parsed.quranReciter
+        : undefined,
     };
   } catch {
     return {};
@@ -99,16 +111,23 @@ export function AppPreferencesProvider({ children }: { children: React.ReactNode
   const setTheme = useCallback((theme: ThemeMode) => persist({ theme }), [persist]);
   const setIconStyle = useCallback((iconStyle: IconStyleMode) => persist({ iconStyle }), [persist]);
   const setTextSize = useCallback((textSize: TextSizeMode) => persist({ textSize }), [persist]);
+  const setTextColor = useCallback((textColor: TextColorMode) => persist({ textColor }), [persist]);
   const setAccentColor = useCallback((accentColor: AccentColorKey) => persist({ accentColor }), [persist]);
   const setLocale = useCallback((locale: LanguageLocale) => persist({ locale }), [persist]);
+  const setQuranReciter = useCallback((quranReciter: string) => {
+    if (!AVAILABLE_RECITERS.some((r) => r.id === quranReciter)) return;
+    persist({ quranReciter });
+  }, [persist]);
 
   const value: AppPreferencesContextType = {
     ...state,
     setTheme,
     setIconStyle,
     setTextSize,
+    setTextColor,
     setAccentColor,
     setLocale,
+    setQuranReciter,
   };
 
   return (
@@ -126,8 +145,10 @@ export function useAppPreferences(): AppPreferencesContextType {
     setTheme: () => {},
     setIconStyle: () => {},
     setTextSize: () => {},
+    setTextColor: () => {},
     setAccentColor: () => {},
     setLocale: () => {},
+    setQuranReciter: () => {},
   };
   }
   return ctx;
@@ -169,6 +190,12 @@ export const TEXT_SIZE_LABELS: Record<TextSizeMode, string> = {
   small: "Petite",
   medium: "Normale",
   large: "Grande",
+};
+
+export const TEXT_COLOR_LABELS: Record<TextColorMode, string> = {
+  black: "Noir",
+  slate: "Ardoise",
+  brown: "Brun",
 };
 
 export const LANGUAGE_LABELS: Record<LanguageLocale, string> = {

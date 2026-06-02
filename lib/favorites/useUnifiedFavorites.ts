@@ -2,6 +2,8 @@ import { useCallback, useEffect, useState } from "react";
 
 import { getDuaFavorites } from "@/lib/dua/storage";
 import { getHadithFavorites } from "@/lib/hadith/storage";
+import { useAppPreferences } from "@/lib/app-preferences";
+import { translate } from "@/lib/i18n";
 import { getFavorites as getQuranFavorites } from "@/lib/quran/storage";
 import type { Favorite as QuranFavorite } from "@/lib/quran/types";
 
@@ -16,19 +18,23 @@ export interface UnifiedFavoriteItem {
   params?: Record<string, string>;
 }
 
-function mapQuran(f: QuranFavorite): UnifiedFavoriteItem {
+function mapQuran(f: QuranFavorite, locale: "fr" | "en" | "ar"): UnifiedFavoriteItem {
   const ayahPart =
     f.type === "ayah" && f.ayahNumber != null ? ` · ${f.ayahNumber}` : "";
   return {
     id: `quran-${f.suraNumber}-${f.ayahNumber ?? "sura"}`,
     kind: "quran",
-    title: `Sourate ${f.suraNumber}${ayahPart}`,
-    subtitle: f.type === "ayah" ? "Verset favori" : "Sourate favorite",
+    title: `${translate(locale, "favorites.kindQuran")} ${f.suraNumber}${ayahPart}`,
+    subtitle:
+      f.type === "ayah"
+        ? translate(locale, "favorites.quranAyahFavorite")
+        : translate(locale, "favorites.quranSuraFavorite"),
     route: `/(root)/(tabs)/coran/${f.suraNumber}`,
   };
 }
 
 export function useUnifiedFavorites() {
+  const { locale } = useAppPreferences();
   const [items, setItems] = useState<UnifiedFavoriteItem[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -54,7 +60,7 @@ export function useUnifiedFavorites() {
           id: `hadith-${h.collectionName}-${h.hadithNumber}`,
           kind: "hadith" as const,
           title: h.collectionDisplayName || h.collectionName,
-          subtitle: `Hadith ${h.hadithNumber}`,
+          subtitle: `${translate(locale, "favorites.kindHadith")} ${h.hadithNumber}`,
           route:
             "/(root)/(tabs)/coran/hadiths/collection/[name]/hadith/[hadithNumber]",
           params: {
@@ -62,14 +68,14 @@ export function useUnifiedFavorites() {
             hadithNumber: h.hadithNumber,
           },
         })),
-        ...quran.map(mapQuran),
+        ...quran.map((item) => mapQuran(item, locale)),
       ];
 
       setItems(merged);
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [locale]);
 
   useEffect(() => {
     void refetch();
