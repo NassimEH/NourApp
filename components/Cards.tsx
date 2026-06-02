@@ -1,11 +1,11 @@
 ﻿import {
+  Image,
   StyleSheet,
   Text,
   TouchableOpacity,
   View,
 } from "react-native";
 import { AppIcon, type AppIconName } from "@/components/AppIcon";
-import Colors from "@/constants/Colors";
 import { ITEM_HEIGHT, ITEM_WIDTH } from "@/constants";
 import Spacing from "@/constants/Spacing";
 import { useAppTheme } from "@/lib/app-theme";
