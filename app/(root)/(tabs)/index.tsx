@@ -67,7 +67,6 @@ import { HomeContinueSection } from "@/components/home/HomeContinueSection";
 import { HomePrayerWeatherCarousel } from "@/components/home/HomePrayerWeatherCarousel";
 import { HomeToolsSection } from "@/components/home/HomeToolsSection";
 import { HomeRamadanBanner } from "@/components/home/HomeRamadanBanner";
-import { useMosqueName } from "@/lib/home/hooks/useMosqueName";
 import { rescheduleNextPrayerNotification } from "@/lib/notifications/prayer-notifications";
 import { useGlobalContext } from "@/lib/global-provider";
 import { usePrayerTimes, type PrayerTimes } from "@/lib/usePrayerTimes";
@@ -90,8 +89,6 @@ type HomeListHeaderProps = {
   prayerCity: string | null;
   prayerCoords: { latitude: number; longitude: number } | null;
   onRequestLocation: () => void;
-  mosqueDisplayName: string;
-  onEditMosque: () => void;
   onBellPress: () => void;
   bellLabel: string;
 };
@@ -106,8 +103,6 @@ const HomeListHeader = React.memo(function HomeListHeader({
   prayerCity,
   prayerCoords,
   onRequestLocation,
-  mosqueDisplayName,
-  onEditMosque,
   onBellPress,
   bellLabel,
 }: HomeListHeaderProps) {
@@ -210,11 +205,8 @@ const HomeListHeader = React.memo(function HomeListHeader({
       </View>
       <HomePrayerWeatherCarousel
         prayerLoading={prayerLoading}
-        prayerTimes={prayerTimes}
         prayerCoords={prayerCoords}
         onRequestLocation={onRequestLocation}
-        mosqueDisplayName={mosqueDisplayName}
-        onEditMosque={onEditMosque}
       />
 
       <HomeRamadanBanner />
@@ -246,7 +238,6 @@ const Home = () => {
     coords: prayerCoords,
     refetch: refetchLocation,
   } = usePrayerTimes();
-  const { mosqueName } = useMosqueName();
   const { t: tHome } = useTranslation();
 
   useEffect(() => {
@@ -255,7 +246,6 @@ const Home = () => {
     }
   }, [prayerTimes]);
 
-  const mosqueDisplayName = mosqueName ?? tHome("home.defaultMosqueName");
   const handleBellPress = () => {
     Alert.alert(
       tHome("home.bellMenuTitle"),
@@ -297,8 +287,6 @@ const Home = () => {
             prayerCity={prayerCity}
             prayerCoords={prayerCoords}
             onRequestLocation={refetchLocation}
-            mosqueDisplayName={mosqueDisplayName}
-            onEditMosque={() => router.push("/(root)/mosque-settings")}
             onBellPress={handleBellPress}
             bellLabel={tHome("reminders.title")}
           />

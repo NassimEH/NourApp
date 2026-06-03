@@ -225,35 +225,11 @@ export function HomeContinueSection() {
         <ActivityIndicator color={colors.accent} style={styles.loader} />
 
       ) : items.length === 0 ? (
-
-        <View
-
-          style={[
-
-            styles.empty,
-
-            {
-
-              backgroundColor: colors.usesBackgroundImage
-
-                ? colors.card
-
-                : colors.cardElevated,
-
-              borderColor: colors.border,
-
-            },
-
-          ]}
-
-        >
-
-          <AppIcon name="compass" size={28} color={colors.iconMuted} />
-
+        <View style={styles.empty}>
+          <AppIcon name="book-open" size={22} color={colors.textMuted} />
           <Text style={[styles.emptyText, { color: colors.textMuted }, rtlTextStyle]}>
             {t("home.continueEmpty")}
           </Text>
-
         </View>
 
       ) : (
@@ -401,29 +377,19 @@ const styles = StyleSheet.create({
   },
 
   empty: {
-
     alignItems: "center",
-
-    gap: 12,
-
-    padding: 28,
-
-    borderRadius: CARD_RADIUS,
-
-    borderWidth: StyleSheet.hairlineWidth,
-
+    justifyContent: "center",
+    paddingVertical: 20,
+    paddingHorizontal: 12,
+    gap: 10,
   },
-
   emptyText: {
-
     fontSize: 14,
-
     fontFamily: "PlusJakartaSans-Regular",
-
     textAlign: "center",
-
-    lineHeight: 20,
-
+    lineHeight: 21,
+    maxWidth: 300,
+    opacity: 0.85,
   },
 
 });

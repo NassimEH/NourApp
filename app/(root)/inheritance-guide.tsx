@@ -1,10 +1,12 @@
-import { ScrollView, StyleSheet, Text } from "react-native";
+import { useMemo } from "react";
+import { Text } from "react-native";
 
-import { PreferenceScreenLayout } from "@/components/PreferenceScreenLayout";
+import { ToolScreenLayout } from "@/components/ToolScreenLayout";
 import { useAppTheme } from "@/lib/app-theme";
 import { useAppTypography } from "@/lib/app-typography";
 import { bodyLineHeight } from "@/lib/ui/typography";
 import { useTranslation } from "@/lib/i18n";
+import { createToolScreenStyles } from "@/lib/tool-screen-styles";
 
 const SECTION_KEYS = [
   "inheritance.intro",
@@ -16,39 +18,24 @@ const SECTION_KEYS = [
 
 export default function InheritanceGuideScreen() {
   const colors = useAppTheme();
+  const styles = useMemo(() => createToolScreenStyles(colors), [colors]);
   const typography = useAppTypography();
   const { t } = useTranslation();
   const lh = bodyLineHeight(typography.body);
 
   return (
-    <PreferenceScreenLayout
+    <ToolScreenLayout
       title={t("inheritance.title")}
       subtitle={t("inheritance.subtitle")}
     >
-      <ScrollView showsVerticalScrollIndicator={false}>
-        {SECTION_KEYS.map((key) => (
-          <Text
-            key={key}
-            style={[
-              styles.paragraph,
-              {
-                color: colors.text,
-                fontSize: typography.body,
-                lineHeight: lh,
-              },
-            ]}
-          >
-            {t(key)}
-          </Text>
-        ))}
-      </ScrollView>
-    </PreferenceScreenLayout>
+      {SECTION_KEYS.map((key) => (
+        <Text
+          key={key}
+          style={[styles.body, { fontSize: typography.body, lineHeight: lh }]}
+        >
+          {t(key)}
+        </Text>
+      ))}
+    </ToolScreenLayout>
   );
 }
-
-const styles = StyleSheet.create({
-  paragraph: {
-    fontFamily: "PlusJakartaSans-Regular",
-    marginBottom: 16,
-  },
-});

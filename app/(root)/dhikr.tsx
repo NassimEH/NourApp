@@ -1,8 +1,8 @@
-import { useCallback, useEffect, useState } from "react";
-import { Platform, Pressable, StyleSheet, Text, View } from "react-native";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { Platform, Pressable, Text, View } from "react-native";
 import * as Haptics from "expo-haptics";
 
-import { PreferenceScreenLayout } from "@/components/PreferenceScreenLayout";
+import { ToolScreenLayout } from "@/components/ToolScreenLayout";
 import { useAppTheme } from "@/lib/app-theme";
 import { useTranslation } from "@/lib/i18n";
 import {
@@ -11,11 +11,13 @@ import {
   setDhikrCount,
   setDhikrDailyGoal,
 } from "@/lib/tools/dhikr-storage";
+import { createToolScreenStyles } from "@/lib/tool-screen-styles";
 
 const GOAL_OPTIONS = [33, 99, 100];
 
 export default function DhikrScreen() {
   const colors = useAppTheme();
+  const styles = useMemo(() => createToolScreenStyles(colors), [colors]);
   const { t, rtlTextStyle } = useTranslation();
   const [count, setCount] = useState(0);
   const [goal, setGoal] = useState(33);
@@ -51,7 +53,7 @@ export default function DhikrScreen() {
   const progress = goal > 0 ? Math.min(1, count / goal) : 0;
 
   return (
-    <PreferenceScreenLayout
+    <ToolScreenLayout
       title={t("tools.dhikr.title")}
       subtitle={t("tools.dhikr.subtitle")}
     >
@@ -61,144 +63,54 @@ export default function DhikrScreen() {
         accessibilityLabel={t("tools.dhikr.tapToCount")}
         style={({ pressed }) => [
           styles.counterZone,
-          {
-            backgroundColor: colors.accentSurface,
-            borderColor: colors.accentBorder,
-          },
-          pressed && styles.pressed,
+          pressed && { opacity: 0.88 },
         ]}
       >
-        <Text style={[styles.count, { color: colors.accent }]}>{count}</Text>
-        <Text style={[styles.hint, { color: colors.textMuted }, rtlTextStyle]}>
+        <Text style={styles.counterValue}>{count}</Text>
+        <Text style={[styles.counterHint, rtlTextStyle]}>
           {t("tools.dhikr.tapToCount")}
         </Text>
       </Pressable>
 
-      <View style={[styles.progressTrack, { backgroundColor: colors.divider }]}>
-        <View
-          style={[
-            styles.progressFill,
-            { backgroundColor: colors.accent, width: `${progress * 100}%` },
-          ]}
-        />
+      <View style={styles.progressTrack}>
+        <View style={[styles.progressFill, { width: `${progress * 100}%` }]} />
       </View>
-      <Text style={[styles.goalLabel, { color: colors.textMuted }, rtlTextStyle]}>
+      <Text style={[styles.note, rtlTextStyle, { marginBottom: 20 }]}>
         {t("tools.dhikr.goalProgress", { count, goal })}
       </Text>
 
-      <Text style={[styles.sectionLabel, { color: colors.textMuted }, rtlTextStyle]}>
+      <Text style={[styles.sectionLabel, rtlTextStyle]}>
         {t("tools.dhikr.dailyGoal")}
       </Text>
-      <View style={styles.goalRow}>
-        {GOAL_OPTIONS.map((g) => (
-          <Pressable
-            key={g}
-            onPress={() => pickGoal(g)}
-            style={[
-              styles.goalChip,
-              {
-                borderColor: colors.border,
-                backgroundColor: goal === g ? colors.accent : colors.cardElevated,
-              },
-            ]}
-          >
-            <Text
-              style={[
-                styles.goalChipText,
-                { color: goal === g ? colors.onAccent : colors.text },
-              ]}
+      <View style={[styles.chipRow, { marginBottom: 24 }]}>
+        {GOAL_OPTIONS.map((g) => {
+          const active = goal === g;
+          return (
+            <Pressable
+              key={g}
+              onPress={() => pickGoal(g)}
+              style={[styles.chip, active && styles.chipActive]}
             >
-              {g}
-            </Text>
-          </Pressable>
-        ))}
+              <Text
+                style={[styles.chipText, active && styles.chipTextActive]}
+              >
+                {g}
+              </Text>
+            </Pressable>
+          );
+        })}
       </View>
 
       <Pressable
         onPress={reset}
-        style={[styles.resetBtn, { borderColor: colors.border }]}
+        style={styles.ghostBtn}
         accessibilityRole="button"
         accessibilityLabel={t("tools.dhikr.reset")}
       >
-        <Text style={[styles.resetText, { color: colors.text }, rtlTextStyle]}>
+        <Text style={[styles.ghostBtnText, rtlTextStyle]}>
           {t("tools.dhikr.reset")}
         </Text>
       </Pressable>
-    </PreferenceScreenLayout>
+    </ToolScreenLayout>
   );
 }
-
-const styles = StyleSheet.create({
-  counterZone: {
-    alignItems: "center",
-    justifyContent: "center",
-    paddingVertical: 48,
-    borderRadius: 20,
-    borderWidth: 1,
-    marginBottom: 16,
-    minHeight: 160,
-  },
-  pressed: {
-    opacity: 0.92,
-  },
-  count: {
-    fontSize: 64,
-    fontFamily: "PlusJakartaSans-Bold",
-    lineHeight: 72,
-  },
-  hint: {
-    fontSize: 14,
-    fontFamily: "PlusJakartaSans-Medium",
-    marginTop: 8,
-  },
-  progressTrack: {
-    height: 6,
-    borderRadius: 3,
-    overflow: "hidden",
-    marginBottom: 8,
-  },
-  progressFill: {
-    height: "100%",
-    borderRadius: 3,
-  },
-  goalLabel: {
-    fontSize: 13,
-    fontFamily: "PlusJakartaSans-Regular",
-    marginBottom: 20,
-  },
-  sectionLabel: {
-    fontSize: 13,
-    fontFamily: "PlusJakartaSans-SemiBold",
-    marginBottom: 10,
-  },
-  goalRow: {
-    flexDirection: "row",
-    gap: 10,
-    marginBottom: 24,
-  },
-  goalChip: {
-    paddingVertical: 10,
-    paddingHorizontal: 18,
-    borderRadius: 12,
-    borderWidth: StyleSheet.hairlineWidth,
-    minWidth: 56,
-    alignItems: "center",
-  },
-  goalChipText: {
-    fontSize: 15,
-    fontFamily: "PlusJakartaSans-SemiBold",
-  },
-  resetBtn: {
-    alignSelf: "center",
-    paddingVertical: 12,
-    paddingHorizontal: 24,
-    borderRadius: 12,
-    borderWidth: StyleSheet.hairlineWidth,
-    minHeight: 44,
-    justifyContent: "center",
-  },
-  resetText: {
-    fontSize: 15,
-    fontFamily: "PlusJakartaSans-Medium",
-  },
-});

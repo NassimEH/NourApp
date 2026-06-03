@@ -1,16 +1,10 @@
 import { useMemo, useState } from "react";
-import { ScrollView } from "react-native";
-import {
-  Pressable,
-  StyleSheet,
-  Text,
-  TextInput,
-  View,
-} from "react-native";
+import { Pressable, ScrollView, Text, TextInput, View } from "react-native";
 
-import { PreferenceScreenLayout } from "@/components/PreferenceScreenLayout";
+import { ToolScreenLayout } from "@/components/ToolScreenLayout";
 import { useAppTheme } from "@/lib/app-theme";
 import { useTranslation } from "@/lib/i18n";
+import { createToolScreenStyles } from "@/lib/tool-screen-styles";
 import { ZAKAT_COUNTRY_PRESETS } from "@/lib/zakat/presets";
 
 function parseAmount(value: string): number {
@@ -21,6 +15,7 @@ function parseAmount(value: string): number {
 
 export default function ZakatFitrScreen() {
   const colors = useAppTheme();
+  const styles = useMemo(() => createToolScreenStyles(colors), [colors]);
   const { t, rtlTextStyle } = useTranslation();
   const [persons, setPersons] = useState(1);
   const [amountPerPerson, setAmountPerPerson] = useState("7");
@@ -37,67 +32,64 @@ export default function ZakatFitrScreen() {
   }, [total]);
 
   return (
-    <PreferenceScreenLayout
+    <ToolScreenLayout
       title={t("zakatFitr.title")}
       subtitle={t("zakatFitr.subtitle")}
     >
-      <View style={styles.block}>
-        <Text style={[styles.label, { color: colors.textMuted }, rtlTextStyle]}>
+      <View style={styles.section}>
+        <Text style={[styles.sectionLabel, rtlTextStyle]}>
           {t("zakatFitr.persons")}
         </Text>
         <View style={styles.stepper}>
           <Pressable
             onPress={() => setPersons((p) => Math.max(1, p - 1))}
-            style={[styles.stepBtn, { borderColor: colors.border }]}
+            style={styles.stepBtn}
             accessibilityLabel={t("zakatFitr.decrease")}
           >
-            <Text style={[styles.stepBtnText, { color: colors.text }]}>−</Text>
+            <Text style={styles.stepBtnText}>−</Text>
           </Pressable>
-          <Text style={[styles.stepValue, { color: colors.text }]}>
-            {persons}
-          </Text>
+          <Text style={styles.stepValue}>{persons}</Text>
           <Pressable
             onPress={() => setPersons((p) => p + 1)}
-            style={[styles.stepBtn, { borderColor: colors.border }]}
+            style={styles.stepBtn}
             accessibilityLabel={t("zakatFitr.increase")}
           >
-            <Text style={[styles.stepBtnText, { color: colors.text }]}>+</Text>
+            <Text style={styles.stepBtnText}>+</Text>
           </Pressable>
         </View>
       </View>
 
-      <Text style={[styles.label, { color: colors.textMuted }, rtlTextStyle]}>
+      <Text style={[styles.sectionLabel, rtlTextStyle]}>
         {t("zakatFitr.countrySection")}
       </Text>
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}
-        contentContainerStyle={styles.presetRow}
+        contentContainerStyle={{ gap: 10, paddingBottom: 8, marginBottom: 16 }}
       >
         {ZAKAT_COUNTRY_PRESETS.map((preset) => (
           <Pressable
             key={preset.id}
             onPress={() => setAmountPerPerson(String(preset.amountPerPerson))}
-            style={[
-              styles.presetChip,
-              {
-                borderColor: colors.border,
-                backgroundColor: colors.backgroundSecondary,
-              },
-            ]}
+            style={styles.presetChip}
           >
-            <Text style={[styles.presetLabel, { color: colors.text }]}>
+            <Text style={[styles.chipText, { color: colors.text }]}>
               {t(preset.labelKey)}
             </Text>
-            <Text style={[styles.presetAmount, { color: colors.accent }]}>
+            <Text
+              style={[
+                styles.fieldLabel,
+                { color: colors.accent, marginTop: 2, marginBottom: 0 },
+              ]}
+            >
               {preset.amountPerPerson} {preset.currency}
             </Text>
           </Pressable>
         ))}
       </ScrollView>
 
-      <View style={styles.block}>
-        <Text style={[styles.label, { color: colors.textMuted }, rtlTextStyle]}>
+      <View style={styles.field}>
+        <Text style={[styles.fieldLabel, rtlTextStyle]}>
           {t("zakatFitr.amountPerPerson")}
         </Text>
         <TextInput
@@ -106,124 +98,18 @@ export default function ZakatFitrScreen() {
           keyboardType="decimal-pad"
           placeholder="7"
           placeholderTextColor={colors.textMuted}
-          style={[
-            styles.input,
-            {
-              color: colors.text,
-              borderColor: colors.border,
-              backgroundColor: colors.backgroundSecondary,
-            },
-          ]}
+          style={[styles.input, rtlTextStyle]}
         />
       </View>
 
-      <View
-        style={[
-          styles.totalCard,
-          {
-            backgroundColor: colors.accentSurface,
-            borderColor: colors.accent,
-          },
-        ]}
-      >
-        <Text style={[styles.totalLabel, { color: colors.textMuted }, rtlTextStyle]}>
+      <View style={styles.highlight}>
+        <Text style={[styles.highlightLabel, rtlTextStyle]}>
           {t("zakatFitr.total")}
         </Text>
-        <Text style={[styles.totalValue, { color: colors.accent }]}>
-          {formattedTotal}
-        </Text>
+        <Text style={styles.highlightValue}>{formattedTotal}</Text>
       </View>
 
-      <Text style={[styles.note, { color: colors.textMuted }, rtlTextStyle]}>
-        {t("zakatFitr.disclaimer")}
-      </Text>
-    </PreferenceScreenLayout>
+      <Text style={[styles.note, rtlTextStyle]}>{t("zakatFitr.disclaimer")}</Text>
+    </ToolScreenLayout>
   );
 }
-
-const styles = StyleSheet.create({
-  block: {
-    paddingVertical: 14,
-    gap: 10,
-  },
-  label: {
-    fontSize: 13,
-    fontFamily: "PlusJakartaSans-SemiBold",
-    textTransform: "uppercase",
-    letterSpacing: 0.4,
-  },
-  stepper: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 20,
-  },
-  stepBtn: {
-    width: 44,
-    height: 44,
-    borderRadius: 12,
-    borderWidth: StyleSheet.hairlineWidth,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  stepBtnText: {
-    fontSize: 22,
-    fontFamily: "PlusJakartaSans-Medium",
-  },
-  stepValue: {
-    fontSize: 28,
-    fontFamily: "PlusJakartaSans-Bold",
-    minWidth: 48,
-    textAlign: "center",
-  },
-  input: {
-    fontSize: 18,
-    fontFamily: "PlusJakartaSans-SemiBold",
-    paddingVertical: 12,
-    paddingHorizontal: 14,
-    borderRadius: 12,
-    borderWidth: StyleSheet.hairlineWidth,
-  },
-  totalCard: {
-    marginTop: 8,
-    padding: 20,
-    borderRadius: 16,
-    borderWidth: 1,
-    alignItems: "center",
-    gap: 6,
-  },
-  totalLabel: {
-    fontSize: 13,
-    fontFamily: "PlusJakartaSans-SemiBold",
-  },
-  totalValue: {
-    fontSize: 36,
-    fontFamily: "PlusJakartaSans-Bold",
-  },
-  note: {
-    marginTop: 16,
-    fontSize: 13,
-    fontFamily: "PlusJakartaSans-Regular",
-    lineHeight: 20,
-  },
-  presetRow: {
-    gap: 10,
-    paddingBottom: 8,
-    marginBottom: 12,
-  },
-  presetChip: {
-    paddingVertical: 10,
-    paddingHorizontal: 14,
-    borderRadius: 12,
-    borderWidth: StyleSheet.hairlineWidth,
-    marginRight: 8,
-  },
-  presetLabel: {
-    fontSize: 13,
-    fontFamily: "PlusJakartaSans-SemiBold",
-  },
-  presetAmount: {
-    fontSize: 12,
-    fontFamily: "PlusJakartaSans-Medium",
-    marginTop: 2,
-  },
-});

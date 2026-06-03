@@ -1,9 +1,10 @@
 import { useMemo, useState } from "react";
-import { StyleSheet, Text, TextInput, View } from "react-native";
+import { Text, TextInput, View } from "react-native";
 
-import { PreferenceScreenLayout } from "@/components/PreferenceScreenLayout";
+import { ToolScreenLayout } from "@/components/ToolScreenLayout";
 import { useAppTheme } from "@/lib/app-theme";
 import { useTranslation } from "@/lib/i18n";
+import { createToolScreenStyles } from "@/lib/tool-screen-styles";
 
 const ZAKAT_RATE = 0.025;
 
@@ -15,6 +16,7 @@ function parseAmount(value: string): number {
 
 export default function ZakatMalScreen() {
   const colors = useAppTheme();
+  const styles = useMemo(() => createToolScreenStyles(colors), [colors]);
   const { t, rtlTextStyle } = useTranslation();
   const [assets, setAssets] = useState("");
   const [gold, setGold] = useState("");
@@ -34,7 +36,7 @@ export default function ZakatMalScreen() {
   }, [netWealth, zakatDue]);
 
   return (
-    <PreferenceScreenLayout
+    <ToolScreenLayout
       title={t("tools.zakatMal.title")}
       subtitle={t("tools.zakatMal.subtitle")}
     >
@@ -42,51 +44,44 @@ export default function ZakatMalScreen() {
         label={t("tools.zakatMal.assets")}
         value={assets}
         onChangeText={setAssets}
-        colors={colors}
+        styles={styles}
         rtlTextStyle={rtlTextStyle}
+        colors={colors}
       />
       <Field
         label={t("tools.zakatMal.gold")}
         value={gold}
         onChangeText={setGold}
-        colors={colors}
+        styles={styles}
         rtlTextStyle={rtlTextStyle}
+        colors={colors}
       />
       <Field
         label={t("tools.zakatMal.debts")}
         value={debts}
         onChangeText={setDebts}
-        colors={colors}
+        styles={styles}
         rtlTextStyle={rtlTextStyle}
+        colors={colors}
       />
 
-      <View
-        style={[
-          styles.resultCard,
-          {
-            backgroundColor: colors.accentSurface,
-            borderColor: colors.accentBorder,
-          },
-        ]}
-      >
-        <Text style={[styles.resultLabel, { color: colors.textMuted }, rtlTextStyle]}>
+      <View style={styles.highlight}>
+        <Text style={[styles.highlightLabel, rtlTextStyle]}>
           {t("tools.zakatMal.netWealth")}
         </Text>
-        <Text style={[styles.resultValue, { color: colors.text }]}>
+        <Text style={[styles.highlightValue, { color: colors.text, fontSize: 26 }]}>
           {netWealth.toLocaleString()}
         </Text>
-        <Text style={[styles.resultLabel, { color: colors.textMuted }, rtlTextStyle]}>
+        <Text style={[styles.highlightLabel, rtlTextStyle, { marginTop: 12 }]}>
           {t("tools.zakatMal.zakatDue")}
         </Text>
-        <Text style={[styles.zakatAmount, { color: colors.accent }]}>
-          {formattedZakat}
-        </Text>
+        <Text style={styles.highlightValue}>{formattedZakat}</Text>
       </View>
 
-      <Text style={[styles.disclaimer, { color: colors.textMuted }, rtlTextStyle]}>
+      <Text style={[styles.note, rtlTextStyle]}>
         {t("tools.zakatMal.disclaimer")}
       </Text>
-    </PreferenceScreenLayout>
+    </ToolScreenLayout>
   );
 }
 
@@ -94,81 +89,28 @@ function Field({
   label,
   value,
   onChangeText,
-  colors,
+  styles,
   rtlTextStyle,
+  colors,
 }: {
   label: string;
   value: string;
   onChangeText: (v: string) => void;
-  colors: ReturnType<typeof useAppTheme>;
+  styles: ReturnType<typeof createToolScreenStyles>;
   rtlTextStyle: object;
+  colors: ReturnType<typeof useAppTheme>;
 }) {
   return (
     <View style={styles.field}>
-      <Text style={[styles.label, { color: colors.textMuted }, rtlTextStyle]}>
-        {label}
-      </Text>
+      <Text style={[styles.fieldLabel, rtlTextStyle]}>{label}</Text>
       <TextInput
         value={value}
         onChangeText={onChangeText}
         keyboardType="decimal-pad"
         placeholder="0"
         placeholderTextColor={colors.textMuted}
-        style={[
-          styles.input,
-          {
-            color: colors.text,
-            borderColor: colors.border,
-            backgroundColor: colors.cardElevated,
-          },
-          rtlTextStyle,
-        ]}
+        style={[styles.input, styles.inputMuted, rtlTextStyle]}
       />
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  field: {
-    marginBottom: 16,
-  },
-  label: {
-    fontSize: 13,
-    fontFamily: "PlusJakartaSans-SemiBold",
-    marginBottom: 8,
-  },
-  input: {
-    borderWidth: StyleSheet.hairlineWidth,
-    borderRadius: 12,
-    paddingHorizontal: 14,
-    paddingVertical: 12,
-    fontSize: 16,
-    fontFamily: "PlusJakartaSans-Regular",
-  },
-  resultCard: {
-    padding: 18,
-    borderRadius: 16,
-    borderWidth: 1,
-    marginTop: 8,
-    marginBottom: 16,
-    gap: 6,
-  },
-  resultLabel: {
-    fontSize: 12,
-    fontFamily: "PlusJakartaSans-Medium",
-  },
-  resultValue: {
-    fontSize: 22,
-    fontFamily: "PlusJakartaSans-Bold",
-    marginBottom: 12,
-  },
-  zakatAmount: {
-    fontSize: 28,
-    fontFamily: "PlusJakartaSans-Bold",
-  },
-  disclaimer: {
-    fontSize: 12,
-    fontFamily: "PlusJakartaSans-Regular",
-    lineHeight: 18,
-  },
-});
