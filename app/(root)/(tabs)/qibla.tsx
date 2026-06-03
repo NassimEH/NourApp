@@ -3,7 +3,6 @@ import {
   Alert,
   View,
   Text,
-  StyleSheet,
   Platform,
   Dimensions,
   Animated,
@@ -18,7 +17,13 @@ import { AppIcon } from "@/components/AppIcon";
 import { HomeMosqueBlock } from "@/components/home/HomeMosqueBlock";
 import { PrayerLocationSearchBar } from "@/components/prayers/PrayerLocationSearchBar";
 
-import { getQiblaBearing } from "@/lib/prayerUtils";
+import {
+  getQiblaBearing,
+  getNextPrayerInfo,
+  getCurrentPrayer,
+  getNextPrayerTimestamp,
+  formatCountdownHM,
+} from "@/lib/prayerUtils";
 import {
   usePrayerTimes,
   PRAYER_ORDER,
@@ -26,19 +31,9 @@ import {
   type PrayerKey,
 } from "@/lib/usePrayerTimes";
 import { usePrayersChecked } from "@/lib/usePrayersChecked";
-import {
-  getNextPrayerInfo,
-  getCurrentPrayer,
-  getNextPrayerTimestamp,
-  formatCountdownHM,
-} from "@/lib/prayerUtils";
-import type { PrayerTimes } from "@/lib/usePrayerTimes";
 import { toHijri } from "hijri-converter";
 import { ScreenBackground } from "@/components/ScreenBackground";
-import {
-  screenPageHeaderSpacing,
-  screenScrollContent,
-} from "@/constants/screen-layout";
+import { screenPageHeaderSpacing } from "@/constants/screen-layout";
 import { ScreenPageHeader } from "@/components/ScreenPageHeader";
 import { TRANSLATIONS, useTranslation } from "@/lib/i18n";
 import { useAppTheme } from "@/lib/app-theme";
@@ -96,7 +91,7 @@ export default function MesPrièresScreen() {
     cityName: prayerCity,
     coords: prayerCoords,
     applyLocationByQuery,
-    useDeviceLocation,
+    applyDeviceLocation,
   } = usePrayerTimes();
   const { toggle: togglePrayerChecked, isChecked: isPrayerChecked } = usePrayersChecked();
   const { mosqueName } = useMosqueName();
@@ -216,7 +211,7 @@ export default function MesPrièresScreen() {
           onClear={() => setLocationQuery("")}
           onUseDeviceLocation={() => {
             setLocationQuery("");
-            void useDeviceLocation();
+            void applyDeviceLocation();
           }}
           loading={applyingLocation}
         />

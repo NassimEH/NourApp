@@ -3,7 +3,6 @@ import { AppIcon } from "@/components/AppIcon";
 import {
   ACCENT,
   CARD_BG,
-  MUTED,
   PREVIEW_PAD,
   TEXT,
   previewShared,

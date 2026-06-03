@@ -481,6 +481,7 @@ function createExploreStyles(c: AppThemeColors) {
   },
   featuredCard: {
     width: FEATURED_CARD_WIDTH,
+    height: FEATURED_CARD_HEIGHT,
     padding: 12,
     borderRadius: 10,
     borderWidth: 1,

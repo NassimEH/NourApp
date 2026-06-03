@@ -56,7 +56,6 @@ function RecentSuraTile({
   onPress: () => void;
   styles: ReturnType<typeof createLearnScreenStyles>;
 }) {
-  const colors = useAppTheme();
   const { rtlTextStyle } = useTranslation();
   const revelation =
     sura.revelationType === "Meccan" ? "Mecquoise" : "Médinoise";

@@ -14,9 +14,8 @@ import {
 } from "react-native";
 import * as ImagePicker from "expo-image-picker";
 import * as Location from "expo-location";
-import { useFocusEffect } from "expo-router";
+import { router, useFocusEffect } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { router } from "expo-router";
 import { AppIcon, type AppIconName } from "@/components/AppIcon";
 
 import { getProfileAvatarUri, setProfileAvatarUri } from "@/lib/profile-avatar";

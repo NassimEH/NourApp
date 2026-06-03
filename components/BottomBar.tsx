@@ -11,6 +11,7 @@ import {
   Text,
   Image,
   PanResponder,
+  ScrollView,
 } from "react-native";
 import { ThemedGlassSurface } from "@/components/ThemedGlassSurface";
 import * as Haptics from "expo-haptics";
@@ -23,7 +24,6 @@ import { QuranMiniPlayer } from "@/components/quran/QuranMiniPlayer";
 import { useQuranAudioContextOptional } from "@/lib/quran/QuranAudioContext";
 import { useSuraList } from "@/lib/quran/hooks/useSuraList";
 import { useAppTheme } from "@/lib/app-theme";
-import { ScrollView } from "react-native";
 import type { Reciter } from "@/lib/quran/types";
 
 const quranArtwork = require("@/assets/images/islamic-new-year-quran-book-with-dates-photo.jpg");
@@ -519,7 +519,6 @@ export function FullScreenPlayer({
 }
 
 export default function BottomBar({ state }: BottomTabBarProps) {
-  const colors = useAppTheme();
   const insets = useSafeAreaInsets();
   const audio = useQuranAudioContextOptional();
   const { list: suraList } = useSuraList();

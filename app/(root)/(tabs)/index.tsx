@@ -17,6 +17,21 @@ import {
   isVendredi,
   getHadithVendrediDuJour,
 } from "@/constants/hadithsVendredi";
+import { HomeContinueSection } from "@/components/home/HomeContinueSection";
+import { HomePrayerWeatherCarousel } from "@/components/home/HomePrayerWeatherCarousel";
+import { HomeToolsSection } from "@/components/home/HomeToolsSection";
+import { HomeRamadanBanner } from "@/components/home/HomeRamadanBanner";
+import { rescheduleNextPrayerNotification } from "@/lib/notifications/prayer-notifications";
+import { useGlobalContext } from "@/lib/global-provider";
+import { usePrayerTimes, type PrayerTimes } from "@/lib/usePrayerTimes";
+import { ScreenBackground } from "@/components/ScreenBackground";
+import { SCREEN_EDGE_PADDING } from "@/constants/screen-layout";
+import { ScreenPageHeader } from "@/components/ScreenPageHeader";
+import { useAppTypography } from "@/lib/app-typography";
+import { useAppTheme } from "@/lib/app-theme";
+import { createHomeStyles } from "@/lib/home-screen-styles";
+import { addActivityLog } from "@/lib/activity-log";
+import { useTranslation, getLocaleDateString, TRANSLATIONS } from "@/lib/i18n";
 
 function useTodayDates(locale: "fr" | "en" | "ar") {
   return useMemo(() => {
@@ -62,22 +77,6 @@ const HeaderAvatarBell = React.memo(function HeaderAvatarBell({
     </View>
   );
 });
-
-import { HomeContinueSection } from "@/components/home/HomeContinueSection";
-import { HomePrayerWeatherCarousel } from "@/components/home/HomePrayerWeatherCarousel";
-import { HomeToolsSection } from "@/components/home/HomeToolsSection";
-import { HomeRamadanBanner } from "@/components/home/HomeRamadanBanner";
-import { rescheduleNextPrayerNotification } from "@/lib/notifications/prayer-notifications";
-import { useGlobalContext } from "@/lib/global-provider";
-import { usePrayerTimes, type PrayerTimes } from "@/lib/usePrayerTimes";
-import { ScreenBackground } from "@/components/ScreenBackground";
-import { SCREEN_EDGE_PADDING } from "@/constants/screen-layout";
-import { ScreenPageHeader } from "@/components/ScreenPageHeader";
-import { useAppTypography } from "@/lib/app-typography";
-import { useAppTheme } from "@/lib/app-theme";
-import { createHomeStyles } from "@/lib/home-screen-styles";
-import { addActivityLog } from "@/lib/activity-log";
-import { useTranslation, getLocaleDateString, TRANSLATIONS } from "@/lib/i18n";
 
 type HomeListHeaderProps = {
   user: { name?: string; avatar?: string } | null;

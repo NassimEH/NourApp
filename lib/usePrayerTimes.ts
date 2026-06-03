@@ -284,7 +284,7 @@ export function usePrayerTimes() {
     []
   );
 
-  const useDeviceLocation = useCallback(async () => {
+  const applyDeviceLocation = useCallback(async () => {
     await clearPrayerLocationPreference();
     refetch();
   }, [refetch]);
@@ -298,6 +298,6 @@ export function usePrayerTimes() {
     coords,
     refetch,
     applyLocationByQuery,
-    useDeviceLocation,
+    applyDeviceLocation,
   };
 }

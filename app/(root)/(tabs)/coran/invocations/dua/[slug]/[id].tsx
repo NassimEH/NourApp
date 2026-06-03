@@ -15,7 +15,6 @@ import { AppIcon } from "@/components/AppIcon";
 import { useCallback } from "react";
 
 import { useDuaDetail, useDuaFavorites, useDuaLanguage } from "@/lib/dua";
-import type { DuaDetail } from "@/lib/dua/types";
 import { useAppTheme } from "@/lib/app-theme";
 import { ScreenBackground } from "@/components/ScreenBackground";
 import { ScreenPageHeader } from "@/components/ScreenPageHeader";
