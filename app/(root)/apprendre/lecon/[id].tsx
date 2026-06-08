@@ -80,7 +80,7 @@ export default function LearnLessonScreen() {
       return () => {
         cancelled = true;
       };
-    }, [lesson, lessonIndex, course?.lessons])
+    }, [lesson, lessonIndex, course])
   );
 
   const score = useMemo(() => {

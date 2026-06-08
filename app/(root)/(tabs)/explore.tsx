@@ -47,6 +47,7 @@ const GRID_CARD_HEIGHT = 56;
 const GRID_IMAGE_SIZE = 56;
 
 const FEATURED_CARD_WIDTH = 150;
+const FEATURED_CARD_HEIGHT = 200;
 
 type TabId = "tout" | "sourates" | "recitateurs" | "juz" | "invocations";
 
@@ -488,6 +489,7 @@ function createExploreStyles(c: AppThemeColors) {
   },
   featuredCard: {
     width: FEATURED_CARD_WIDTH,
+    height: FEATURED_CARD_HEIGHT,
     padding: 12,
     borderRadius: 10,
     borderWidth: 1,

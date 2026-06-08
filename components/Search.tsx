@@ -3,10 +3,9 @@ import { View, TouchableOpacity, Image, TextInput } from "react-native";
 import { useDebouncedCallback } from "use-debounce";
 
 import icons from "@/constants/icons";
-import { useLocalSearchParams, router, usePathname } from "expo-router";
+import { useLocalSearchParams, router } from "expo-router";
 
 const Search = () => {
-  const path = usePathname();
   const params = useLocalSearchParams<{ query?: string }>();
   const [search, setSearch] = useState(params.query);
 

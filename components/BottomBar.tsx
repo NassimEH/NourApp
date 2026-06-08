@@ -23,7 +23,6 @@ import { QuranMiniPlayer } from "@/components/quran/QuranMiniPlayer";
 import { useQuranAudioContextOptional } from "@/lib/quran/QuranAudioContext";
 import { useSuraList } from "@/lib/quran/hooks/useSuraList";
 import { useAppTheme } from "@/lib/app-theme";
-
 import type { Reciter } from "@/lib/quran/types";
 
 const quranArtwork = require("@/assets/images/islamic-new-year-quran-book-with-dates-photo.jpg");

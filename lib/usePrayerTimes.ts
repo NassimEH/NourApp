@@ -5,6 +5,11 @@ import {
   getAladhanMethodId,
   getPrayerCalculationMethod,
 } from "@/lib/prayer-method-preference";
+import {
+  clearPrayerLocationPreference,
+  getPrayerLocationPreference,
+  setPrayerLocationManual,
+} from "@/lib/prayer-location-preference";
 
 const ALADHAN_BY_ADDRESS = "https://api.aladhan.com/v1/timingsByAddress";
 const ALADHAN_BY_COORDS = "https://api.aladhan.com/v1/timings";
@@ -84,24 +89,79 @@ async function fetchTimingsByAddress(
 const FALLBACK_ADDRESS = "Paris";
 const FALLBACK_COORDS = { latitude: 48.8566, longitude: 2.3522 };
 
+async function reverseGeocodeLabel(
+  latitude: number,
+  longitude: number
+): Promise<string | null> {
+  try {
+    const [address] = await Location.reverseGeocodeAsync({ latitude, longitude });
+    if (address?.city) return address.city;
+    if (address?.region) return address.region;
+  } catch {
+    // ignore
+  }
+  return null;
+}
+
+export type ApplyLocationResult =
+  | { ok: true }
+  | { ok: false; reason: "empty" | "not_found" | "error" };
+
 export function usePrayerTimes() {
   const [timings, setTimings] = useState<PrayerTimes | null>(null);
   const [loading, setLoading] = useState(true);
+  const [applyingLocation, setApplyingLocation] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [cityName, setCityName] = useState<string | null>(null);
-  const [coords, setCoords] = useState<{ latitude: number; longitude: number } | null>(null);
+  const [coords, setCoords] = useState<{ latitude: number; longitude: number } | null>(
+    null
+  );
   const [refetchTrigger, setRefetchTrigger] = useState(0);
 
   useEffect(() => {
     let cancelled = false;
     setLoading(true);
     setError(null);
-    setCityName(null);
 
     (async () => {
       try {
         const calcMethod = await getPrayerCalculationMethod();
         const methodId = getAladhanMethodId(calcMethod);
+        const saved = await getPrayerLocationPreference();
+
+        if (saved?.source === "manual") {
+          let manualTimings: PrayerTimes | null = null;
+          if (
+            typeof saved.latitude === "number" &&
+            typeof saved.longitude === "number"
+          ) {
+            manualTimings = await fetchTimingsByCoords(
+              saved.latitude,
+              saved.longitude,
+              methodId
+            );
+          } else {
+            manualTimings = await fetchTimingsByAddress(saved.address, methodId);
+          }
+          if (cancelled) return;
+          if (manualTimings) {
+            setTimings(manualTimings);
+            setCityName(saved.label);
+            if (
+              typeof saved.latitude === "number" &&
+              typeof saved.longitude === "number"
+            ) {
+              setCoords({
+                latitude: saved.latitude,
+                longitude: saved.longitude,
+              });
+            } else {
+              setCoords(null);
+            }
+            return;
+          }
+        }
+
         const { status } = await Location.requestForegroundPermissionsAsync();
         if (cancelled) return;
 
@@ -132,16 +192,8 @@ export function usePrayerTimes() {
 
         if (coordsTimings) {
           setTimings(coordsTimings);
-          try {
-            const [address] = await Location.reverseGeocodeAsync({
-              latitude,
-              longitude,
-            });
-            if (!cancelled && address?.city) setCityName(address.city);
-            else if (!cancelled && address?.region) setCityName(address.region);
-          } catch {
-            // ignore geocode failure, we still have timings
-          }
+          const label = await reverseGeocodeLabel(latitude, longitude);
+          if (!cancelled && label) setCityName(label);
         } else {
           const fallback = await fetchTimingsByAddress(FALLBACK_ADDRESS, methodId);
           if (!cancelled && fallback) {
@@ -177,5 +229,75 @@ export function usePrayerTimes() {
 
   const refetch = useCallback(() => setRefetchTrigger((t) => t + 1), []);
 
-  return { timings, loading, error, cityName, coords, refetch };
+  const applyLocationByQuery = useCallback(
+    async (query: string): Promise<ApplyLocationResult> => {
+      const trimmed = query.trim();
+      if (!trimmed) return { ok: false, reason: "empty" };
+
+      setApplyingLocation(true);
+      setError(null);
+      try {
+        const methodId = getAladhanMethodId(await getPrayerCalculationMethod());
+        const geocoded = await Location.geocodeAsync(trimmed);
+        const hit = geocoded[0];
+
+        if (hit) {
+          const { latitude, longitude } = hit;
+          const coordsTimings = await fetchTimingsByCoords(
+            latitude,
+            longitude,
+            methodId
+          );
+          if (!coordsTimings) return { ok: false, reason: "not_found" };
+
+          const label =
+            (await reverseGeocodeLabel(latitude, longitude)) ?? trimmed;
+          await setPrayerLocationManual({
+            label,
+            address: trimmed,
+            latitude,
+            longitude,
+          });
+          setTimings(coordsTimings);
+          setCityName(label);
+          setCoords({ latitude, longitude });
+          return { ok: true };
+        }
+
+        const addressTimings = await fetchTimingsByAddress(trimmed, methodId);
+        if (!addressTimings) return { ok: false, reason: "not_found" };
+
+        await setPrayerLocationManual({
+          label: trimmed,
+          address: trimmed,
+        });
+        setTimings(addressTimings);
+        setCityName(trimmed);
+        setCoords(null);
+        return { ok: true };
+      } catch {
+        return { ok: false, reason: "error" };
+      } finally {
+        setApplyingLocation(false);
+      }
+    },
+    []
+  );
+
+  const applyDeviceLocation = useCallback(async () => {
+    await clearPrayerLocationPreference();
+    refetch();
+  }, [refetch]);
+
+  return {
+    timings,
+    loading,
+    applyingLocation,
+    error,
+    cityName,
+    coords,
+    refetch,
+    applyLocationByQuery,
+    applyDeviceLocation,
+  };
 }

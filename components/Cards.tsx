@@ -70,6 +70,8 @@ interface Props {
   cardHeight?: number;
   /** Désactive la marge à droite (utile en grille) */
   noMargin?: boolean;
+  /** Bibliothèque Coran : carte compacte uniforme */
+  variant?: "default" | "compact";
 }
 
 export const FeaturedCard = ({
@@ -79,6 +81,7 @@ export const FeaturedCard = ({
   cardWidth,
   cardHeight,
   noMargin,
+  variant = "default",
 }: Props) => {
   const colors = useAppTheme();
   const { t } = useTranslation();
@@ -94,6 +97,7 @@ export const FeaturedCard = ({
     if (onPress) onPress();
   };
 
+  const compact = variant === "compact";
   const width = cardWidth ?? ITEM_WIDTH;
   const height = cardHeight ?? ITEM_HEIGHT;
   const isDisabled = item.disabled === true;
@@ -105,11 +109,12 @@ export const FeaturedCard = ({
       style={[
         styles.card,
         styles.featuredCardAccent,
+        compact && styles.featuredCardCompact,
         {
           height,
           width,
           marginRight: noMargin ? 0 : Spacing * 2,
-          borderRadius: Spacing * 3,
+          borderRadius: compact ? 14 : Spacing * 3,
           borderColor: colors.border,
           backgroundColor: colors.cardElevated,
         },
@@ -117,11 +122,12 @@ export const FeaturedCard = ({
       ]}
       activeOpacity={0.9}
     >
-      <View style={styles.content}>
+      <View style={[styles.content, compact && styles.contentCompact]}>
         {item.soon ? (
           <View
             style={[
               styles.soonBadge,
+              compact && styles.soonBadgeCompact,
               { backgroundColor: colors.accentSurface, borderColor: colors.accentBorder },
             ]}
           >
@@ -130,23 +136,42 @@ export const FeaturedCard = ({
             </Text>
           </View>
         ) : null}
-        <View style={styles.topRow}>
+        <View style={[styles.topRow, compact && styles.topRowCompact]}>
           <View
             style={[
               styles.featuredCardIconWrap,
+              compact && styles.featuredCardIconWrapCompact,
               { backgroundColor: colors.accentSurface, borderColor: colors.accentBorder },
             ]}
           >
-            <AppIcon name={item.icon ?? "book-open"} size={24} color={colors.accent} />
+            <AppIcon
+              name={item.icon ?? "book-open"}
+              size={compact ? 18 : 24}
+              color={colors.accent}
+            />
           </View>
-          <Text style={[styles.title, { color: colors.text }]} numberOfLines={2}>
+          <Text
+            style={[
+              styles.title,
+              compact && styles.titleCompact,
+              { color: colors.text },
+            ]}
+            numberOfLines={2}
+          >
             {title}
           </Text>
-          <Text style={[styles.price, { color: colors.textMuted }]} numberOfLines={2}>
+          <Text
+            style={[
+              styles.price,
+              compact && styles.priceCompact,
+              { color: colors.textMuted },
+            ]}
+            numberOfLines={2}
+          >
             {price}
           </Text>
         </View>
-        {!isDisabled ? (
+        {!isDisabled && !compact ? (
           <TouchableOpacity
             onPress={(e) => {
               e.stopPropagation();
@@ -211,10 +236,20 @@ const styles = StyleSheet.create({
     shadowRadius: 8,
     elevation: 3,
   },
+  featuredCardCompact: {
+    borderWidth: 1,
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 2,
+  },
   content: {
     padding: Spacing * 3,
     justifyContent: "space-between",
     height: "100%",
+  },
+  contentCompact: {
+    padding: 12,
+    justifyContent: "flex-start",
   },
   topRow: {
     flexDirection: "column",
@@ -222,6 +257,14 @@ const styles = StyleSheet.create({
     gap: 8,
     flex: 1,
     minHeight: 0,
+  },
+  topRowCompact: {
+    gap: 6,
+    width: "100%",
+  },
+  soonBadgeCompact: {
+    right: 8,
+    top: 8,
   },
   soonBadge: {
     position: "absolute",
@@ -245,15 +288,29 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
+  featuredCardIconWrapCompact: {
+    width: 36,
+    height: 36,
+    borderRadius: 12,
+  },
   title: {
     fontFamily: "PlusJakartaSans-Bold",
     fontSize: 17,
     width: "100%",
   },
+  titleCompact: {
+    fontSize: 13,
+    lineHeight: 17,
+  },
   price: {
     fontFamily: "PlusJakartaSans-SemiBold",
     fontSize: 13,
     width: "100%",
+  },
+  priceCompact: {
+    fontSize: 11,
+    lineHeight: 15,
+    fontFamily: "PlusJakartaSans-Regular",
   },
   arrowCorner: {
     position: "absolute",

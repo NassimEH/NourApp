@@ -1,8 +1,8 @@
 ﻿import React, { useEffect, useState, useRef, useMemo } from "react";
 import {
+  Alert,
   View,
   Text,
-  StyleSheet,
   Platform,
   Dimensions,
   Animated,
@@ -12,9 +12,13 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import * as Location from "expo-location";
+import { router } from "expo-router";
 import { AppIcon } from "@/components/AppIcon";
+import { HomeMosqueBlock } from "@/components/home/HomeMosqueBlock";
+import { PrayerLocationSearchBar } from "@/components/prayers/PrayerLocationSearchBar";
 
-import { getQiblaBearing ,
+import {
+  getQiblaBearing,
   getNextPrayerInfo,
   getCurrentPrayer,
   getNextPrayerTimestamp,
@@ -25,20 +29,16 @@ import {
   PRAYER_ORDER,
   getPrayerLabel,
   type PrayerKey,
- PrayerTimes } from "@/lib/usePrayerTimes";
+} from "@/lib/usePrayerTimes";
 import { usePrayersChecked } from "@/lib/usePrayersChecked";
-
-
 import { toHijri } from "hijri-converter";
 import { ScreenBackground } from "@/components/ScreenBackground";
-import {
-  screenPageHeaderSpacing,
-  screenScrollContent,
-} from "@/constants/screen-layout";
+import { screenPageHeaderSpacing } from "@/constants/screen-layout";
 import { ScreenPageHeader } from "@/components/ScreenPageHeader";
 import { TRANSLATIONS, useTranslation } from "@/lib/i18n";
 import { useAppTheme } from "@/lib/app-theme";
 import { createQiblaStyles } from "@/lib/qibla-screen-styles";
+import { useMosqueName } from "@/lib/home/hooks/useMosqueName";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 const COMPASS_SIZE = Math.min(SCREEN_WIDTH - 64, 260);
@@ -84,15 +84,37 @@ export default function MesPrièresScreen() {
   const styles = useMemo(() => createQiblaStyles(colors), [colors]);
   const hijriMonths = TRANSLATIONS[locale].home.hijriMonths;
   const { gregorian, hijri } = useTodayDates(locale, hijriMonths);
-  const { timings: prayerTimes, loading: prayerLoading, cityName: prayerCity, coords: prayerCoords } = usePrayerTimes();
+  const {
+    timings: prayerTimes,
+    loading: prayerLoading,
+    applyingLocation,
+    cityName: prayerCity,
+    coords: prayerCoords,
+    applyLocationByQuery,
+    applyDeviceLocation,
+  } = usePrayerTimes();
   const { toggle: togglePrayerChecked, isChecked: isPrayerChecked } = usePrayersChecked();
+  const { mosqueName } = useMosqueName();
+  const mosqueDisplayName = mosqueName ?? t("home.defaultMosqueName");
 
   const [heading, setHeading] = useState<number | null>(null);
   const [bearing, setBearing] = useState<number | null>(null);
   const [compassError, setCompassError] = useState<string | null>(null);
   const [countdownNow, setCountdownNow] = useState(() => Date.now());
+  const [locationQuery, setLocationQuery] = useState("");
 
   const needleAnim = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    if (prayerCity) setLocationQuery(prayerCity);
+  }, [prayerCity]);
+
+  const handleLocationSubmit = async () => {
+    const result = await applyLocationByQuery(locationQuery);
+    if (!result.ok && result.reason !== "empty") {
+      Alert.alert(t("screens.prayersTitle"), t("screens.prayersLocationError"));
+    }
+  };
 
   const nextPrayer = prayerTimes ? getNextPrayerInfo(prayerTimes) : null;
   const currentPrayer = prayerTimes ? getCurrentPrayer(prayerTimes) : null;
@@ -182,6 +204,25 @@ export default function MesPrièresScreen() {
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
         >
+        <PrayerLocationSearchBar
+          value={locationQuery}
+          onChangeText={setLocationQuery}
+          onSubmit={() => void handleLocationSubmit()}
+          onClear={() => setLocationQuery("")}
+          onUseDeviceLocation={() => {
+            setLocationQuery("");
+            void applyDeviceLocation();
+          }}
+          loading={applyingLocation}
+        />
+
+        <HomeMosqueBlock
+          prayerLoading={prayerLoading}
+          prayerTimes={prayerTimes}
+          mosqueDisplayName={mosqueDisplayName}
+          onEditMosque={() => router.push("/(root)/mosque-settings")}
+        />
+
         {/* Bloc prières */}
         <View style={styles.prayerSection}>
           <Text style={styles.sectionLabel}>

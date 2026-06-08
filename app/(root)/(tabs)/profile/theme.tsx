@@ -13,10 +13,7 @@ import {
 } from "@/lib/i18n";
 import { useAppTheme } from "@/lib/app-theme";
 import { PreferenceOptionRow } from "@/components/PreferenceOptionRow";
-import {
-  PreferenceScreenLayout,
-  PreferenceOptionDivider,
-} from "@/components/PreferenceScreenLayout";
+import { PreferenceScreenLayout } from "@/components/PreferenceScreenLayout";
 
 const OPTIONS: ThemeMode[] = ["spiritual", "light", "dark"];
 const TEXT_COLOR_OPTIONS: TextColorMode[] = ["black", "slate", "brown"];

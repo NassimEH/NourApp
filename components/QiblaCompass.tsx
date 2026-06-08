@@ -34,7 +34,7 @@ export default function QiblaCompass({ bearing, size = 64, hideLabel }: QiblaCom
           const h = data.trueHeading >= 0 ? data.trueHeading : data.magHeading;
           if (h >= 0) setHeading(h);
         });
-      } catch (e) {
+      } catch {
         setError("Boussole indisponible");
       }
     })();

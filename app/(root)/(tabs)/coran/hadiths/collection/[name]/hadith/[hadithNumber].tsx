@@ -21,7 +21,6 @@ import {
   getCollectionDisplayName,
 } from "@/lib/hadith";
 import { useAppTypography } from "@/lib/app-typography";
-import type { HadithRecord } from "@/lib/hadith/types";
 import { useCollections } from "@/lib/hadith/hooks/useCollections";
 import { ScreenBackground } from "@/components/ScreenBackground";
 import { ScreenPageHeader } from "@/components/ScreenPageHeader";

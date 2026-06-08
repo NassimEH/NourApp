@@ -12,29 +12,20 @@ import { ScreenPageHeader } from "@/components/ScreenPageHeader";
 import { useTranslation } from "@/lib/i18n";
 import { ScreenBackground } from "@/components/ScreenBackground";
 
-interface ScreenStackLayoutProps {
+interface ToolScreenLayoutProps {
   title: string;
   subtitle: string;
-  onBack?: () => void;
-  headerActions?: React.ReactNode;
-  rightElement?: React.ReactNode;
   children: React.ReactNode;
-  contentContainerStyle?: StyleProp<ViewStyle>;
-  scrollStyle?: StyleProp<ViewStyle>;
-  headerStyle?: StyleProp<ViewStyle>;
+  contentStyle?: StyleProp<ViewStyle>;
 }
 
-export function ScreenStackLayout({
+/** Écrans outils : contenu à plat sur le fond, sans carte blanche englobante. */
+export function ToolScreenLayout({
   title,
   subtitle,
-  onBack = () => router.back(),
-  headerActions,
-  rightElement,
   children,
-  contentContainerStyle,
-  scrollStyle,
-  headerStyle,
-}: ScreenStackLayoutProps) {
+  contentStyle,
+}: ToolScreenLayoutProps) {
   const { rtlViewStyle } = useTranslation();
 
   return (
@@ -43,14 +34,11 @@ export function ScreenStackLayout({
         <ScreenPageHeader
           title={title}
           subtitle={subtitle}
-          onBack={onBack}
-          headerActions={headerActions}
-          rightElement={rightElement}
-          style={headerStyle}
+          onBack={() => router.back()}
         />
         <ScrollView
-          style={[styles.scroll, rtlViewStyle, scrollStyle]}
-          contentContainerStyle={[styles.content, contentContainerStyle]}
+          style={[styles.scroll, rtlViewStyle]}
+          contentContainerStyle={[styles.content, contentStyle]}
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
         >
@@ -68,5 +56,6 @@ const styles = StyleSheet.create({
   content: {
     ...screenScrollContent,
     paddingTop: 8,
+    paddingBottom: 48,
   },
 });

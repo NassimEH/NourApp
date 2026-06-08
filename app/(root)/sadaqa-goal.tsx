@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
-import { Pressable, StyleSheet, Text, TextInput, View } from "react-native";
+import { Pressable, Text, TextInput, View } from "react-native";
 
-import { PreferenceScreenLayout } from "@/components/PreferenceScreenLayout";
+import { ToolScreenLayout } from "@/components/ToolScreenLayout";
 import { useAppTheme } from "@/lib/app-theme";
 import { useTranslation } from "@/lib/i18n";
 import {
@@ -10,6 +10,7 @@ import {
   setSadaqaMonthDone,
   setSadaqaMonthlyGoal,
 } from "@/lib/tools/sadaqa-goal";
+import { createToolScreenStyles } from "@/lib/tool-screen-styles";
 
 function parseAmount(value: string): number {
   const normalized = value.replace(",", ".").trim();
@@ -19,6 +20,7 @@ function parseAmount(value: string): number {
 
 export default function SadaqaGoalScreen() {
   const colors = useAppTheme();
+  const styles = useMemo(() => createToolScreenStyles(colors), [colors]);
   const { t, rtlTextStyle } = useTranslation();
   const [goalStr, setGoalStr] = useState("");
   const [doneStr, setDoneStr] = useState("");
@@ -47,62 +49,45 @@ export default function SadaqaGoalScreen() {
   const remaining = useMemo(() => Math.max(0, goal - done), [goal, done]);
 
   return (
-    <PreferenceScreenLayout
+    <ToolScreenLayout
       title={t("tools.sadaqa.title")}
       subtitle={t("tools.sadaqa.subtitle")}
     >
-      <Text style={[styles.label, { color: colors.textMuted }, rtlTextStyle]}>
-        {t("tools.sadaqa.monthlyGoal")}
-      </Text>
-      <TextInput
-        value={goalStr}
-        onChangeText={setGoalStr}
-        onBlur={saveGoal}
-        keyboardType="decimal-pad"
-        placeholder="0"
-        placeholderTextColor={colors.textMuted}
-        style={[
-          styles.input,
-          {
-            color: colors.text,
-            borderColor: colors.border,
-            backgroundColor: colors.cardElevated,
-          },
-          rtlTextStyle,
-        ]}
-      />
-
-      <Text style={[styles.label, { color: colors.textMuted }, rtlTextStyle]}>
-        {t("tools.sadaqa.monthDone")}
-      </Text>
-      <TextInput
-        value={doneStr}
-        onChangeText={setDoneStr}
-        onBlur={saveDone}
-        keyboardType="decimal-pad"
-        placeholder="0"
-        placeholderTextColor={colors.textMuted}
-        style={[
-          styles.input,
-          {
-            color: colors.text,
-            borderColor: colors.border,
-            backgroundColor: colors.cardElevated,
-          },
-          rtlTextStyle,
-        ]}
-      />
-
-      <View style={[styles.progressTrack, { backgroundColor: colors.divider }]}>
-        <View
-          style={[
-            styles.progressFill,
-            { backgroundColor: colors.accent, width: `${progress * 100}%` },
-          ]}
+      <View style={styles.field}>
+        <Text style={[styles.fieldLabel, rtlTextStyle]}>
+          {t("tools.sadaqa.monthlyGoal")}
+        </Text>
+        <TextInput
+          value={goalStr}
+          onChangeText={setGoalStr}
+          onBlur={saveGoal}
+          keyboardType="decimal-pad"
+          placeholder="0"
+          placeholderTextColor={colors.textMuted}
+          style={[styles.input, styles.inputMuted, rtlTextStyle]}
         />
       </View>
 
-      <Text style={[styles.summary, { color: colors.text }, rtlTextStyle]}>
+      <View style={styles.field}>
+        <Text style={[styles.fieldLabel, rtlTextStyle]}>
+          {t("tools.sadaqa.monthDone")}
+        </Text>
+        <TextInput
+          value={doneStr}
+          onChangeText={setDoneStr}
+          onBlur={saveDone}
+          keyboardType="decimal-pad"
+          placeholder="0"
+          placeholderTextColor={colors.textMuted}
+          style={[styles.input, styles.inputMuted, rtlTextStyle]}
+        />
+      </View>
+
+      <View style={styles.progressTrack}>
+        <View style={[styles.progressFill, { width: `${progress * 100}%` }]} />
+      </View>
+
+      <Text style={[styles.body, rtlTextStyle, { marginBottom: 24 }]}>
         {goal > 0
           ? t("tools.sadaqa.progress", {
               done: done.toLocaleString(),
@@ -117,57 +102,10 @@ export default function SadaqaGoalScreen() {
           saveGoal();
           saveDone();
         }}
-        style={[styles.saveBtn, { backgroundColor: colors.accent }]}
+        style={styles.primaryBtn}
       >
-        <Text style={[styles.saveText, { color: colors.onAccent }]}>
-          {t("common.save")}
-        </Text>
+        <Text style={styles.primaryBtnText}>{t("common.save")}</Text>
       </Pressable>
-    </PreferenceScreenLayout>
+    </ToolScreenLayout>
   );
 }
-
-const styles = StyleSheet.create({
-  label: {
-    fontSize: 13,
-    fontFamily: "PlusJakartaSans-SemiBold",
-    marginBottom: 8,
-    marginTop: 4,
-  },
-  input: {
-    borderWidth: StyleSheet.hairlineWidth,
-    borderRadius: 12,
-    paddingHorizontal: 14,
-    paddingVertical: 12,
-    fontSize: 16,
-    fontFamily: "PlusJakartaSans-Regular",
-    marginBottom: 16,
-  },
-  progressTrack: {
-    height: 8,
-    borderRadius: 4,
-    overflow: "hidden",
-    marginBottom: 12,
-  },
-  progressFill: {
-    height: "100%",
-    borderRadius: 4,
-  },
-  summary: {
-    fontSize: 15,
-    fontFamily: "PlusJakartaSans-Medium",
-    lineHeight: 22,
-    marginBottom: 24,
-  },
-  saveBtn: {
-    paddingVertical: 14,
-    borderRadius: 12,
-    alignItems: "center",
-    minHeight: 44,
-    justifyContent: "center",
-  },
-  saveText: {
-    fontSize: 16,
-    fontFamily: "PlusJakartaSans-SemiBold",
-  },
-});
