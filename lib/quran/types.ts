@@ -77,6 +77,18 @@ export interface Favorite {
 /** Identifiants d'éditions (AlQuran Cloud) */
 export const QURAN_UTHMANI_EDITION = "quran-uthmani";
 export const FR_TRANSLATION_EDITION = "fr.hamidullah";
+export const EN_TRANSLATION_EDITION = "en.sahih";
+export const AR_TRANSLATION_EDITION = "ar.muyassar";
+
+export type QuranTranslationLang = "fr" | "en" | "ar";
+
+export const QURAN_TRANSLATION_EDITIONS: Record<QuranTranslationLang, string> = {
+  fr: FR_TRANSLATION_EDITION,
+  en: EN_TRANSLATION_EDITION,
+  ar: AR_TRANSLATION_EDITION,
+};
+
+export const QURAN_TRANSLATION_LANG_ORDER: QuranTranslationLang[] = ["fr", "en", "ar"];
 /** Récitateur audio par défaut (verset par verset) */
 export const DEFAULT_AUDIO_RECITER = "ar.abdulbasitmurattal";
 export const AUDIO_BITRATE = "128";

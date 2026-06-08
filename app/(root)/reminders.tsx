@@ -1,4 +1,4 @@
-import { StyleSheet, Text, View } from "react-native";
+import { Alert, StyleSheet, Switch, Text, View } from "react-native";
 import { useCallback, useState } from "react";
 import { useFocusEffect } from "expo-router";
 
@@ -7,11 +7,15 @@ import { PreferenceScreenLayout } from "@/components/PreferenceScreenLayout";
 import { getRecentActivityLogs, type ActivityLogEntry } from "@/lib/activity-log";
 import { useAppTheme } from "@/lib/app-theme";
 import { useTranslation } from "@/lib/i18n";
+import {
+  isHadithReminderEnabled,
+  isLessonReminderEnabled,
+  setHadithReminderEnabled,
+  setLessonReminderEnabled,
+} from "@/lib/notifications/content-reminders";
 
-const REMINDER_KEYS = [
+const REMINDER_INFO_KEYS = [
   "reminders.prayer",
-  "reminders.hadith",
-  "reminders.lesson",
   "reminders.ramadan",
 ] as const;
 
@@ -19,6 +23,8 @@ export default function RemindersScreen() {
   const colors = useAppTheme();
   const { t, rtlTextStyle } = useTranslation();
   const [activityLogs, setActivityLogs] = useState<ActivityLogEntry[]>([]);
+  const [hadithEnabled, setHadithEnabled] = useState(false);
+  const [lessonEnabled, setLessonEnabled] = useState(false);
 
   useFocusEffect(
     useCallback(() => {
@@ -26,11 +32,41 @@ export default function RemindersScreen() {
       void getRecentActivityLogs().then((logs) => {
         if (!cancelled) setActivityLogs(logs);
       });
+      void isHadithReminderEnabled().then((v) => {
+        if (!cancelled) setHadithEnabled(v);
+      });
+      void isLessonReminderEnabled().then((v) => {
+        if (!cancelled) setLessonEnabled(v);
+      });
       return () => {
         cancelled = true;
       };
     }, [])
   );
+
+  const onToggleHadith = async (value: boolean) => {
+    setHadithEnabled(value);
+    const ok = await setHadithReminderEnabled(value, {
+      title: t("reminders.hadithTitle"),
+      body: t("reminders.hadithBody"),
+    });
+    if (!ok && value) {
+      setHadithEnabled(false);
+      Alert.alert(t("reminders.title"), t("reminders.permissionDenied"));
+    }
+  };
+
+  const onToggleLesson = async (value: boolean) => {
+    setLessonEnabled(value);
+    const ok = await setLessonReminderEnabled(value, {
+      title: t("reminders.lessonTitle"),
+      body: t("reminders.lessonBody"),
+    });
+    if (!ok && value) {
+      setLessonEnabled(false);
+      Alert.alert(t("reminders.title"), t("reminders.permissionDenied"));
+    }
+  };
 
   return (
     <PreferenceScreenLayout
@@ -57,7 +93,21 @@ export default function RemindersScreen() {
           ))}
         </View>
       ) : null}
-      {REMINDER_KEYS.map((key) => (
+
+      <ReminderToggleRow
+        title={t("reminders.hadithTitle")}
+        body={t("reminders.hadithBody")}
+        value={hadithEnabled}
+        onValueChange={(v) => void onToggleHadith(v)}
+      />
+      <ReminderToggleRow
+        title={t("reminders.lessonTitle")}
+        body={t("reminders.lessonBody")}
+        value={lessonEnabled}
+        onValueChange={(v) => void onToggleLesson(v)}
+      />
+
+      {REMINDER_INFO_KEYS.map((key) => (
         <View
           key={key}
           style={[
@@ -86,6 +136,49 @@ export default function RemindersScreen() {
   );
 }
 
+function ReminderToggleRow({
+  title,
+  body,
+  value,
+  onValueChange,
+}: {
+  title: string;
+  body: string;
+  value: boolean;
+  onValueChange: (value: boolean) => void;
+}) {
+  const colors = useAppTheme();
+  const { rtlTextStyle } = useTranslation();
+
+  return (
+    <View
+      style={[
+        styles.row,
+        {
+          borderColor: colors.border,
+          backgroundColor: colors.backgroundSecondary,
+        },
+      ]}
+    >
+      <AppIcon name="bell" size={20} color={colors.accent} />
+      <View style={styles.rowText}>
+        <Text style={[styles.rowTitle, { color: colors.text }, rtlTextStyle]}>
+          {title}
+        </Text>
+        <Text style={[styles.rowBody, { color: colors.textMuted }, rtlTextStyle]}>
+          {body}
+        </Text>
+      </View>
+      <Switch
+        value={value}
+        onValueChange={onValueChange}
+        trackColor={{ false: colors.divider, true: colors.accent }}
+        thumbColor="#fff"
+      />
+    </View>
+  );
+}
+
 const styles = StyleSheet.create({
   intro: {
     fontSize: 14,
@@ -95,6 +188,7 @@ const styles = StyleSheet.create({
   },
   row: {
     flexDirection: "row",
+    alignItems: "center",
     gap: 12,
     padding: 14,
     borderRadius: 12,

@@ -11,19 +11,19 @@ import {
   Text,
   Image,
   PanResponder,
+  ScrollView,
 } from "react-native";
 import { ThemedGlassSurface } from "@/components/ThemedGlassSurface";
 import * as Haptics from "expo-haptics";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { AppIcon } from "@/components/AppIcon";
-import { router } from "expo-router";
 import type { BottomTabBarProps } from "@react-navigation/bottom-tabs";
 
 import { QuranMiniPlayer } from "@/components/quran/QuranMiniPlayer";
 import { useQuranAudioContextOptional } from "@/lib/quran/QuranAudioContext";
 import { useSuraList } from "@/lib/quran/hooks/useSuraList";
 import { useAppTheme } from "@/lib/app-theme";
-import { ScrollView } from "react-native";
+
 import type { Reciter } from "@/lib/quran/types";
 
 const quranArtwork = require("@/assets/images/islamic-new-year-quran-book-with-dates-photo.jpg");
@@ -518,8 +518,7 @@ export function FullScreenPlayer({
   );
 }
 
-export default function BottomBar({ state }: BottomTabBarProps) {
-  const colors = useAppTheme();
+export default function BottomBar({ state, navigation }: BottomTabBarProps) {
   const insets = useSafeAreaInsets();
   const audio = useQuranAudioContextOptional();
   const { list: suraList } = useSuraList();
@@ -550,7 +549,7 @@ export default function BottomBar({ state }: BottomTabBarProps) {
             key={route.name}
             route={route}
             isActive={currentRoute === route.name}
-            onPress={() => router.push(route.href)}
+            onPress={() => navigation.navigate(route.name)}
           />
         ))}
       </View>

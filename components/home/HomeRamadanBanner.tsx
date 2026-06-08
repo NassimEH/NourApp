@@ -1,5 +1,5 @@
 import { Pressable, StyleSheet, Text, View } from "react-native";
-import { router } from "expo-router";
+import { router, type Href } from "expo-router";
 
 import { AppIcon } from "@/components/AppIcon";
 import { useAppTheme } from "@/lib/app-theme";
@@ -17,7 +17,7 @@ export function HomeRamadanBanner() {
 
   return (
     <Pressable
-      onPress={() => router.push("/(root)/(tabs)/profile")}
+      onPress={() => router.push("/(root)/ramadan" as Href)}
       style={({ pressed }) => [
         styles.wrap,
         {

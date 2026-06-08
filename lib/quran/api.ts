@@ -9,13 +9,16 @@ import type {
   SuraMeta,
   SuraContent,
   AyahText,
+  QuranTranslationLang,
 } from "./types";
 import {
   QURAN_UTHMANI_EDITION,
   FR_TRANSLATION_EDITION,
+  QURAN_TRANSLATION_EDITIONS,
   DEFAULT_AUDIO_RECITER,
   AUDIO_BITRATE,
 } from "./types";
+
 
 const BASE = "https://api.alquran.cloud/v1";
 
@@ -43,25 +46,37 @@ export async function fetchSuraArabic(suraNumber: number): Promise<SuraContent> 
   return out.data;
 }
 
-/** Contenu d'une sourate en français (traduction) */
-export async function fetchSuraTranslation(suraNumber: number): Promise<AyahText[]> {
+function resolveTranslationEdition(lang: QuranTranslationLang = "fr"): string {
+  return QURAN_TRANSLATION_EDITIONS[lang] ?? FR_TRANSLATION_EDITION;
+}
+
+/** Contenu d'une sourate — traduction / tafsir selon l'édition */
+export async function fetchSuraTranslation(
+  suraNumber: number,
+  lang: QuranTranslationLang = "fr"
+): Promise<AyahText[]> {
+  const edition = resolveTranslationEdition(lang);
   const out = await fetchJson<SuraEditionResponse>(
-    `${BASE}/surah/${suraNumber}/${FR_TRANSLATION_EDITION}`
+    `${BASE}/surah/${suraNumber}/${edition}`
   );
   if (out.code !== 200 || !out.data?.ayahs) throw new Error(`Sura ${suraNumber} translation failed`);
   return out.data.ayahs;
 }
 
 /** Une sourate complète : arabe + traduction (deux appels en parallèle) */
-export async function fetchSuraFull(suraNumber: number): Promise<{
+export async function fetchSuraFull(
+  suraNumber: number,
+  translationLang: QuranTranslationLang = "fr"
+): Promise<{
   arabic: SuraContent;
   translation: AyahText[];
+  translationLang: QuranTranslationLang;
 }> {
   const [arabic, translation] = await Promise.all([
     fetchSuraArabic(suraNumber),
-    fetchSuraTranslation(suraNumber),
+    fetchSuraTranslation(suraNumber, translationLang),
   ]);
-  return { arabic, translation };
+  return { arabic, translation, translationLang };
 }
 
 /** Un Juz (1-30) avec édition */

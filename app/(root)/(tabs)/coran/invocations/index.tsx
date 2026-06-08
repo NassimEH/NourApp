@@ -25,7 +25,6 @@ import { useTranslation } from "@/lib/i18n";
 import { useAppTheme } from "@/lib/app-theme";
 
 const H_PADDING = SCREEN_EDGE_PADDING;
-const ACCENT = "#3d6b47";
 
 function filterCategories(
   list: DuaCategory[],
@@ -69,7 +68,11 @@ export default function InvocationsCategoriesScreen() {
         ) : error && categories.length === 0 ? (
           <View style={styles.errorWrap}>
             <Text style={styles.errorText}>{error}</Text>
-            <TouchableOpacity onPress={() => refetch()} style={styles.retryBtn} activeOpacity={0.8}>
+            <TouchableOpacity
+              onPress={() => refetch()}
+              style={[styles.retryBtn, { backgroundColor: colors.accent }]}
+              activeOpacity={0.8}
+            >
               <AppIcon name="refresh-cw" size={20} color="#fff" />
               <Text style={styles.retryText}>{t("home.retry")}</Text>
             </TouchableOpacity>
@@ -142,7 +145,6 @@ const styles = StyleSheet.create({
   langBtnText: {
     fontSize: 14,
     fontFamily: "PlusJakartaSans-SemiBold",
-    color: ACCENT,
   },
   searchWrap: {
     flexDirection: "row",
@@ -185,7 +187,6 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
     paddingHorizontal: 24,
     borderRadius: 12,
-    backgroundColor: ACCENT,
   },
   retryText: {
     fontSize: 16,

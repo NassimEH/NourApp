@@ -38,15 +38,15 @@ Dernière revue produit : juin 2026.
 
 ### Écrans placeholder → contenu ou redirection
 
-- [ ] **Hadith du jour** — contenu réel (rotation quotidienne ; réutiliser données locales / API)
-- [ ] **Hadiths par thème** — navigation vers collections ou filtres par sujet
-- [ ] **Récitateurs** — liste depuis `AVAILABLE_RECITERS` + lien audio
-- [ ] **Détail récitateur** — fiche + lancer écoute (contexte `QuranAudioContext`)
-- [ ] **Player** (`player.tsx`) — brancher sur `QuranAudioContext` ou rediriger vers mini-player / lecteur
-- [ ] **Recherche Coran** — v1 : recherche par nom / numéro de sourate (`useSuraList`)
-- [ ] **Invocations matin & soir** — redirection vers catégories API (slugs) ou liste filtrée
-- [ ] **Invocations météo** — redirection vers `meteo.tsx` et/ou `WEATHER_DOU3A` + catégories dua
-- [ ] **Invocations sommeil** — redirection vers catégorie API ou liste locale
+- [OK] **Hadith du jour** — contenu réel (rotation quotidienne ; réutiliser données locales / API)
+- [OK] **Hadiths par thème** — navigation vers collections ou filtres par sujet
+- [OK] **Récitateurs** — liste depuis `AVAILABLE_RECITERS` + lien audio
+- [OK] **Détail récitateur** — fiche + lancer écoute (contexte `QuranAudioContext`)
+- [OK] **Player** (`player.tsx`) — brancher sur `QuranAudioContext` ou rediriger vers mini-player / lecteur
+- [OK] **Recherche Coran** — v1 : recherche par nom / numéro de sourate (`useSuraList`)
+- [OK] **Invocations matin & soir** — redirection vers catégories API (slugs) ou liste filtrée
+- [OK] **Invocations météo** — redirection vers `meteo.tsx` et/ou `WEATHER_DOU3A` + catégories dua
+- [OK] **Invocations sommeil** — redirection vers catégorie API ou liste locale
 - [ ] **Tafsir** — v1 : lien externe par sourate/verset ou API tafsir
 - [ ] **Traduction** — lien vers lecteur avec traduction activée (pas écran vide)
 
@@ -60,20 +60,20 @@ Dernière revue produit : juin 2026.
 
 ### Coran & écoute
 
-- [ ] Copier / partager verset depuis le lecteur sourate (`Share` + `expo-clipboard`)
-- [ ] Copier / partager sur détail **dua** (comme hadith)
-- [ ] Toggle + choix langue traduction dans `[number].tsx` (sans écran Traduction séparé)
-- [ ] Écran **Écoute** : cohérence des liens (éviter 3 chemins vers un player factice)
+- [OK] Copier / partager verset depuis le lecteur sourate (`Share` + `expo-clipboard`)
+- [OK] Copier / partager sur détail **dua** (comme hadith)
+- [OK] Toggle + choix langue traduction dans `[number].tsx` (sans écran Traduction séparé)
+- [OK] Écran **Écoute** : cohérence des liens (éviter 3 chemins vers un player factice)
 
 ### Spirituel & quotidien
 
-- [ ] **Ramadan** : écran ou section dédiée (imsak/iftar, rappels, invocations) — bannière accueil y mène
-- [ ] **Vendredi** : carte accueil cliquable vers hadith complet + option notification
+- [OK] **Ramadan** : écran ou section dédiée (imsak/iftar, rappels, invocations) — bannière accueil y mène
+- [OK] **Vendredi** : carte accueil cliquable vers hadith complet + option notification
 - [ ] **Invocations météo** : contenu depuis `constants/weather.ts` si pas seulement redirection
 
 ### Hadiths & invocations
 
-- [ ] Hadith du jour : favori + partage (parité avec détail hadith)
+- [OK] Hadith du jour : favori + partage (parité avec détail hadith)
 - [ ] Thème hadith : au moins 3–5 thèmes avec liens vers chapitres / collections
 
 ### Apprendre
@@ -83,7 +83,7 @@ Dernière revue produit : juin 2026.
 
 ### Rappels
 
-- [ ] `reminders.tsx` : toggles actifs (hadith jour, leçon) via `expo-notifications`
+- [OK] `reminders.tsx` : toggles actifs (hadith jour, leçon) via `expo-notifications`
 - [ ] Rappel leçon Apprendre (notification quotidienne optionnelle)
 
 ---
@@ -96,7 +96,7 @@ Dernière revue produit : juin 2026.
 - [ ] Tables + RLS : progression Apprendre par `courseId`
 - [ ] Sync à la connexion : fusion favoris locaux ↔ cloud
 - [ ] Sync à la connexion : fusion progression Apprendre
-- [ ] Message UX : « favoris locaux » vs « synchronisés » après login
+- [~] Message UX : « favoris locaux » vs « synchronisés » après login (bannière invité profil)
 
 ### Hors-ligne
 
@@ -137,7 +137,7 @@ Dernière revue produit : juin 2026.
 - [ ] CI : `npm run lint` vert (ESLint configuré)
 - [ ] CI : `npx tsc --noEmit` vert
 - [ ] Retirer ou implémenter toutes les routes Bibliothèque listées dans `coran/index.tsx`
-- [ ] `player.tsx` : supprimer si remplacé par flux audio global
+- [OK] `player.tsx` : supprimer si remplacé par flux audio global
 
 ---
 

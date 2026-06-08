@@ -67,7 +67,9 @@ export default function SouratesScreen() {
               activeOpacity={0.7}
             >
               <AppIcon name="layers" size={22} color={colors.accent} />
-              <Text style={[styles.juzLinkText, { color: colors.accent }]}>Juz</Text>
+              <Text style={[styles.juzLinkText, { color: colors.accent }]}>
+                {t("screens.juzTitle")}
+              </Text>
             </TouchableOpacity>
           }
         />

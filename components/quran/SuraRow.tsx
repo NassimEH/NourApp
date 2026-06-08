@@ -3,6 +3,7 @@ import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { AppIcon } from "@/components/AppIcon";
 import type { SuraMeta } from "@/lib/quran/types";
 import { useAppTheme } from "@/lib/app-theme";
+import { useTranslation } from "@/lib/i18n";
 
 const ICON_SIZE = 22;
 
@@ -13,9 +14,12 @@ interface SuraRowProps {
 
 export function SuraRow({ sura, onPress }: SuraRowProps) {
   const colors = useAppTheme();
+  const { t } = useTranslation();
   const styles = useMemo(() => createStyles(colors), [colors]);
   const revelationLabel =
-    sura.revelationType === "Meccan" ? "Mecquoise" : "Médinoise";
+    sura.revelationType === "Meccan"
+      ? t("library.suraMeccan")
+      : t("library.suraMedinan");
 
   return (
     <TouchableOpacity
@@ -32,7 +36,7 @@ export function SuraRow({ sura, onPress }: SuraRowProps) {
             {sura.name}
           </Text>
           <Text style={styles.subtitle} numberOfLines={1}>
-            {sura.englishName} · {revelationLabel} · {sura.numberOfAyahs} versets
+            {sura.englishName} · {revelationLabel} · {t("library.verseCount", { count: sura.numberOfAyahs })}
           </Text>
         </View>
       </View>

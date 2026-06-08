@@ -12,7 +12,11 @@ import {
   isAccentColorKey,
   type AccentColorKey,
 } from "@/lib/accent-colors";
-import { AVAILABLE_RECITERS, DEFAULT_AUDIO_RECITER } from "@/lib/quran/types";
+import {
+  AVAILABLE_RECITERS,
+  DEFAULT_AUDIO_RECITER,
+  type QuranTranslationLang,
+} from "@/lib/quran/types";
 
 const STORAGE_KEY = "@nour_app_preferences";
 
@@ -31,6 +35,7 @@ export interface AppPreferencesState {
   accentColor: AccentColorKey;
   locale: LanguageLocale;
   quranReciter: string;
+  quranTranslationLang: QuranTranslationLang;
 }
 
 const DEFAULT_PREFS: AppPreferencesState = {
@@ -41,6 +46,7 @@ const DEFAULT_PREFS: AppPreferencesState = {
   accentColor: "green",
   locale: "fr",
   quranReciter: DEFAULT_AUDIO_RECITER,
+  quranTranslationLang: "fr",
 };
 
 interface AppPreferencesContextType extends AppPreferencesState {
@@ -51,6 +57,7 @@ interface AppPreferencesContextType extends AppPreferencesState {
   setAccentColor: (v: AccentColorKey) => void;
   setLocale: (v: LanguageLocale) => void;
   setQuranReciter: (v: string) => void;
+  setQuranTranslationLang: (v: QuranTranslationLang) => void;
 }
 
 const AppPreferencesContext = createContext<AppPreferencesContextType | undefined>(undefined);
@@ -72,6 +79,9 @@ async function loadStored(): Promise<Partial<AppPreferencesState>> {
       locale: ["fr", "en", "ar"].includes(parsed.locale ?? "") ? parsed.locale : undefined,
       quranReciter: AVAILABLE_RECITERS.some((r) => r.id === parsed.quranReciter)
         ? parsed.quranReciter
+        : undefined,
+      quranTranslationLang: ["fr", "en", "ar"].includes(parsed.quranTranslationLang ?? "")
+        ? parsed.quranTranslationLang
         : undefined,
     };
   } catch {
@@ -118,6 +128,10 @@ export function AppPreferencesProvider({ children }: { children: React.ReactNode
     if (!AVAILABLE_RECITERS.some((r) => r.id === quranReciter)) return;
     persist({ quranReciter });
   }, [persist]);
+  const setQuranTranslationLang = useCallback(
+    (quranTranslationLang: QuranTranslationLang) => persist({ quranTranslationLang }),
+    [persist]
+  );
 
   const value: AppPreferencesContextType = {
     ...state,
@@ -128,6 +142,7 @@ export function AppPreferencesProvider({ children }: { children: React.ReactNode
     setAccentColor,
     setLocale,
     setQuranReciter,
+    setQuranTranslationLang,
   };
 
   return (
@@ -149,6 +164,7 @@ export function useAppPreferences(): AppPreferencesContextType {
     setAccentColor: () => {},
     setLocale: () => {},
     setQuranReciter: () => {},
+    setQuranTranslationLang: () => {},
   };
   }
   return ctx;

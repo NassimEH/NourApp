@@ -18,11 +18,11 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 import { AppIcon } from "@/components/AppIcon";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState , useCallback } from "react";
 
 import { router, useFocusEffect } from "expo-router";
 
-import { useCallback } from "react";
+
 
 
 
@@ -49,6 +49,18 @@ import type { SuraMeta } from "@/lib/quran/types";
 
 
 
+import {
+  getLearnCourses,
+  PROPHETS_COURSE_ID,
+} from "@/lib/learn/courses";
+import { useAppPreferences } from "@/lib/app-preferences";
+import { useLearnProgress } from "@/lib/learn/hooks/useLearnProgress";
+import { useLearnCatalog } from "@/lib/learn/hooks/useLearnCatalog";
+import { useWeeklyGoal } from "@/lib/learn/hooks/useWeeklyGoal";
+import type { LessonStatus } from "@/lib/learn/types";
+
+
+
 const H_PADDING = SCREEN_EDGE_PADDING;
 
 function hairlineBorder(borderColor: string) {
@@ -70,18 +82,6 @@ const LESSON_COLORS = [
 
 
 
-import {
-  getLearnCourses,
-  PROPHETS_COURSE_ID,
-} from "@/lib/learn/courses";
-import { useAppPreferences } from "@/lib/app-preferences";
-import { useLearnProgress } from "@/lib/learn/hooks/useLearnProgress";
-import { useLearnCatalog } from "@/lib/learn/hooks/useLearnCatalog";
-import { useWeeklyGoal } from "@/lib/learn/hooks/useWeeklyGoal";
-import type { LessonStatus } from "@/lib/learn/types";
-
-
-
 function RecentSuraCard({
 
   sura,
@@ -96,8 +96,11 @@ function RecentSuraCard({
 
 }) {
   const colors = useAppTheme();
+  const { t } = useTranslation();
   const revelation =
-    sura.revelationType === "Meccan" ? "Mecquoise" : "Médinoise";
+    sura.revelationType === "Meccan"
+      ? t("library.suraMeccan")
+      : t("library.suraMedinan");
 
   return (
     <TouchableOpacity
@@ -224,7 +227,7 @@ export default function ApprendreScreen() {
                 </Text>
               </View>
               <TouchableOpacity
-                onPress={() => router.push("/apprendre-stats")}
+                onPress={() => router.push("/(root)/apprendre-stats")}
                 activeOpacity={0.8}
                 style={styles.avatarTouchable}
               >

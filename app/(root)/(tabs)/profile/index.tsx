@@ -16,7 +16,7 @@ import * as ImagePicker from "expo-image-picker";
 import * as Location from "expo-location";
 import { useFocusEffect } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { router } from "expo-router";
+import { router, type Href } from "expo-router";
 import { AppIcon, type AppIconName } from "@/components/AppIcon";
 
 import { getProfileAvatarUri, setProfileAvatarUri } from "@/lib/profile-avatar";
@@ -207,7 +207,7 @@ const PermissionRow = ({
 };
 
 export default function ProfileScreen() {
-  const { user, refetch, isLogged, enterAsGuest } = useGlobalContext();
+  const { user, refetch, isLogged, isGuest, enterAsGuest } = useGlobalContext();
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const [localAvatarUri, setLocalAvatarUri] = useState<string | null>(null);
 
@@ -372,6 +372,22 @@ export default function ProfileScreen() {
           showsVerticalScrollIndicator={false}
           contentContainerStyle={[styles.scrollContent, rtlViewStyle]}
         >
+          {isGuest ? (
+            <View
+              style={[
+                styles.guestBanner,
+                {
+                  backgroundColor: colors.accentSurface,
+                  borderColor: colors.accentBorder,
+                },
+              ]}
+            >
+              <AppIcon name="info" size={18} color={colors.accent} />
+              <Text style={[styles.guestBannerText, { color: colors.text }, rtlTextStyle]}>
+                {t("profile.guestModeHint")}
+              </Text>
+            </View>
+          ) : null}
           <View style={styles.avatarBlock}>
             <View style={styles.avatarRingWrapper}>
               <View
@@ -447,12 +463,15 @@ export default function ProfileScreen() {
                 title={t(item.titleKey)}
                 onPress={
                   item.href
-                    ? () =>
-                        router.push(
-                          item.href === "/qibla"
-                            ? "/(root)/(tabs)/qibla"
-                            : "/(root)/(tabs)/profile/favorites"
-                        )
+                    ? () => {
+                        if (item.href === "/qibla") {
+                          router.push("/(root)/(tabs)/qibla");
+                        } else if (item.href === "/profile/favorites") {
+                          router.push("/(root)/(tabs)/profile/favorites");
+                        } else if (item.href) {
+                          router.push(item.href as Href);
+                        }
+                      }
                     : undefined
                 }
               />
@@ -497,7 +516,7 @@ export default function ProfileScreen() {
                       router.push("/(root)/prayer-method");
                       return;
                     }
-                    router.push(`/profile/${item.key}`);
+                    router.push(`/(root)/(tabs)/profile/${item.key}` as Href);
                   }}
                 />
               );
@@ -558,7 +577,12 @@ export default function ProfileScreen() {
                 }
                 onPress={
                   item.href
-                    ? () => router.push(item.href as "/profile/language" | "/profile/security")
+                    ? () =>
+                        router.push(
+                          item.href === "/profile/language"
+                            ? "/(root)/(tabs)/profile/language"
+                            : "/(root)/(tabs)/profile/security"
+                        )
                     : item.key === "share"
                       ? handleShareApp
                       : undefined
@@ -593,6 +617,21 @@ const styles = StyleSheet.create({
   scrollContent: {
     ...screenScrollContent,
     paddingTop: 4,
+  },
+  guestBanner: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    gap: 10,
+    padding: 12,
+    borderRadius: 12,
+    borderWidth: StyleSheet.hairlineWidth,
+    marginBottom: 16,
+  },
+  guestBannerText: {
+    flex: 1,
+    fontSize: 13,
+    fontFamily: "PlusJakartaSans-Regular",
+    lineHeight: 19,
   },
   avatarBlock: { alignItems: "center", marginTop: 24, marginBottom: 32 },
   avatarRingWrapper: {

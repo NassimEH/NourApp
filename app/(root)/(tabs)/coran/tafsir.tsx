@@ -1,4 +1,5 @@
-﻿import { StyleSheet, Text } from "react-native";
+﻿import { StyleSheet, Text, TouchableOpacity } from "react-native";
+import { router } from "expo-router";
 
 import { ScreenStackLayout } from "@/components/ScreenStackLayout";
 import { useAppTheme } from "@/lib/app-theme";
@@ -14,10 +15,17 @@ export default function TafsirScreen() {
       subtitle={t("screens.tafsirSubtitle")}
     >
       <Text style={[styles.placeholder, { color: colors.textMuted }]}>
-        {
-          "Exégèse et explication des versets : sélection d'une sourate et d'un verset pour afficher les commentaires des savants (tafsir). Les sources et le contenu seront intégrés ici."
-        }
+        {t("screens.tafsirComingSoon")}
       </Text>
+      <TouchableOpacity
+        style={[styles.cta, { backgroundColor: colors.accentSurface, borderColor: colors.accentBorder }]}
+        onPress={() => router.push("/(root)/(tabs)/coran/sourates")}
+        activeOpacity={0.8}
+      >
+        <Text style={[styles.ctaText, { color: colors.text }]}>
+          {t("screens.translationOpenReader")}
+        </Text>
+      </TouchableOpacity>
     </ScreenStackLayout>
   );
 }
@@ -27,5 +35,16 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontFamily: "PlusJakartaSans-Regular",
     lineHeight: 22,
+    marginBottom: 16,
+  },
+  cta: {
+    borderWidth: 1,
+    borderRadius: 12,
+    paddingVertical: 12,
+    paddingHorizontal: 14,
+  },
+  ctaText: {
+    fontSize: 15,
+    fontFamily: "PlusJakartaSans-SemiBold",
   },
 });

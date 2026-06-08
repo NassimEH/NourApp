@@ -74,12 +74,12 @@ interface ApiResponse<T> {
 
 /** Réponse /categories : tableau ou objet avec data */
 interface CategoriesResponse {
-  data?: Array<{ id?: string; name: string; slug: string; description?: string; total?: number }>;
+  data?: { id?: string; name: string; slug: string; description?: string; total?: number }[];
 }
 
 /** Réponse /categories/:slug : tableau de duas */
 interface CategoryDuasResponse {
-  data?: Array<{
+  data?: {
     id: number;
     title: string;
     arabic?: string;
@@ -88,7 +88,7 @@ interface CategoryDuasResponse {
     notes?: string;
     fawaid?: string;
     source?: string;
-  }>;
+  }[];
 }
 
 /** Réponse /categories/:slug/:id : un dua */

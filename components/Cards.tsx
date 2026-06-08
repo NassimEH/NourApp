@@ -9,6 +9,7 @@ import { AppIcon, type AppIconName } from "@/components/AppIcon";
 import { ITEM_HEIGHT, ITEM_WIDTH } from "@/constants";
 import Spacing from "@/constants/Spacing";
 import { useAppTheme } from "@/lib/app-theme";
+import { useTranslation } from "@/lib/i18n";
 
 const READING_CARD_HEIGHT = 200;
 const READING_CARD_WIDTH = 160;
@@ -26,6 +27,7 @@ interface ReadingCardProps {
 }
 
 export const ReadingCard = ({ item, onPress }: ReadingCardProps) => {
+  const colors = useAppTheme();
   return (
     <TouchableOpacity
       onPress={onPress}
@@ -34,7 +36,7 @@ export const ReadingCard = ({ item, onPress }: ReadingCardProps) => {
     >
       <View style={styles.readingCardInner}>
         <View style={styles.readingCardIconWrap}>
-          <AppIcon name={item.icon} size={28} color="#3d6b47" />
+          <AppIcon name={item.icon} size={28} color={colors.accent} />
         </View>
         <Text style={styles.readingCardTitle} numberOfLines={2}>
           {item.title}
@@ -79,6 +81,7 @@ export const FeaturedCard = ({
   noMargin,
 }: Props) => {
   const colors = useAppTheme();
+  const { t } = useTranslation();
   const title = item.name ?? "";
   const price =
     item.price != null
@@ -122,7 +125,9 @@ export const FeaturedCard = ({
               { backgroundColor: colors.accentSurface, borderColor: colors.accentBorder },
             ]}
           >
-            <Text style={[styles.soonBadgeText, { color: colors.accent }]}>Bientot</Text>
+            <Text style={[styles.soonBadgeText, { color: colors.accent }]}>
+              {t("library.soonBadge")}
+            </Text>
           </View>
         ) : null}
         <View style={styles.topRow}>

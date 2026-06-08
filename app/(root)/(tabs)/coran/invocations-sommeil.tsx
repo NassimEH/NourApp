@@ -1,29 +1,15 @@
-﻿import { StyleSheet, Text } from "react-native";
+﻿import { Redirect } from "expo-router";
 
-import { ScreenStackLayout } from "@/components/ScreenStackLayout";
-import { useAppTheme } from "@/lib/app-theme";
-import { useTranslation } from "@/lib/i18n";
+const SLEEP_SLUG = "doua-avant-dormir";
 
+/** Redirige vers la catégorie invocations avant le sommeil. */
 export default function InvocationsSommeilScreen() {
-  const { t } = useTranslation();
-  const colors = useAppTheme();
-
   return (
-    <ScreenStackLayout
-      title={t("screens.invocationsSleepTitle")}
-      subtitle={t("screens.invocationsSleepSubtitle")}
-    >
-      <Text style={[styles.placeholder, { color: colors.textMuted }]}>
-        Invocations et adhkâr à réciter avant de dormir.
-      </Text>
-    </ScreenStackLayout>
+    <Redirect
+      href={{
+        pathname: "/(root)/(tabs)/coran/invocations/category/[slug]",
+        params: { slug: SLEEP_SLUG },
+      }}
+    />
   );
 }
-
-const styles = StyleSheet.create({
-  placeholder: {
-    fontSize: 15,
-    fontFamily: "PlusJakartaSans-Regular",
-    lineHeight: 22,
-  },
-});

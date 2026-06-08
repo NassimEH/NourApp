@@ -1,7 +1,6 @@
 import { useEffect, useRef } from "react";
 import { View, StyleSheet, Animated } from "react-native";
 
-const ACCENT = "#3d6b47";
 const SKELETON_BG = "rgba(61, 107, 71, 0.12)";
 const H_PADDING = 20;
 const ROW_HEIGHT = 76;

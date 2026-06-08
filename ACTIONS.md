@@ -208,3 +208,5 @@ Légende : `[ ]` à faire · `[OK]` fait
 
 **Backlog features (à cocher à chaque livraison) :** voir [`FEATURES.md`](FEATURES.md).
 
+**Audit juin 2026 (priorités P1–P30) :** voir [`AUDIT_ACTIONS.md`](AUDIT_ACTIONS.md).
+

@@ -1,11 +1,14 @@
 import { useState, useEffect, useCallback } from "react";
+
+import { useAppPreferences } from "@/lib/app-preferences";
 import { fetchSuraFull } from "../api";
 import { getCachedSuraContent, setCachedSuraContent } from "../cache";
-import type { SuraContent, AyahText } from "../types";
+import type { SuraContent, AyahText, QuranTranslationLang } from "../types";
 
 export interface SuraFull {
   arabic: SuraContent;
   translation: AyahText[];
+  translationLang: QuranTranslationLang;
 }
 
 export function useSura(suraNumber: number | null): {
@@ -14,6 +17,7 @@ export function useSura(suraNumber: number | null): {
   error: string | null;
   refetch: () => Promise<void>;
 } {
+  const { quranTranslationLang } = useAppPreferences();
   const [data, setData] = useState<SuraFull | null>(null);
   const [loading, setLoading] = useState(!!suraNumber);
   const [error, setError] = useState<string | null>(null);
@@ -25,7 +29,7 @@ export function useSura(suraNumber: number | null): {
       return;
     }
     setError(null);
-    const cached = await getCachedSuraContent(suraNumber);
+    const cached = await getCachedSuraContent(suraNumber, quranTranslationLang);
     if (cached) {
       setData(cached);
       setLoading(false);
@@ -33,18 +37,18 @@ export function useSura(suraNumber: number | null): {
     }
     setLoading(true);
     try {
-      const content = await fetchSuraFull(suraNumber);
-      await setCachedSuraContent(suraNumber, content);
+      const content = await fetchSuraFull(suraNumber, quranTranslationLang);
+      await setCachedSuraContent(suraNumber, quranTranslationLang, content);
       setData(content);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Erreur chargement de la sourate");
     } finally {
       setLoading(false);
     }
-  }, [suraNumber]);
+  }, [suraNumber, quranTranslationLang]);
 
   useEffect(() => {
-    load();
+    void load();
   }, [load]);
 
   return { data, loading, error, refetch: load };

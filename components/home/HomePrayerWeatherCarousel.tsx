@@ -85,7 +85,7 @@ export function HomePrayerWeatherCarousel({
           <View style={styles.carouselSlideInner}>
             <SectionHeader
               title={t("home.myWeather")}
-              onSeeAll={() => router.push("/meteo")}
+              onSeeAll={() => router.push("/(root)/meteo")}
               style={styles.slideHeader}
             />
             {!prayerCoords && prayerLoading ? (
@@ -186,7 +186,7 @@ export function HomePrayerWeatherCarousel({
           <View style={styles.carouselSlideInner}>
             <SectionHeader
               title={t("home.myMosque")}
-              onSeeAll={() => router.push("/mosquee")}
+              onSeeAll={() => router.push("/(root)/mosquee")}
               style={styles.slideHeader}
             />
             {prayerLoading ? (

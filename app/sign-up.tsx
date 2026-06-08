@@ -12,6 +12,9 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Redirect, router } from "expo-router";
 
+import { AuthGradientBackdrop } from "@/components/auth/AuthGradientBackdrop";
+import { AuthHero } from "@/components/auth/AuthHero";
+import { authSharedStyles } from "@/components/auth/auth-styles";
 import { AuthTextField } from "@/components/auth/AuthTextField";
 import { ScreenBackground } from "@/components/ScreenBackground";
 import { SCREEN_EDGE_PADDING } from "@/constants/screen-layout";
@@ -78,21 +81,22 @@ export default function SignUpScreen() {
 
   return (
     <ScreenBackground style={styles.background}>
+      <AuthGradientBackdrop />
       <SafeAreaView style={styles.safeArea} edges={["top", "left", "right"]}>
         <ScrollView
           contentContainerStyle={styles.scroll}
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
         >
-          <Text style={[styles.title, { color: colors.text }]}>
-            {t("auth.signUpPageTitle")}
-          </Text>
-          <Text style={[styles.subtitle, { color: colors.textMuted }]}>
-            {t("auth.signUpPageSubtitle")}
-          </Text>
-          <Text style={[styles.hint, { color: colors.textMuted }]}>
-            {t("auth.signUpHint")}
-          </Text>
+          <AuthHero
+            headline={t("auth.signUpPageTitle")}
+            subtitle={t("auth.signUpHint")}
+            emblem="user"
+          />
+
+          <View
+            style={[authSharedStyles.sectionDivider, { backgroundColor: colors.divider }]}
+          />
 
           {!isSupabaseConfigured ? (
             <Text style={[styles.configWarning, { color: colors.danger }]}>
@@ -103,6 +107,7 @@ export default function SignUpScreen() {
           <AuthTextField
             label={t("auth.name")}
             icon="user"
+            variant="flat"
             value={name}
             onChangeText={setName}
             placeholder={t("auth.namePlaceholder")}
@@ -112,6 +117,7 @@ export default function SignUpScreen() {
           <AuthTextField
             label={t("auth.email")}
             icon="mail"
+            variant="flat"
             value={email}
             onChangeText={setEmail}
             placeholder={t("auth.emailPlaceholder")}
@@ -122,6 +128,7 @@ export default function SignUpScreen() {
           <AuthTextField
             label={t("auth.password")}
             icon="lock"
+            variant="flat"
             value={password}
             onChangeText={setPassword}
             secureTextEntry
@@ -130,6 +137,7 @@ export default function SignUpScreen() {
           <AuthTextField
             label={t("auth.confirmPassword")}
             icon="lock"
+            variant="flat"
             value={confirm}
             onChangeText={setConfirm}
             secureTextEntry
@@ -137,26 +145,35 @@ export default function SignUpScreen() {
           />
 
           <TouchableOpacity
-            style={[styles.primaryBtn, { backgroundColor: colors.accent }]}
+            style={[
+              authSharedStyles.pillButton,
+              styles.primaryBtn,
+              { backgroundColor: colors.text },
+            ]}
             onPress={handleSignUp}
             disabled={busy}
-            activeOpacity={0.85}
+            activeOpacity={0.88}
           >
             {busy ? (
               <ActivityIndicator color="#fff" />
             ) : (
-              <Text style={styles.primaryBtnText}>{t("auth.signUpSubmit")}</Text>
+              <Text style={authSharedStyles.pillButtonText}>
+                {t("auth.signUpSubmit")}
+              </Text>
             )}
           </TouchableOpacity>
 
-          <View style={styles.footerRow}>
-            <Text style={{ color: colors.textMuted }}>{t("auth.hasAccount")} </Text>
-            <Pressable onPress={() => router.replace("/sign-in")} disabled={busy}>
-              <Text style={{ color: colors.accent, fontFamily: "PlusJakartaSans-SemiBold" }}>
-                {t("auth.signInLink")}
-              </Text>
-            </Pressable>
-          </View>
+          <Pressable
+            onPress={() => router.replace("/sign-in")}
+            disabled={busy}
+            style={authSharedStyles.textLink}
+          >
+            <Text
+              style={[authSharedStyles.textLinkLabel, { color: colors.text }]}
+            >
+              {t("auth.signInLink")}
+            </Text>
+          </Pressable>
         </ScrollView>
       </SafeAreaView>
     </ScreenBackground>
@@ -168,24 +185,8 @@ const styles = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: "transparent" },
   scroll: {
     paddingHorizontal: SCREEN_EDGE_PADDING,
-    paddingTop: 32,
+    paddingTop: 20,
     paddingBottom: 48,
-  },
-  title: {
-    fontSize: 26,
-    fontFamily: "PlusJakartaSans-Bold",
-    marginBottom: 8,
-  },
-  subtitle: {
-    fontSize: 15,
-    fontFamily: "PlusJakartaSans-Regular",
-    marginBottom: 12,
-  },
-  hint: {
-    fontSize: 14,
-    fontFamily: "PlusJakartaSans-Regular",
-    lineHeight: 22,
-    marginBottom: 24,
   },
   configWarning: {
     fontSize: 13,
@@ -194,21 +195,6 @@ const styles = StyleSheet.create({
     lineHeight: 20,
   },
   primaryBtn: {
-    borderRadius: 14,
-    minHeight: 52,
-    alignItems: "center",
-    justifyContent: "center",
-    marginTop: 8,
-  },
-  primaryBtnText: {
-    color: "#fff",
-    fontSize: 16,
-    fontFamily: "PlusJakartaSans-SemiBold",
-  },
-  footerRow: {
-    flexDirection: "row",
-    justifyContent: "center",
-    marginTop: 28,
-    flexWrap: "wrap",
+    marginTop: 6,
   },
 });

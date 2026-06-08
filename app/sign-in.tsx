@@ -12,6 +12,10 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Redirect, router } from "expo-router";
 
+import { AuthFeatureList } from "@/components/auth/AuthFeatureList";
+import { AuthGradientBackdrop } from "@/components/auth/AuthGradientBackdrop";
+import { AuthHero } from "@/components/auth/AuthHero";
+import { authSharedStyles } from "@/components/auth/auth-styles";
 import { AuthTextField } from "@/components/auth/AuthTextField";
 import { ScreenBackground } from "@/components/ScreenBackground";
 import { SCREEN_EDGE_PADDING } from "@/constants/screen-layout";
@@ -85,21 +89,20 @@ export default function SignInScreen() {
 
   return (
     <ScreenBackground style={styles.background}>
+      <AuthGradientBackdrop />
       <SafeAreaView style={styles.safeArea} edges={["top", "left", "right"]}>
         <ScrollView
           contentContainerStyle={styles.scroll}
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
         >
-          <Text style={[styles.brand, { color: colors.text }]}>
-            {t("auth.brand")}
-          </Text>
-          <Text style={[styles.tagline, { color: colors.textMuted }]}>
-            {t("auth.tagline")}
-          </Text>
-          <Text style={[styles.hint, { color: colors.textMuted }]}>
-            {t("auth.loginPrompt")}
-          </Text>
+          <AuthHero headline={t("auth.intro")} subtitle={t("auth.tagline")} />
+
+          <AuthFeatureList />
+
+          <View
+            style={[authSharedStyles.sectionDivider, { backgroundColor: colors.divider }]}
+          />
 
           {!isSupabaseConfigured ? (
             <Text style={[styles.configWarning, { color: colors.danger }]}>
@@ -110,6 +113,7 @@ export default function SignInScreen() {
           <AuthTextField
             label={t("auth.email")}
             icon="mail"
+            variant="flat"
             value={email}
             onChangeText={setEmail}
             placeholder={t("auth.emailPlaceholder")}
@@ -120,6 +124,7 @@ export default function SignInScreen() {
           <AuthTextField
             label={t("auth.password")}
             icon="lock"
+            variant="flat"
             value={password}
             onChangeText={setPassword}
             secureTextEntry
@@ -127,36 +132,47 @@ export default function SignInScreen() {
           />
 
           <TouchableOpacity
-            style={[styles.primaryBtn, { backgroundColor: colors.accent }]}
+            style={[
+              authSharedStyles.pillButton,
+              styles.primaryBtn,
+              { backgroundColor: colors.text },
+            ]}
             onPress={handleSignIn}
             disabled={busy}
-            activeOpacity={0.85}
+            activeOpacity={0.88}
           >
             {busy ? (
               <ActivityIndicator color="#fff" />
             ) : (
-              <Text style={styles.primaryBtnText}>{t("auth.signIn")}</Text>
+              <Text style={authSharedStyles.pillButtonText}>
+                {t("auth.signIn")}
+              </Text>
             )}
           </TouchableOpacity>
 
-          <View style={styles.dividerRow}>
-            <View style={[styles.divider, { backgroundColor: colors.border }]} />
-            <Text style={[styles.dividerText, { color: colors.textMuted }]}>
-              {t("auth.orDivider")}
-            </Text>
-            <View style={[styles.divider, { backgroundColor: colors.border }]} />
-          </View>
-
-          <TouchableOpacity
-            style={[styles.secondaryBtn, { borderColor: colors.border }]}
+          <Pressable
             onPress={handleGoogle}
             disabled={busy}
-            activeOpacity={0.85}
+            style={authSharedStyles.textLink}
           >
-            <Text style={[styles.secondaryBtnText, { color: colors.text }]}>
+            <Text
+              style={[authSharedStyles.textLinkLabel, { color: colors.text }]}
+            >
               {t("auth.loginGoogle")}
             </Text>
-          </TouchableOpacity>
+          </Pressable>
+
+          <Pressable
+            onPress={() => router.push("/sign-up")}
+            disabled={busy}
+            style={authSharedStyles.textLink}
+          >
+            <Text
+              style={[authSharedStyles.textLinkLabel, { color: colors.text }]}
+            >
+              {t("auth.signUpLink")}
+            </Text>
+          </Pressable>
 
           <Pressable
             onPress={() => {
@@ -164,21 +180,17 @@ export default function SignInScreen() {
               router.replace("/(root)/(tabs)/explore");
             }}
             disabled={busy}
-            style={styles.guestLink}
+            style={authSharedStyles.textLink}
           >
-            <Text style={[styles.guestText, { color: colors.accent }]}>
+            <Text
+              style={[
+                authSharedStyles.textLinkLabel,
+                { color: colors.textMuted },
+              ]}
+            >
               {t("auth.guest")}
             </Text>
           </Pressable>
-
-          <View style={styles.footerRow}>
-            <Text style={{ color: colors.textMuted }}>{t("auth.noAccount")} </Text>
-            <Pressable onPress={() => router.push("/sign-up")} disabled={busy}>
-              <Text style={{ color: colors.accent, fontFamily: "PlusJakartaSans-SemiBold" }}>
-                {t("auth.signUpLink")}
-              </Text>
-            </Pressable>
-          </View>
         </ScrollView>
       </SafeAreaView>
     </ScreenBackground>
@@ -190,24 +202,8 @@ const styles = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: "transparent" },
   scroll: {
     paddingHorizontal: SCREEN_EDGE_PADDING,
-    paddingTop: 32,
+    paddingTop: 20,
     paddingBottom: 48,
-  },
-  brand: {
-    fontSize: 32,
-    fontFamily: "PlusJakartaSans-Bold",
-    marginBottom: 8,
-  },
-  tagline: {
-    fontSize: 16,
-    fontFamily: "PlusJakartaSans-Regular",
-    marginBottom: 20,
-  },
-  hint: {
-    fontSize: 14,
-    fontFamily: "PlusJakartaSans-Regular",
-    lineHeight: 22,
-    marginBottom: 24,
   },
   configWarning: {
     fontSize: 13,
@@ -216,52 +212,6 @@ const styles = StyleSheet.create({
     lineHeight: 20,
   },
   primaryBtn: {
-    borderRadius: 14,
-    minHeight: 52,
-    alignItems: "center",
-    justifyContent: "center",
-    marginTop: 8,
-  },
-  primaryBtnText: {
-    color: "#fff",
-    fontSize: 16,
-    fontFamily: "PlusJakartaSans-SemiBold",
-  },
-  dividerRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 12,
-    marginVertical: 20,
-  },
-  divider: { flex: 1, height: StyleSheet.hairlineWidth },
-  dividerText: {
-    fontSize: 13,
-    fontFamily: "PlusJakartaSans-Regular",
-  },
-  secondaryBtn: {
-    borderWidth: 1,
-    borderRadius: 14,
-    minHeight: 52,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  secondaryBtnText: {
-    fontSize: 15,
-    fontFamily: "PlusJakartaSans-SemiBold",
-  },
-  guestLink: {
-    alignSelf: "center",
-    marginTop: 24,
-    paddingVertical: 8,
-  },
-  guestText: {
-    fontSize: 15,
-    fontFamily: "PlusJakartaSans-SemiBold",
-  },
-  footerRow: {
-    flexDirection: "row",
-    justifyContent: "center",
-    marginTop: 28,
-    flexWrap: "wrap",
+    marginTop: 6,
   },
 });

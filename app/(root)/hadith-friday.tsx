@@ -1,16 +1,28 @@
-﻿import { StyleSheet, Text, TouchableOpacity, Share, Alert } from "react-native";
+import { StyleSheet, Text, TouchableOpacity, Share, Alert } from "react-native";
 import * as Clipboard from "expo-clipboard";
-
 import { AppIcon } from "@/components/AppIcon";
-import { ScreenStackLayout } from "@/components/ScreenStackLayout";
-import { getHadithDuJour } from "@/constants/hadithsJour";
+import { PreferenceScreenLayout } from "@/components/PreferenceScreenLayout";
+import { getHadithVendrediDuJour } from "@/constants/hadithsVendredi";
 import { useAppTheme } from "@/lib/app-theme";
 import { useTranslation } from "@/lib/i18n";
 
-export default function HadithJourScreen() {
-  const { t } = useTranslation();
+export default function HadithFridayScreen() {
+  const { t, rtlTextStyle } = useTranslation();
   const colors = useAppTheme();
-  const hadith = getHadithDuJour();
+  const hadith = getHadithVendrediDuJour();
+
+  if (!hadith) {
+    return (
+      <PreferenceScreenLayout
+        title={t("screens.hadithFridayScreenTitle")}
+        subtitle={t("home.hadithFridayLabel")}
+      >
+        <Text style={[styles.empty, { color: colors.textMuted }, rtlTextStyle]}>
+          {t("screens.hadithFridayNotFriday")}
+        </Text>
+      </PreferenceScreenLayout>
+    );
+  }
 
   const onShare = () => {
     void Share.share({
@@ -24,12 +36,16 @@ export default function HadithJourScreen() {
   };
 
   return (
-    <ScreenStackLayout
-      title={t("screens.hadithDayTitle")}
-      subtitle={t("screens.hadithDaySubtitle")}
+    <PreferenceScreenLayout
+      title={t("screens.hadithFridayScreenTitle")}
+      subtitle={t("home.hadithFridayLabel")}
     >
-      <Text style={[styles.hadithText, { color: colors.text }]}>{hadith.text}</Text>
-      <Text style={[styles.source, { color: colors.textMuted }]}>{hadith.source}</Text>
+      <Text style={[styles.hadithText, { color: colors.text }, rtlTextStyle]}>
+        {hadith.text}
+      </Text>
+      <Text style={[styles.source, { color: colors.textMuted }, rtlTextStyle]}>
+        {hadith.source}
+      </Text>
 
       <TouchableOpacity
         style={[styles.actionBtn, { borderColor: colors.border }]}
@@ -48,7 +64,7 @@ export default function HadithJourScreen() {
         <AppIcon name="copy" size={20} color={colors.accent} />
         <Text style={[styles.actionLabel, { color: colors.text }]}>{t("quran.copyVerse")}</Text>
       </TouchableOpacity>
-    </ScreenStackLayout>
+    </PreferenceScreenLayout>
   );
 }
 
@@ -64,6 +80,11 @@ const styles = StyleSheet.create({
     fontFamily: "PlusJakartaSans-Regular",
     lineHeight: 20,
     marginBottom: 20,
+  },
+  empty: {
+    fontSize: 15,
+    fontFamily: "PlusJakartaSans-Regular",
+    lineHeight: 22,
   },
   actionBtn: {
     flexDirection: "row",

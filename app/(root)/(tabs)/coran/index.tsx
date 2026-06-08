@@ -132,16 +132,12 @@ function InvocationsHeroBlock() {
         name: t("library.invocationsWeather"),
         price: t("library.invocationsWeatherSub"),
         icon: "cloud" as const,
-        soon: true,
-        disabled: true,
       },
       right: {
         $id: "invocations-matin-soir" as const,
         name: t("library.invocationsMorning"),
         price: t("library.invocationsMorningSub"),
         icon: "sun" as const,
-        soon: true,
-        disabled: true,
       },
     }),
     [t]
@@ -191,16 +187,12 @@ function HadithsHeroBlock() {
         name: t("library.hadithDay"),
         price: t("library.hadithDaySub"),
         icon: "message-circle" as const,
-        soon: true,
-        disabled: true,
       },
       topRight: {
         $id: "hadiths-theme" as const,
         name: t("library.hadithThemes"),
         price: t("library.hadithThemesSub"),
         icon: "bookmark" as const,
-        soon: true,
-        disabled: true,
       },
       bottom: {
         $id: "hadiths" as const,

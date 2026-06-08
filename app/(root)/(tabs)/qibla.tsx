@@ -14,21 +14,21 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import * as Location from "expo-location";
 import { AppIcon } from "@/components/AppIcon";
 
-import { getQiblaBearing } from "@/lib/prayerUtils";
-import {
-  usePrayerTimes,
-  PRAYER_ORDER,
-  getPrayerLabel,
-  type PrayerKey,
-} from "@/lib/usePrayerTimes";
-import { usePrayersChecked } from "@/lib/usePrayersChecked";
-import {
+import { getQiblaBearing ,
   getNextPrayerInfo,
   getCurrentPrayer,
   getNextPrayerTimestamp,
   formatCountdownHM,
 } from "@/lib/prayerUtils";
-import type { PrayerTimes } from "@/lib/usePrayerTimes";
+import {
+  usePrayerTimes,
+  PRAYER_ORDER,
+  getPrayerLabel,
+  type PrayerKey,
+ PrayerTimes } from "@/lib/usePrayerTimes";
+import { usePrayersChecked } from "@/lib/usePrayersChecked";
+
+
 import { toHijri } from "hijri-converter";
 import { ScreenBackground } from "@/components/ScreenBackground";
 import {

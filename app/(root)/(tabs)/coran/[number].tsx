@@ -1,11 +1,14 @@
 import {
   ActivityIndicator,
+  Alert,
   PanResponder,
+  Share,
   StyleSheet,
   Text,
   TouchableOpacity,
   View,
 } from "react-native";
+import * as Clipboard from "expo-clipboard";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router, useLocalSearchParams } from "expo-router";
 import { AppIcon } from "@/components/AppIcon";
@@ -19,11 +22,15 @@ import { ScreenPageHeader } from "@/components/ScreenPageHeader";
 import { useAppTypography } from "@/lib/app-typography";
 import { useTranslation } from "@/lib/i18n";
 import { useAppTheme } from "@/lib/app-theme";
+import { useAppPreferences } from "@/lib/app-preferences";
 import { SCREEN_EDGE_PADDING } from "@/constants/screen-layout";
+import {
+  QURAN_TRANSLATION_LANG_ORDER,
+  type QuranTranslationLang,
+} from "@/lib/quran/types";
 
 const H_PADDING = SCREEN_EDGE_PADDING;
 const ICON_SIZE = 22;
-const ACCENT = "#3d6b47";
 
 export default function QuranReaderScreen() {
   const { number, autoplay } = useLocalSearchParams<{ number: string; autoplay?: string }>();
@@ -33,7 +40,24 @@ export default function QuranReaderScreen() {
   const typography = useAppTypography();
   const colors = useAppTheme();
   const { t } = useTranslation();
+  const { quranTranslationLang, setQuranTranslationLang } = useAppPreferences();
   const audio = useQuranAudioContext();
+
+  const translationLangLabel = useMemo(() => {
+    const key: Record<QuranTranslationLang, string> = {
+      fr: "quran.translationLangFr",
+      en: "quran.translationLangEn",
+      ar: "quran.translationLangAr",
+    };
+    return t(key[quranTranslationLang]);
+  }, [quranTranslationLang, t]);
+
+  const cycleTranslationLang = useCallback(() => {
+    const idx = QURAN_TRANSLATION_LANG_ORDER.indexOf(quranTranslationLang);
+    const next =
+      QURAN_TRANSLATION_LANG_ORDER[(idx + 1) % QURAN_TRANSLATION_LANG_ORDER.length];
+    setQuranTranslationLang(next);
+  }, [quranTranslationLang, setQuranTranslationLang]);
 
   const [showTranslation, setShowTranslation] = useState(true);
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -100,6 +124,23 @@ export default function QuranReaderScreen() {
     if (suraNumber) audio.playSura(suraNumber);
   }, [suraNumber, audio]);
 
+  const shareVerse = useCallback(() => {
+    if (!ayah) return;
+    const parts = [ayah.text, showTranslation && trans?.text ? trans.text : null].filter(
+      Boolean
+    );
+    void Share.share({ message: parts.join("\n\n") });
+  }, [ayah, trans?.text, showTranslation]);
+
+  const copyVerse = useCallback(async () => {
+    if (!ayah) return;
+    const parts = [ayah.text, showTranslation && trans?.text ? trans.text : null].filter(
+      Boolean
+    );
+    await Clipboard.setStringAsync(parts.join("\n\n"));
+    Alert.alert(t("quran.copied"));
+  }, [ayah, trans?.text, showTranslation, t]);
+
   useEffect(() => {
     if (
       autoplayRequested &&
@@ -163,14 +204,40 @@ export default function QuranReaderScreen() {
               </TouchableOpacity>
               <TouchableOpacity
                 onPress={() => setShowTranslation((v) => !v)}
+                onLongPress={cycleTranslationLang}
                 style={styles.iconBtn}
                 activeOpacity={0.7}
+                accessibilityLabel={t("quran.translationLang")}
               >
                 <AppIcon
                   name="book"
                   size={ICON_SIZE}
                   color={showTranslation ? colors.accent : colors.icon}
                 />
+              </TouchableOpacity>
+              <TouchableOpacity
+                onPress={cycleTranslationLang}
+                style={[styles.langBadge, { borderColor: colors.border }]}
+                activeOpacity={0.7}
+                accessibilityLabel={translationLangLabel}
+              >
+                <Text style={[styles.langBadgeText, { color: colors.accent }]}>
+                  {quranTranslationLang.toUpperCase()}
+                </Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                onPress={shareVerse}
+                style={styles.iconBtn}
+                activeOpacity={0.7}
+              >
+                <AppIcon name="share-2" size={ICON_SIZE} color={colors.icon} />
+              </TouchableOpacity>
+              <TouchableOpacity
+                onPress={() => void copyVerse()}
+                style={styles.iconBtn}
+                activeOpacity={0.7}
+              >
+                <AppIcon name="copy" size={ICON_SIZE} color={colors.icon} />
               </TouchableOpacity>
             </>
           }
@@ -186,7 +253,11 @@ export default function QuranReaderScreen() {
         ) : error && !data ? (
           <View style={styles.errorWrap}>
             <Text style={[styles.errorText, { color: colors.text }]}>{error}</Text>
-            <TouchableOpacity onPress={() => refetch()} style={styles.retryBtn} activeOpacity={0.8}>
+            <TouchableOpacity
+              onPress={() => refetch()}
+              style={[styles.retryBtn, { backgroundColor: colors.accent }]}
+              activeOpacity={0.8}
+            >
               <Text style={styles.retryText}>{t("home.retry")}</Text>
             </TouchableOpacity>
           </View>
@@ -235,7 +306,7 @@ export default function QuranReaderScreen() {
                 style={styles.playSuraBtn}
                 activeOpacity={0.7}
               >
-                <AppIcon name="play-circle" size={24} color={ACCENT} />
+                <AppIcon name="play-circle" size={24} color={colors.accent} />
                 <Text style={[styles.playSuraLabel, { color: colors.text }]}>
                   {t("screens.listenSura")}
                 </Text>
@@ -289,6 +360,18 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   iconBtn: { padding: 8 },
+  langBadge: {
+    paddingHorizontal: 6,
+    paddingVertical: 4,
+    borderRadius: 6,
+    borderWidth: StyleSheet.hairlineWidth,
+    minWidth: 32,
+    alignItems: "center",
+  },
+  langBadgeText: {
+    fontSize: 11,
+    fontFamily: "PlusJakartaSans-Bold",
+  },
   verseArea: {
     flex: 1,
     justifyContent: "center",
@@ -347,7 +430,6 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
     paddingHorizontal: 28,
     borderRadius: 12,
-    backgroundColor: ACCENT,
   },
   retryText: { fontSize: 16, fontFamily: "PlusJakartaSans-SemiBold", color: "#fff" },
   centered: { flex: 1, justifyContent: "center", alignItems: "center" },

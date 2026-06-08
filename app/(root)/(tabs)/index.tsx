@@ -1,6 +1,7 @@
 ﻿import {
   Alert,
   Image,
+  Pressable,
   ScrollView,
   StyleSheet,
   Text,
@@ -8,7 +9,7 @@
   View,
 } from "react-native";
 import React, { useEffect, useMemo } from "react";
-import { router } from "expo-router";
+import { router, type Href } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { toHijri } from "hijri-converter";
 
@@ -17,6 +18,23 @@ import {
   isVendredi,
   getHadithVendrediDuJour,
 } from "@/constants/hadithsVendredi";
+
+import { HomeContinueSection } from "@/components/home/HomeContinueSection";
+import { HomePrayerWeatherCarousel } from "@/components/home/HomePrayerWeatherCarousel";
+import { HomeToolsSection } from "@/components/home/HomeToolsSection";
+import { HomeRamadanBanner } from "@/components/home/HomeRamadanBanner";
+import { useMosqueName } from "@/lib/home/hooks/useMosqueName";
+import { rescheduleNextPrayerNotification } from "@/lib/notifications/prayer-notifications";
+import { useGlobalContext } from "@/lib/global-provider";
+import { usePrayerTimes, type PrayerTimes } from "@/lib/usePrayerTimes";
+import { ScreenBackground } from "@/components/ScreenBackground";
+import { SCREEN_EDGE_PADDING } from "@/constants/screen-layout";
+import { ScreenPageHeader } from "@/components/ScreenPageHeader";
+import { useAppTypography } from "@/lib/app-typography";
+import { useAppTheme } from "@/lib/app-theme";
+import { createHomeStyles } from "@/lib/home-screen-styles";
+import { addActivityLog } from "@/lib/activity-log";
+import { useTranslation, getLocaleDateString, TRANSLATIONS } from "@/lib/i18n";
 
 function useTodayDates(locale: "fr" | "en" | "ar") {
   return useMemo(() => {
@@ -62,23 +80,6 @@ const HeaderAvatarBell = React.memo(function HeaderAvatarBell({
     </View>
   );
 });
-
-import { HomeContinueSection } from "@/components/home/HomeContinueSection";
-import { HomePrayerWeatherCarousel } from "@/components/home/HomePrayerWeatherCarousel";
-import { HomeToolsSection } from "@/components/home/HomeToolsSection";
-import { HomeRamadanBanner } from "@/components/home/HomeRamadanBanner";
-import { useMosqueName } from "@/lib/home/hooks/useMosqueName";
-import { rescheduleNextPrayerNotification } from "@/lib/notifications/prayer-notifications";
-import { useGlobalContext } from "@/lib/global-provider";
-import { usePrayerTimes, type PrayerTimes } from "@/lib/usePrayerTimes";
-import { ScreenBackground } from "@/components/ScreenBackground";
-import { SCREEN_EDGE_PADDING } from "@/constants/screen-layout";
-import { ScreenPageHeader } from "@/components/ScreenPageHeader";
-import { useAppTypography } from "@/lib/app-typography";
-import { useAppTheme } from "@/lib/app-theme";
-import { createHomeStyles } from "@/lib/home-screen-styles";
-import { addActivityLog } from "@/lib/activity-log";
-import { useTranslation, getLocaleDateString, TRANSLATIONS } from "@/lib/i18n";
 
 type HomeListHeaderProps = {
   user: { name?: string; avatar?: string } | null;
@@ -220,11 +221,19 @@ const HomeListHeader = React.memo(function HomeListHeader({
       <HomeRamadanBanner />
 
       {vendredi && hadithVendredi && (
-        <View style={themed.hadithVendrediBlock}>
+        <Pressable
+          onPress={() => router.push("/(root)/hadith-friday" as Href)}
+          style={({ pressed }) => [
+            themed.hadithVendrediBlock,
+            pressed && { opacity: 0.92 },
+          ]}
+          accessibilityRole="button"
+          accessibilityLabel={t("home.hadithFridayLabel")}
+        >
           <Text style={themed.hadithVendrediLabel}>{t("home.hadithFridayLabel")}</Text>
           <Text style={themed.hadithVendrediText}>{hadithVendredi.text}</Text>
           <Text style={themed.hadithVendrediSource}>{hadithVendredi.source}</Text>
-        </View>
+        </Pressable>
       )}
 
       <HomeToolsSection />

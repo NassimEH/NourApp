@@ -19,6 +19,7 @@ import { useMemo, useState } from "react";
 import { useSuraList } from "@/lib/quran/hooks/useSuraList";
 import { JUZ_TO_FIRST_SURA } from "@/lib/quran/juzMapping";
 import { useQuranAudioContext } from "@/lib/quran/QuranAudioContext";
+import { AVAILABLE_RECITERS } from "@/lib/quran/types";
 import { ScreenBackground } from "@/components/ScreenBackground";
 import {
   SCREEN_EDGE_PADDING,
@@ -46,7 +47,6 @@ const GRID_CARD_HEIGHT = 56;
 const GRID_IMAGE_SIZE = 56;
 
 const FEATURED_CARD_WIDTH = 150;
-const FEATURED_CARD_HEIGHT = 200;
 
 type TabId = "tout" | "sourates" | "recitateurs" | "juz" | "invocations";
 
@@ -64,12 +64,14 @@ function useExploreTabs(): { id: TabId; label: string }[] {
   );
 }
 
-const RECITERS = [
-  { id: "ar.abdulbasitmurattal", name: "Abdul Basit", tag: "Murattal" },
-  { id: "ar.alafasy", name: "Mishary Alafasy", tag: "Populaire" },
-  { id: "ar.husary", name: "Mahmoud Khalil", tag: "Classique" },
-  { id: "ar.minshawi", name: "Al-Minshawi", tag: "Mujawwad" },
-];
+const FEATURED_RECITERS = AVAILABLE_RECITERS.slice(0, 4);
+
+const INVOCATION_SHORTCUTS = [
+  { id: "matin", slug: "invocations-du-matin", icon: "sun" as const, labelKey: "explore.invocationMorning" },
+  { id: "soir", slug: "invocations-du-soir", icon: "moon" as const, labelKey: "explore.invocationEvening" },
+  { id: "priere", slug: "doua-apres-priere", icon: "heart" as const, labelKey: "explore.invocationAfterPrayer" },
+  { id: "sommeil", slug: "doua-avant-dormir", icon: "cloud" as const, labelKey: "explore.invocationSleep" },
+] as const;
 
 const JUZ_ITEMS = Array.from({ length: 30 }, (_, i) => i + 1);
 
@@ -246,7 +248,7 @@ export default function ExploreScreen() {
                     <FeaturedCardSpotify
                       key={sura.number}
                       title={sura.englishName}
-                      subtitle={`${sura.numberOfAyahs} versets • ${sura.revelationType === "Meccan" ? "Mecquoise" : "Médinoise"}`}
+                      subtitle={`${t("library.verseCount", { count: sura.numberOfAyahs })} • ${sura.revelationType === "Meccan" ? t("library.suraMeccan") : t("library.suraMedinan")}`}
                       icon="book-open"
                       onPress={() => playSura(sura.number)}
                     />
@@ -268,12 +270,17 @@ export default function ExploreScreen() {
                 showsHorizontalScrollIndicator={false}
                 contentContainerStyle={styles.horizontalScroll}
               >
-                {RECITERS.map((r) => (
+                {FEATURED_RECITERS.map((r) => (
                   <ReciterCardSpotify
                     key={r.id}
                     name={r.name}
-                    tag={r.tag}
-                    onPress={() => router.push("/(root)/(tabs)/coran/recitateurs")}
+                    tag={r.style}
+                    onPress={() =>
+                      router.push({
+                        pathname: "/(root)/(tabs)/coran/recitateur-detail",
+                        params: { id: r.id },
+                      })
+                    }
                   />
                 ))}
               </ScrollView>
@@ -317,22 +324,22 @@ export default function ExploreScreen() {
                 showsHorizontalScrollIndicator={false}
                 contentContainerStyle={styles.horizontalScroll}
               >
-                {[
-                  { id: "matin", title: "Adhkar du matin", icon: "sun" as const },
-                  { id: "soir", title: "Adhkar du soir", icon: "moon" as const },
-                  { id: "priere", title: "Après la prière", icon: "heart" as const },
-                  { id: "sommeil", title: "Avant de dormir", icon: "cloud" as const },
-                ].map((item) => (
+                {INVOCATION_SHORTCUTS.map((item) => (
                   <TouchableOpacity
                     key={item.id}
                     style={styles.invocationCard}
-                    onPress={() => router.push("/(root)/(tabs)/coran/invocations")}
+                    onPress={() =>
+                      router.push({
+                        pathname: "/(root)/(tabs)/coran/invocations/category/[slug]",
+                        params: { slug: item.slug },
+                      })
+                    }
                     activeOpacity={0.8}
                   >
                     <View style={styles.invocationIconWrap}>
                       <AppIcon name={item.icon} size={28} color={colors.accent} />
                     </View>
-                    <Text style={styles.invocationTitle}>{item.title}</Text>
+                    <Text style={styles.invocationTitle}>{t(item.labelKey)}</Text>
                   </TouchableOpacity>
                 ))}
               </ScrollView>

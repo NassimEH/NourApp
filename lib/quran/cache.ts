@@ -4,7 +4,7 @@
  */
 
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import type { SuraMeta, SuraContent, AyahText } from "./types";
+import type { QuranTranslationLang, SuraMeta, SuraContent, AyahText } from "./types";
 
 const PREFIX = "@quran";
 const SURA_LIST_KEY = `${PREFIX}_sura_list`;
@@ -50,22 +50,35 @@ export async function setCachedSuraList(list: SuraMeta[]): Promise<void> {
   await setCached(SURA_LIST_KEY, list);
 }
 
-export async function getCachedSuraContent(suraNumber: number): Promise<{
+function suraContentKey(suraNumber: number, translationLang: QuranTranslationLang): string {
+  return `${SURA_CONTENT_PREFIX}${suraNumber}_${translationLang}`;
+}
+
+export async function getCachedSuraContent(
+  suraNumber: number,
+  translationLang: QuranTranslationLang
+): Promise<{
   arabic: SuraContent;
   translation: AyahText[];
+  translationLang: QuranTranslationLang;
 } | null> {
-  const key = `${SURA_CONTENT_PREFIX}${suraNumber}`;
-  return getCached(key, CONTENT_TTL_MS);
+  return getCached(suraContentKey(suraNumber, translationLang), CONTENT_TTL_MS);
 }
 
 export async function setCachedSuraContent(
   suraNumber: number,
-  content: { arabic: SuraContent; translation: AyahText[] }
+  translationLang: QuranTranslationLang,
+  content: { arabic: SuraContent; translation: AyahText[]; translationLang: QuranTranslationLang }
 ): Promise<void> {
-  const key = `${SURA_CONTENT_PREFIX}${suraNumber}`;
-  await setCached(key, content);
+  await setCached(suraContentKey(suraNumber, translationLang), content);
 }
 
-export function invalidateSuraContent(suraNumber: number): void {
-  AsyncStorage.removeItem(`${SURA_CONTENT_PREFIX}${suraNumber}`).catch(() => {});
+export function invalidateSuraContent(suraNumber: number, translationLang?: QuranTranslationLang): void {
+  if (translationLang) {
+    AsyncStorage.removeItem(suraContentKey(suraNumber, translationLang)).catch(() => {});
+    return;
+  }
+  (["fr", "en", "ar"] as QuranTranslationLang[]).forEach((lang) => {
+    AsyncStorage.removeItem(suraContentKey(suraNumber, lang)).catch(() => {});
+  });
 }

@@ -1,22 +1,16 @@
-﻿import {
-  ScrollView,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
-} from "react-native";
+﻿import { ScrollView, StyleSheet } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router } from "expo-router";
-import { AppIcon } from "@/components/AppIcon";
+
+import { ListRow } from "@/components/ListRow";
 import { ScreenBackground } from "@/components/ScreenBackground";
 import { ScreenPageHeader } from "@/components/ScreenPageHeader";
 import { screenScrollContent } from "@/constants/screen-layout";
-import { useAppTheme } from "@/lib/app-theme";
 import { useTranslation } from "@/lib/i18n";
+import { AVAILABLE_RECITERS } from "@/lib/quran/types";
 
 export default function RecitateursScreen() {
   const { t } = useTranslation();
-  const colors = useAppTheme();
 
   return (
     <ScreenBackground style={styles.background}>
@@ -31,23 +25,20 @@ export default function RecitateursScreen() {
           contentContainerStyle={styles.content}
           showsVerticalScrollIndicator={false}
         >
-          <Text style={[styles.placeholder, { color: colors.textMuted }]}>
-            {
-              "Liste des récitateurs disponibles pour l'écoute du Coran. Appuyez sur un récitateur pour voir son détail et lancer la lecture."
-            }
-          </Text>
-          <TouchableOpacity
-            style={[
-              styles.card,
-              { backgroundColor: colors.cardElevated, borderColor: colors.border },
-            ]}
-            onPress={() => router.push("recitateur-detail")}
-            activeOpacity={0.8}
-          >
-            <AppIcon name="mic" size={24} color={colors.icon} />
-            <Text style={[styles.cardTitle, { color: colors.text }]}>Exemple récitateur</Text>
-            <AppIcon name="chevron-right" size={20} color={colors.iconMuted} />
-          </TouchableOpacity>
+          {AVAILABLE_RECITERS.map((reciter) => (
+            <ListRow
+              key={reciter.id}
+              icon="mic"
+              title={reciter.name}
+              subtitle={reciter.style}
+              onPress={() =>
+                router.push({
+                  pathname: "/(root)/(tabs)/coran/recitateur-detail",
+                  params: { id: reciter.id },
+                })
+              }
+            />
+          ))}
         </ScrollView>
       </SafeAreaView>
     </ScreenBackground>
@@ -57,37 +48,6 @@ export default function RecitateursScreen() {
 const styles = StyleSheet.create({
   background: { flex: 1 },
   safeArea: { flex: 1, backgroundColor: "transparent" },
-  header: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingHorizontal: 20,
-    paddingVertical: 12,
-  },
-  backButton: { paddingVertical: 8, paddingLeft: 8 },
-  title: {
-    fontSize: 20,
-    fontFamily: "PlusJakartaSans-Bold",
-  },
   scroll: { flex: 1 },
   content: { ...screenScrollContent, paddingTop: 8, paddingBottom: 40 },
-  placeholder: {
-    fontSize: 15,
-    fontFamily: "PlusJakartaSans-Regular",
-    lineHeight: 22,
-    marginBottom: 20,
-  },
-  card: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 12,
-    borderWidth: 1,
-    borderRadius: 12,
-    padding: 16,
-  },
-  cardTitle: {
-    flex: 1,
-    fontSize: 17,
-    fontFamily: "PlusJakartaSans-Medium",
-  },
 });
