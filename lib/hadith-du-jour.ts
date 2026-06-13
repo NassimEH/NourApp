@@ -2,7 +2,8 @@ import {
   HADITHS_DU_JOUR,
   type HadithJourItem,
 } from "@/constants/hadithsJour";
-import { getLocaleDateString, type LanguageLocale } from "@/lib/i18n";
+import { getLocaleDateString } from "@/lib/i18n";
+import type { LanguageLocale } from "@/lib/app-preferences";
 
 export { getHadithDuJour } from "@/constants/hadithsJour";
 export type { HadithJourItem };

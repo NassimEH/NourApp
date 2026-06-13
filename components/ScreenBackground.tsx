@@ -38,9 +38,8 @@ export function ScreenBackground({
       {colors.usesBackgroundImage ? (
         <ImageBackground
           source={source}
-          style={styles.backgroundImage}
+          style={[styles.backgroundImage, styles.nonInteractive]}
           resizeMode="cover"
-          pointerEvents="none"
         />
       ) : (
         <DarkModeScreenGradient />
@@ -56,6 +55,9 @@ const styles = StyleSheet.create({
   fill: { flex: 1 },
   backgroundImage: {
     ...StyleSheet.absoluteFillObject,
+  },
+  nonInteractive: {
+    pointerEvents: "none",
   },
   content: {
     flex: 1,
