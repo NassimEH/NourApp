@@ -3,6 +3,7 @@ import { StyleSheet, Text, View } from "react-native";
 import { AppIcon, type AppIconName } from "@/components/AppIcon";
 import { useAppTheme } from "@/lib/app-theme";
 import { useTranslation } from "@/lib/i18n";
+import { SPACE } from "@/lib/ui/spacing";
 
 const FEATURES: { icon: AppIconName; key: string }[] = [
   { icon: "sunrise", key: "auth.featurePrayers" },
@@ -42,7 +43,7 @@ export function AuthFeatureList() {
 
 const styles = StyleSheet.create({
   wrap: {
-    marginBottom: 28,
+    marginBottom: SPACE.xl,
     width: "100%",
     maxWidth: 360,
     alignSelf: "center",
@@ -50,8 +51,8 @@ const styles = StyleSheet.create({
   row: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 14,
-    paddingVertical: 13,
+    gap: SPACE.md,
+    paddingVertical: SPACE.sm,
   },
   iconSlot: {
     width: 24,

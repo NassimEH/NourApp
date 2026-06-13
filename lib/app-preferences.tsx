@@ -3,6 +3,8 @@ import React, {
   useCallback,
   useContext,
   useEffect,
+  useMemo,
+  useRef,
   useState,
 } from "react";
 import { Platform } from "react-native";
@@ -98,22 +100,31 @@ async function saveStored(prefs: AppPreferencesState) {
 
 export function AppPreferencesProvider({ children }: { children: React.ReactNode }) {
   const [state, setState] = useState<AppPreferencesState>(DEFAULT_PREFS);
-  const [hydrated, setHydrated] = useState(false);
+  const hydrationPendingRef = useRef(true);
 
   useEffect(() => {
     loadStored().then((stored) => {
-      setState((prev) => ({
-        ...prev,
-        ...stored,
-      }));
-      setHydrated(true);
+      setState((prev) => {
+        const hydrated = { ...DEFAULT_PREFS, ...stored };
+        if (!hydrationPendingRef.current) {
+          return { ...hydrated, ...prev };
+        }
+        hydrationPendingRef.current = false;
+        return hydrated;
+      });
     });
   }, []);
 
   const persist = useCallback((next: Partial<AppPreferencesState>) => {
+    hydrationPendingRef.current = false;
     setState((prev) => {
+      const hasChange = (Object.keys(next) as (keyof AppPreferencesState)[]).some(
+        (key) => next[key] !== prev[key]
+      );
+      if (!hasChange) return prev;
+
       const nextState = { ...prev, ...next };
-      saveStored(nextState);
+      void saveStored(nextState);
       return nextState;
     });
   }, []);
@@ -133,17 +144,30 @@ export function AppPreferencesProvider({ children }: { children: React.ReactNode
     [persist]
   );
 
-  const value: AppPreferencesContextType = {
-    ...state,
-    setTheme,
-    setIconStyle,
-    setTextSize,
-    setTextColor,
-    setAccentColor,
-    setLocale,
-    setQuranReciter,
-    setQuranTranslationLang,
-  };
+  const value = useMemo<AppPreferencesContextType>(
+    () => ({
+      ...state,
+      setTheme,
+      setIconStyle,
+      setTextSize,
+      setTextColor,
+      setAccentColor,
+      setLocale,
+      setQuranReciter,
+      setQuranTranslationLang,
+    }),
+    [
+      state,
+      setTheme,
+      setIconStyle,
+      setTextSize,
+      setTextColor,
+      setAccentColor,
+      setLocale,
+      setQuranReciter,
+      setQuranTranslationLang,
+    ]
+  );
 
   return (
     <AppPreferencesContext.Provider value={value}>

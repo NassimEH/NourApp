@@ -13,6 +13,7 @@ import {
 } from "@/lib/i18n";
 import { useAppTheme } from "@/lib/app-theme";
 import { PreferenceOptionRow } from "@/components/PreferenceOptionRow";
+import { PreferenceOptionDivider } from "@/components/PreferenceOptionDivider";
 import { PreferenceScreenLayout } from "@/components/PreferenceScreenLayout";
 
 const OPTIONS: ThemeMode[] = ["spiritual", "light", "dark"];
@@ -31,28 +32,19 @@ export default function ThemeScreen() {
       {OPTIONS.map((opt, index) => (
         <View
           key={opt}
-          style={[
-            styles.optionWrap,
-            index < OPTIONS.length - 1 && {
-              borderBottomWidth: 1,
-              borderBottomColor: colors.border,
-            },
-          ]}
+          style={
+            index < OPTIONS.length - 1
+              ? [styles.optionWrap, { borderBottomColor: colors.border }]
+              : undefined
+          }
         >
           <PreferenceOptionRow
             label={getThemeLabelI18n(locale, opt)}
+            description={getThemeDescriptionI18n(locale, opt)}
+            descriptionStyle={rtlTextStyle}
             selected={theme === opt}
             onPress={() => setTheme(opt)}
           />
-          <Text
-            style={[
-              styles.optionDescription,
-              rtlTextStyle,
-              { color: colors.textMuted },
-            ]}
-          >
-            {getThemeDescriptionI18n(locale, opt)}
-          </Text>
         </View>
       ))}
 
@@ -65,20 +57,26 @@ export default function ThemeScreen() {
       >
         {t("preferences.textColorSubtitle")}
       </Text>
-      {TEXT_COLOR_OPTIONS.map((opt) => (
-        <PreferenceOptionRow
-          key={opt}
-          label={getTextColorLabelI18n(locale, opt)}
-          selected={textColor === opt}
-          onPress={() => setTextColor(opt)}
-        />
+      {TEXT_COLOR_OPTIONS.map((opt, index) => (
+        <View key={opt}>
+          <PreferenceOptionRow
+            label={getTextColorLabelI18n(locale, opt)}
+            selected={textColor === opt}
+            onPress={() => setTextColor(opt)}
+          />
+          {index < TEXT_COLOR_OPTIONS.length - 1 ? (
+            <PreferenceOptionDivider />
+          ) : null}
+        </View>
       ))}
     </PreferenceScreenLayout>
   );
 }
 
 const styles = StyleSheet.create({
-  optionWrap: { paddingBottom: 8 },
+  optionWrap: {
+    borderBottomWidth: StyleSheet.hairlineWidth,
+  },
   sectionDivider: {
     borderTopWidth: 1,
     marginVertical: 16,
@@ -91,7 +89,6 @@ const styles = StyleSheet.create({
   optionDescription: {
     fontSize: 14,
     fontFamily: "PlusJakartaSans-Regular",
-    paddingHorizontal: 4,
     paddingBottom: 12,
     lineHeight: 20,
   },

@@ -3,15 +3,13 @@ import {
   ScrollView,
   StyleSheet,
   Text,
-  TextInput,
-  View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router } from "expo-router";
 
-import { AppIcon } from "@/components/AppIcon";
 import { ScreenPageHeader } from "@/components/ScreenPageHeader";
 import { ScreenBackground } from "@/components/ScreenBackground";
+import { ScreenSearchBar, screenSearchBarSpacing } from "@/components/ScreenSearchBar";
 import { SuraRow } from "@/components/quran/SuraRow";
 import { screenScrollContent } from "@/constants/screen-layout";
 import { useAppTheme } from "@/lib/app-theme";
@@ -52,25 +50,20 @@ export default function RechercheCoranScreen() {
           subtitle={t("screens.searchSubtitle")}
           onBack={() => router.back()}
         />
+
+        <ScreenSearchBar
+          value={query}
+          onChangeText={setQuery}
+          placeholder={t("screens.searchSuraPlaceholder")}
+          containerStyle={screenSearchBarSpacing}
+        />
+
         <ScrollView
           style={[styles.scroll, rtlViewStyle]}
           contentContainerStyle={styles.content}
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
         >
-          <View style={[styles.searchWrap, { borderColor: colors.border, backgroundColor: colors.card }]}>
-            <AppIcon name="search" size={20} color={colors.iconMuted} />
-            <TextInput
-              style={[styles.searchInput, { color: colors.text }]}
-              value={query}
-              onChangeText={setQuery}
-              placeholder={t("screens.searchSuraPlaceholder")}
-              placeholderTextColor={colors.textMuted}
-              returnKeyType="search"
-              autoCorrect={false}
-            />
-          </View>
-
           {showHint ? (
             <Text style={[styles.hint, rtlTextStyle, { color: colors.textMuted }]}>
               {t("screens.searchSuraHint")}
@@ -105,23 +98,7 @@ const styles = StyleSheet.create({
   background: { flex: 1 },
   safeArea: { flex: 1, backgroundColor: "transparent" },
   scroll: { flex: 1 },
-  content: { ...screenScrollContent, paddingTop: 8, paddingBottom: 40 },
-  searchWrap: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 12,
-    borderWidth: StyleSheet.hairlineWidth,
-    borderRadius: 12,
-    paddingHorizontal: 16,
-    paddingVertical: 14,
-    marginBottom: 12,
-  },
-  searchInput: {
-    flex: 1,
-    fontSize: 16,
-    fontFamily: "PlusJakartaSans-Regular",
-    paddingVertical: 0,
-  },
+  content: { ...screenScrollContent, paddingTop: 0, paddingBottom: 40 },
   hint: {
     fontSize: 14,
     fontFamily: "PlusJakartaSans-Regular",

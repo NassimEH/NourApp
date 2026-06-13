@@ -14,7 +14,7 @@ import { router, useLocalSearchParams } from "expo-router";
 import { AppIcon } from "@/components/AppIcon";
 import { useCallback } from "react";
 
-import { useDuaDetail, useDuaFavorites, useDuaLanguage } from "@/lib/dua";
+import { useDuaDetail, useDuaFavorites } from "@/lib/dua";
 import { useAppTheme } from "@/lib/app-theme";
 import { ScreenBackground } from "@/components/ScreenBackground";
 import { ScreenPageHeader } from "@/components/ScreenPageHeader";
@@ -33,8 +33,7 @@ export default function InvocationDetailScreen() {
   const { slug, id } = useLocalSearchParams<{ slug: string; id: string }>();
   const slugDecoded = slug ? decodeURIComponent(slug) : null;
   const idNum = id ? parseInt(id, 10) : null;
-  const { language, setLanguage } = useDuaLanguage();
-  const { detail, loading, error, refetch } = useDuaDetail(slugDecoded, idNum ?? null, language);
+  const { detail, loading, error, refetch } = useDuaDetail(slugDecoded, idNum ?? null, "fr");
   const typography = useAppTypography();
   const colors = useAppTheme();
   const { isFavorite, toggleFavorite } = useDuaFavorites();
@@ -90,15 +89,6 @@ export default function InvocationDetailScreen() {
           onBack={() => router.back()}
           headerActions={
             <>
-              <TouchableOpacity
-                style={styles.langBtn}
-                onPress={() => setLanguage(language === "fr" ? "en" : "fr")}
-                activeOpacity={0.7}
-              >
-                <Text style={styles.langBtnText}>
-                  {language === "fr" ? "English" : "Français"}
-                </Text>
-              </TouchableOpacity>
               <TouchableOpacity onPress={handleFavorite} style={styles.iconBtn} activeOpacity={0.7}>
                 <AppIcon
                   name="heart"
@@ -231,12 +221,6 @@ const styles = StyleSheet.create({
     marginHorizontal: 8,
   },
   headerRight: { flexDirection: "row", alignItems: "center", gap: 4 },
-  langBtn: { paddingVertical: 6, paddingHorizontal: 8 },
-  langBtnText: {
-    fontSize: 13,
-    fontFamily: "PlusJakartaSans-SemiBold",
-    color: ACCENT,
-  },
   iconBtn: { padding: 8 },
   scroll: { flex: 1 },
   scrollContent: { paddingHorizontal: H_PADDING, paddingBottom: 100 },

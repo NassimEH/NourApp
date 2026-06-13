@@ -2,7 +2,6 @@ import {
   FlatList,
   StyleSheet,
   Text,
-  TextInput,
   TouchableOpacity,
   View,
 } from "react-native";
@@ -17,13 +16,12 @@ import type { HadithChapter } from "@/lib/hadith/types";
 import { useCollections } from "@/lib/hadith/hooks/useCollections";
 import { ScreenBackground } from "@/components/ScreenBackground";
 import { ScreenPageHeader } from "@/components/ScreenPageHeader";
+import { ScreenSearchBar, screenSearchBarSpacing } from "@/components/ScreenSearchBar";
 import { useTranslation } from "@/lib/i18n";
+import { useAppTheme } from "@/lib/app-theme";
 import { SCREEN_EDGE_PADDING } from "@/constants/screen-layout";
 
 const H_PADDING = SCREEN_EDGE_PADDING;
-const ICON_COLOR = "#191D31";
-const ACCENT = "#3d6b47";
-const TEXT_MUTED = "rgba(0,0,0,0.5)";
 
 function getChapterDisplayName(ch: HadithChapter, preferFr = true): string {
   const fr = ch.chapter?.find((c) => c.lang === "fr");
@@ -35,6 +33,7 @@ function getChapterDisplayName(ch: HadithChapter, preferFr = true): string {
 
 export default function HadithsChaptersScreen() {
   const { t } = useTranslation();
+  const colors = useAppTheme();
   const { name, number } = useLocalSearchParams<{
     name: string;
     number: string;
@@ -53,7 +52,7 @@ export default function HadithsChaptersScreen() {
     [collections, collectionName]
   );
   const collectionDisplayName = collection
-    ? getCollectionDisplayName(collection, "en")
+    ? getCollectionDisplayName(collection, "fr")
     : collectionName ?? "Chapitres";
 
   const filtered = useMemo(() => {
@@ -77,10 +76,10 @@ export default function HadithsChaptersScreen() {
           <HadithListSkeleton />
         ) : error && chapters.length === 0 ? (
           <View style={styles.errorWrap}>
-            <Text style={styles.errorText}>{error}</Text>
+            <Text style={[styles.errorText, { color: colors.text }]}>{error}</Text>
             <TouchableOpacity
               onPress={() => refetch()}
-              style={styles.retryBtn}
+              style={[styles.retryBtn, { backgroundColor: colors.accent }]}
               activeOpacity={0.8}
             >
               <AppIcon name="refresh-cw" size={20} color="#fff" />
@@ -89,29 +88,12 @@ export default function HadithsChaptersScreen() {
           </View>
         ) : (
           <>
-            <View style={styles.searchWrap}>
-              <AppIcon
-                name="search"
-                size={18}
-                color={TEXT_MUTED}
-                style={styles.searchIcon}
-              />
-              <TextInput
-                style={styles.searchInput}
-                placeholder="Rechercher un chapitre…"
-                placeholderTextColor={TEXT_MUTED}
-                value={search}
-                onChangeText={setSearch}
-              />
-              {search.length > 0 && (
-                <TouchableOpacity
-                  onPress={() => setSearch("")}
-                  hitSlop={12}
-                >
-                  <AppIcon name="x" size={18} color={TEXT_MUTED} />
-                </TouchableOpacity>
-              )}
-            </View>
+            <ScreenSearchBar
+              value={search}
+              onChangeText={setSearch}
+              placeholder={t("library.searchCollectionPlaceholder")}
+              containerStyle={screenSearchBarSpacing}
+            />
 
             <FlatList
               data={filtered}
@@ -120,7 +102,7 @@ export default function HadithsChaptersScreen() {
               showsVerticalScrollIndicator={false}
               ListEmptyComponent={
                 <View style={styles.empty}>
-                  <Text style={styles.emptyText}>
+                  <Text style={[styles.emptyText, { color: colors.textMuted }]}>
                     Aucun chapitre trouvé
                   </Text>
                 </View>
@@ -141,13 +123,13 @@ export default function HadithsChaptersScreen() {
                   }
                   activeOpacity={0.7}
                 >
-                  <AppIcon name="file-text" size={22} color={ICON_COLOR} />
+                  <AppIcon name="file-text" size={22} color={colors.icon} />
                   <View style={styles.rowText}>
-                    <Text style={styles.rowTitle} numberOfLines={2}>
+                    <Text style={[styles.rowTitle, { color: colors.text }]} numberOfLines={2}>
                       {getChapterDisplayName(item, true)}
                     </Text>
                   </View>
-                  <AppIcon name="chevron-right" size={20} color={ICON_COLOR} />
+                  <AppIcon name="chevron-right" size={20} color={colors.iconMuted} />
                 </TouchableOpacity>
               )}
             />
@@ -161,39 +143,6 @@ export default function HadithsChaptersScreen() {
 const styles = StyleSheet.create({
   background: { flex: 1 },
   safeArea: { flex: 1, backgroundColor: "transparent" },
-  header: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingHorizontal: H_PADDING,
-    paddingVertical: 12,
-  },
-  backBtn: { padding: 8 },
-  title: {
-    flex: 1,
-    fontSize: 18,
-    fontFamily: "PlusJakartaSans-Bold",
-    color: ICON_COLOR,
-    textAlign: "center",
-  },
-  headerRight: { width: 42 },
-  searchWrap: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginHorizontal: H_PADDING,
-    marginBottom: 16,
-    paddingVertical: 10,
-    borderBottomWidth: 1,
-    borderBottomColor: "rgba(0,0,0,0.08)",
-  },
-  searchIcon: { marginRight: 10 },
-  searchInput: {
-    flex: 1,
-    fontSize: 15,
-    fontFamily: "PlusJakartaSans-Regular",
-    color: ICON_COLOR,
-    padding: 0,
-  },
   listContent: { paddingHorizontal: H_PADDING, paddingBottom: 120 },
   row: {
     flexDirection: "row",
@@ -205,7 +154,6 @@ const styles = StyleSheet.create({
   rowTitle: {
     fontSize: 17,
     fontFamily: "PlusJakartaSans-Medium",
-    color: ICON_COLOR,
   },
   errorWrap: {
     flex: 1,
@@ -216,7 +164,6 @@ const styles = StyleSheet.create({
   errorText: {
     fontSize: 16,
     fontFamily: "PlusJakartaSans-Regular",
-    color: ICON_COLOR,
     textAlign: "center",
     marginBottom: 20,
   },
@@ -227,7 +174,6 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
     paddingHorizontal: 24,
     borderRadius: 12,
-    backgroundColor: ACCENT,
   },
   retryText: {
     fontSize: 16,
@@ -238,6 +184,5 @@ const styles = StyleSheet.create({
   emptyText: {
     fontSize: 15,
     fontFamily: "PlusJakartaSans-Regular",
-    color: TEXT_MUTED,
   },
 });

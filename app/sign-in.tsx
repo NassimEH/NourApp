@@ -13,12 +13,13 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { Redirect, router } from "expo-router";
 
 import { AuthFeatureList } from "@/components/auth/AuthFeatureList";
-import { AuthGradientBackdrop } from "@/components/auth/AuthGradientBackdrop";
 import { AuthHero } from "@/components/auth/AuthHero";
-import { authSharedStyles } from "@/components/auth/auth-styles";
+import { authSharedStyles, getAuthPrimaryButtonColors } from "@/components/auth/auth-styles";
 import { AuthTextField } from "@/components/auth/AuthTextField";
+import { GoogleSignInButton } from "@/components/auth/GoogleSignInButton";
 import { ScreenBackground } from "@/components/ScreenBackground";
 import { SCREEN_EDGE_PADDING } from "@/constants/screen-layout";
+import { SPACE } from "@/lib/ui/spacing";
 import { resolveAuthErrorKey, type AuthErrorKey } from "@/lib/auth-errors";
 import { isValidEmail, isValidPassword } from "@/lib/auth-validation";
 import { useAppTheme } from "@/lib/app-theme";
@@ -37,6 +38,7 @@ export default function SignInScreen() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
+  const primaryButton = getAuthPrimaryButtonColors(colors);
 
   if (!loading && isLogged) return <Redirect href="/" />;
   if (!loading && isGuest) return <Redirect href="/(root)/(tabs)/explore" />;
@@ -89,10 +91,9 @@ export default function SignInScreen() {
 
   return (
     <ScreenBackground style={styles.background}>
-      <AuthGradientBackdrop />
       <SafeAreaView style={styles.safeArea} edges={["top", "left", "right"]}>
         <ScrollView
-          contentContainerStyle={styles.scroll}
+          contentContainerStyle={[styles.scroll, authSharedStyles.scrollContent]}
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
         >
@@ -110,87 +111,129 @@ export default function SignInScreen() {
             </Text>
           ) : null}
 
-          <AuthTextField
-            label={t("auth.email")}
-            icon="mail"
-            variant="flat"
-            value={email}
-            onChangeText={setEmail}
-            placeholder={t("auth.emailPlaceholder")}
-            keyboardType="email-address"
-            autoComplete="email"
-            editable={!busy}
-          />
-          <AuthTextField
-            label={t("auth.password")}
-            icon="lock"
-            variant="flat"
-            value={password}
-            onChangeText={setPassword}
-            secureTextEntry
-            editable={!busy}
-          />
+          <View style={authSharedStyles.formBlock}>
+            <AuthTextField
+              label={t("auth.email")}
+              icon="mail"
+              variant="flat"
+              value={email}
+              onChangeText={setEmail}
+              placeholder={t("auth.emailPlaceholder")}
+              keyboardType="email-address"
+              autoComplete="email"
+              editable={!busy}
+            />
+            <AuthTextField
+              label={t("auth.password")}
+              icon="lock"
+              variant="flat"
+              value={password}
+              onChangeText={setPassword}
+              secureTextEntry
+              editable={!busy}
+            />
+          </View>
 
           <TouchableOpacity
             style={[
               authSharedStyles.pillButton,
-              styles.primaryBtn,
-              { backgroundColor: colors.text },
+              { backgroundColor: primaryButton.backgroundColor },
             ]}
             onPress={handleSignIn}
             disabled={busy}
             activeOpacity={0.88}
           >
             {busy ? (
-              <ActivityIndicator color="#fff" />
+              <ActivityIndicator color={primaryButton.spinnerColor} />
             ) : (
-              <Text style={authSharedStyles.pillButtonText}>
+              <Text
+                style={[
+                  authSharedStyles.pillButtonText,
+                  { color: primaryButton.labelColor },
+                ]}
+              >
                 {t("auth.signIn")}
               </Text>
             )}
           </TouchableOpacity>
 
-          <Pressable
-            onPress={handleGoogle}
-            disabled={busy}
-            style={authSharedStyles.textLink}
-          >
-            <Text
-              style={[authSharedStyles.textLinkLabel, { color: colors.text }]}
-            >
-              {t("auth.loginGoogle")}
-            </Text>
-          </Pressable>
-
-          <Pressable
-            onPress={() => router.push("/sign-up")}
-            disabled={busy}
-            style={authSharedStyles.textLink}
-          >
-            <Text
-              style={[authSharedStyles.textLinkLabel, { color: colors.text }]}
-            >
-              {t("auth.signUpLink")}
-            </Text>
-          </Pressable>
-
-          <Pressable
-            onPress={() => {
-              enterAsGuest();
-              router.replace("/(root)/(tabs)/explore");
-            }}
-            disabled={busy}
-            style={authSharedStyles.textLink}
-          >
+          <View style={authSharedStyles.orDividerRow}>
+            <View
+              style={[
+                authSharedStyles.orDividerLine,
+                { backgroundColor: colors.divider },
+              ]}
+            />
             <Text
               style={[
-                authSharedStyles.textLinkLabel,
+                authSharedStyles.orDividerLabel,
                 { color: colors.textMuted },
               ]}
             >
-              {t("auth.guest")}
+              {t("auth.orDivider")}
             </Text>
-          </Pressable>
+            <View
+              style={[
+                authSharedStyles.orDividerLine,
+                { backgroundColor: colors.divider },
+              ]}
+            />
+          </View>
+
+          <GoogleSignInButton
+            label={t("auth.loginGoogle")}
+            onPress={handleGoogle}
+            disabled={busy}
+          />
+
+          <View style={authSharedStyles.authFooter}>
+            <Text
+              style={[
+                authSharedStyles.authFooterPrompt,
+                { color: colors.textMuted },
+              ]}
+            >
+              {t("auth.noAccount")}
+            </Text>
+
+            <TouchableOpacity
+              style={[
+                authSharedStyles.pillButton,
+                authSharedStyles.pillButtonInverted,
+                { borderColor: colors.text },
+              ]}
+              onPress={() => router.push("/sign-up")}
+              disabled={busy}
+              activeOpacity={0.88}
+            >
+              <Text
+                style={[
+                  authSharedStyles.pillButtonInvertedText,
+                  { color: colors.text },
+                ]}
+              >
+                {t("auth.signUpLink")}
+              </Text>
+            </TouchableOpacity>
+
+            <Pressable
+              onPress={() => {
+                enterAsGuest();
+                router.replace("/(root)/(tabs)/explore");
+              }}
+              disabled={busy}
+              style={authSharedStyles.guestLink}
+            >
+              <Text
+                style={[
+                  authSharedStyles.guestLinkLabel,
+                  { color: colors.textMuted },
+                ]}
+              >
+                {t("auth.guest")}
+              </Text>
+            </Pressable>
+          </View>
         </ScrollView>
       </SafeAreaView>
     </ScreenBackground>
@@ -202,16 +245,11 @@ const styles = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: "transparent" },
   scroll: {
     paddingHorizontal: SCREEN_EDGE_PADDING,
-    paddingTop: 20,
-    paddingBottom: 48,
   },
   configWarning: {
     fontSize: 13,
     fontFamily: "PlusJakartaSans-Medium",
-    marginBottom: 16,
+    marginBottom: SPACE.md,
     lineHeight: 20,
-  },
-  primaryBtn: {
-    marginTop: 6,
   },
 });

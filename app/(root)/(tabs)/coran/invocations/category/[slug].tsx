@@ -2,7 +2,6 @@ import {
   FlatList,
   StyleSheet,
   Text,
-  TextInput,
   TouchableOpacity,
   View,
 } from "react-native";
@@ -11,19 +10,18 @@ import { router, useLocalSearchParams } from "expo-router";
 import { AppIcon } from "@/components/AppIcon";
 import { useMemo, useState } from "react";
 
-import { useCategoryDuas, useDuaLanguage, getCategoryDisplayNameBySlug } from "@/lib/dua";
+import { useCategoryDuas, getCategoryDisplayNameBySlug } from "@/lib/dua";
 import { DuaListSkeleton } from "@/components/dua/DuaListSkeleton";
 import type { DuaItem } from "@/lib/dua/types";
 import { ScreenBackground } from "@/components/ScreenBackground";
 import { ScreenPageHeader } from "@/components/ScreenPageHeader";
+import { ScreenSearchBar, screenSearchBarSpacing } from "@/components/ScreenSearchBar";
 import { useTranslation } from "@/lib/i18n";
+import { useAppTheme } from "@/lib/app-theme";
 
 import { SCREEN_EDGE_PADDING } from "@/constants/screen-layout";
 
 const H_PADDING = SCREEN_EDGE_PADDING;
-const ICON_COLOR = "#191D31";
-const ACCENT = "#3d6b47";
-const TEXT_MUTED = "rgba(0,0,0,0.5)";
 
 function filterDuas(list: DuaItem[], query: string) {
   const q = query.trim().toLowerCase();
@@ -38,18 +36,18 @@ function filterDuas(list: DuaItem[], query: string) {
 
 export default function InvocationsCategoryScreen() {
   const { t } = useTranslation();
+  const colors = useAppTheme();
   const { slug } = useLocalSearchParams<{ slug: string }>();
   const decodedSlug = slug ? decodeURIComponent(slug) : null;
-  const { language, setLanguage } = useDuaLanguage();
-  const { duas, loading, error, refetch } = useCategoryDuas(decodedSlug, language);
+  const { duas, loading, error, refetch } = useCategoryDuas(decodedSlug, "fr");
   const [search, setSearch] = useState("");
 
   const filtered = useMemo(() => filterDuas(duas, search), [duas, search]);
 
   const categoryName =
-    decodedSlug && language
-      ? getCategoryDisplayNameBySlug(decodedSlug, language)
-      : "Invocations";
+    decodedSlug != null
+      ? getCategoryDisplayNameBySlug(decodedSlug, "fr")
+      : t("screens.invocationsTitle");
 
   return (
     <ScreenBackground style={styles.background}>
@@ -58,46 +56,30 @@ export default function InvocationsCategoryScreen() {
           title={categoryName}
           subtitle={t("screens.invocationCategorySubtitle")}
           onBack={() => router.back()}
-          headerActions={
-            <TouchableOpacity
-              style={styles.langBtn}
-              onPress={() => setLanguage(language === "fr" ? "en" : "fr")}
-              activeOpacity={0.7}
-            >
-              <Text style={styles.langBtnText}>
-                {language === "fr" ? "English" : "Français"}
-              </Text>
-            </TouchableOpacity>
-          }
         />
 
         {loading && duas.length === 0 ? (
           <DuaListSkeleton />
         ) : error && duas.length === 0 ? (
           <View style={styles.errorWrap}>
-            <Text style={styles.errorText}>{error}</Text>
-            <TouchableOpacity onPress={() => refetch()} style={styles.retryBtn} activeOpacity={0.8}>
+            <Text style={[styles.errorText, { color: colors.text }]}>{error}</Text>
+            <TouchableOpacity
+              onPress={() => refetch()}
+              style={[styles.retryBtn, { backgroundColor: colors.accent }]}
+              activeOpacity={0.8}
+            >
               <AppIcon name="refresh-cw" size={20} color="#fff" />
               <Text style={styles.retryText}>Réessayer</Text>
             </TouchableOpacity>
           </View>
         ) : (
           <>
-            <View style={styles.searchWrap}>
-              <AppIcon name="search" size={18} color={TEXT_MUTED} style={styles.searchIcon} />
-              <TextInput
-                style={styles.searchInput}
-                placeholder="Rechercher…"
-                placeholderTextColor={TEXT_MUTED}
-                value={search}
-                onChangeText={setSearch}
-              />
-              {search.length > 0 && (
-                <TouchableOpacity onPress={() => setSearch("")} hitSlop={12}>
-                  <AppIcon name="x" size={18} color={TEXT_MUTED} />
-                </TouchableOpacity>
-              )}
-            </View>
+            <ScreenSearchBar
+              value={search}
+              onChangeText={setSearch}
+              placeholder={t("screens.searchPlaceholder")}
+              containerStyle={screenSearchBarSpacing}
+            />
 
             <FlatList
               data={filtered}
@@ -106,7 +88,9 @@ export default function InvocationsCategoryScreen() {
               showsVerticalScrollIndicator={false}
               ListEmptyComponent={
                 <View style={styles.empty}>
-                  <Text style={styles.emptyText}>Aucune invocation trouvée</Text>
+                  <Text style={[styles.emptyText, { color: colors.textMuted }]}>
+                    {t("library.searchNoResults")}
+                  </Text>
                 </View>
               }
               renderItem={({ item }) => (
@@ -120,16 +104,16 @@ export default function InvocationsCategoryScreen() {
                   }
                   activeOpacity={0.7}
                 >
-                  <AppIcon name="book-open" size={22} color={ICON_COLOR} />
+                  <AppIcon name="book-open" size={22} color={colors.icon} />
                   <View style={styles.rowText}>
-                    <Text style={styles.rowTitle} numberOfLines={1}>
+                    <Text style={[styles.rowTitle, { color: colors.text }]} numberOfLines={1}>
                       {item.title}
                     </Text>
-                    <Text style={styles.rowPreview} numberOfLines={1}>
+                    <Text style={[styles.rowPreview, { color: colors.textMuted }]} numberOfLines={1}>
                       {item.translation || item.arabic || item.latin || categoryName}
                     </Text>
                   </View>
-                  <AppIcon name="chevron-right" size={20} color={ICON_COLOR} />
+                  <AppIcon name="chevron-right" size={20} color={colors.iconMuted} />
                 </TouchableOpacity>
               )}
             />
@@ -154,32 +138,8 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 20,
     fontFamily: "PlusJakartaSans-Bold",
-    color: ICON_COLOR,
     flex: 1,
     textAlign: "center",
-  },
-  langBtn: { paddingVertical: 8, paddingHorizontal: 10 },
-  langBtnText: {
-    fontSize: 14,
-    fontFamily: "PlusJakartaSans-SemiBold",
-    color: ACCENT,
-  },
-  searchWrap: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginHorizontal: H_PADDING,
-    marginBottom: 16,
-    paddingVertical: 10,
-    borderBottomWidth: 1,
-    borderBottomColor: "rgba(0,0,0,0.08)",
-  },
-  searchIcon: { marginRight: 10 },
-  searchInput: {
-    flex: 1,
-    fontSize: 15,
-    fontFamily: "PlusJakartaSans-Regular",
-    color: ICON_COLOR,
-    padding: 0,
   },
   listContent: {
     paddingHorizontal: H_PADDING,
@@ -195,12 +155,10 @@ const styles = StyleSheet.create({
   rowTitle: {
     fontSize: 17,
     fontFamily: "PlusJakartaSans-Medium",
-    color: ICON_COLOR,
   },
   rowPreview: {
     fontSize: 14,
     fontFamily: "PlusJakartaSans-Regular",
-    color: TEXT_MUTED,
     marginTop: 2,
   },
   errorWrap: {
@@ -212,7 +170,6 @@ const styles = StyleSheet.create({
   errorText: {
     fontSize: 16,
     fontFamily: "PlusJakartaSans-Regular",
-    color: ICON_COLOR,
     textAlign: "center",
     marginBottom: 20,
   },
@@ -223,7 +180,6 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
     paddingHorizontal: 24,
     borderRadius: 12,
-    backgroundColor: ACCENT,
   },
   retryText: {
     fontSize: 16,
@@ -234,6 +190,5 @@ const styles = StyleSheet.create({
   emptyText: {
     fontSize: 15,
     fontFamily: "PlusJakartaSans-Regular",
-    color: TEXT_MUTED,
   },
 });

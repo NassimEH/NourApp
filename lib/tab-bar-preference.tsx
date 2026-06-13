@@ -1,4 +1,4 @@
-import React, { createContext, useCallback, useContext, useEffect, useState } from "react";
+import React, { createContext, useCallback, useContext, useEffect, useRef, useState } from "react";
 import { Platform } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
@@ -15,22 +15,31 @@ const TabBarPreferenceContext = createContext<TabBarPreferenceContextType | unde
 
 export function TabBarPreferenceProvider({ children }: { children: React.ReactNode }) {
   const [tabBarVariant, setTabBarVariantState] = useState<TabBarVariant>("custom");
+  const hydrationPendingRef = useRef(true);
 
   useEffect(() => {
-    if (Platform.OS === "web") return;
+    if (Platform.OS === "web") {
+      hydrationPendingRef.current = false;
+      return;
+    }
     AsyncStorage.getItem(TAB_BAR_STORAGE_KEY)
       .then((value) => {
+        if (!hydrationPendingRef.current) return;
         if (value === "native" || value === "custom" || value === "liquid") {
           setTabBarVariantState(value);
         }
+        hydrationPendingRef.current = false;
       })
-      .catch(() => {});
+      .catch(() => {
+        hydrationPendingRef.current = false;
+      });
   }, []);
 
   const setTabBarVariant = useCallback((v: TabBarVariant) => {
+    hydrationPendingRef.current = false;
     setTabBarVariantState(v);
     if (Platform.OS !== "web") {
-      AsyncStorage.setItem(TAB_BAR_STORAGE_KEY, v).catch(() => {});
+      void AsyncStorage.setItem(TAB_BAR_STORAGE_KEY, v);
     }
   }, []);
 

@@ -28,13 +28,18 @@ interface HadithApiItem {
   chapterName?: string;
 }
 
-/** Collections supportées par l’API (nom interne, libellé, total) */
-const API_COLLECTIONS: { name: string; title: string; totalHadith: number }[] = [
-  { name: "bukhari", title: "Sahih Bukhari", totalHadith: 7563 },
-  { name: "muslim", title: "Sahih Muslim", totalHadith: 3032 },
-  { name: "abudawud", title: "Sunan Abu Dawud", totalHadith: 3998 },
-  { name: "ibnmajah", title: "Sunan Ibn Majah", totalHadith: 4342 },
-  { name: "tirmidhi", title: "Jami' at-Tirmidhi", totalHadith: 3956 },
+/** Collections supportées — libellés FR / EN */
+const API_COLLECTIONS: {
+  name: string;
+  titleEn: string;
+  titleFr: string;
+  totalHadith: number;
+}[] = [
+  { name: "bukhari", titleEn: "Sahih Bukhari", titleFr: "Sahih al-Boukhari", totalHadith: 7563 },
+  { name: "muslim", titleEn: "Sahih Muslim", titleFr: "Sahih Mouslim", totalHadith: 3032 },
+  { name: "abudawud", titleEn: "Sunan Abu Dawud", titleFr: "Sunan Abou Dawoud", totalHadith: 3998 },
+  { name: "ibnmajah", titleEn: "Sunan Ibn Majah", titleFr: "Sunan Ibn Majah", totalHadith: 4342 },
+  { name: "tirmidhi", titleEn: "Jami' at-Tirmidhi", titleFr: "Jami' at-Tirmidhi", totalHadith: 3956 },
 ];
 
 function mapApiItemToRecord(
@@ -70,7 +75,13 @@ export async function fetchCollections(): Promise<HadithCollection[]> {
     collection: [
       {
         lang: "en",
-        title: c.title,
+        title: c.titleEn,
+        totalHadith: c.totalHadith,
+        totalAvailableHadith: c.totalHadith,
+      },
+      {
+        lang: "fr",
+        title: c.titleFr,
         totalHadith: c.totalHadith,
         totalAvailableHadith: c.totalHadith,
       },
@@ -141,23 +152,32 @@ export async function fetchHadithDetail(
   return mapApiItemToRecord(item, collectionName);
 }
 
-/** Noms d’affichage des collections (fallback) */
-export const COLLECTION_DISPLAY_NAMES: Record<string, string> = {
-  bukhari: "Sahih Bukhari",
-  muslim: "Sahih Muslim",
-  abudawud: "Sunan Abu Dawud",
-  ibnmajah: "Sunan Ibn Majah",
-  tirmidhi: "Jami' at-Tirmidhi",
+/** Noms d’affichage des collections */
+export const COLLECTION_DISPLAY_NAMES: Record<
+  string,
+  { en: string; fr: string }
+> = {
+  bukhari: { en: "Sahih Bukhari", fr: "Sahih al-Boukhari" },
+  muslim: { en: "Sahih Muslim", fr: "Sahih Mouslim" },
+  abudawud: { en: "Sunan Abu Dawud", fr: "Sunan Abou Dawoud" },
+  ibnmajah: { en: "Sunan Ibn Majah", fr: "Sunan Ibn Majah" },
+  tirmidhi: { en: "Jami' at-Tirmidhi", fr: "Jami' at-Tirmidhi" },
 };
 
 /** Nom d’affichage d’une collection */
 export function getCollectionDisplayName(
   collection: HadithCollection,
-  _lang: "en" | "ar" | "fr" = "en"
+  lang: "en" | "ar" | "fr" = "fr"
 ): string {
   const key = collection.name.toLowerCase();
-  if (COLLECTION_DISPLAY_NAMES[key]) return COLLECTION_DISPLAY_NAMES[key];
-  const entry = collection.collection?.[0];
+  const known = COLLECTION_DISPLAY_NAMES[key];
+  if (known) {
+    return lang === "en" ? known.en : known.fr;
+  }
+  const entry =
+    collection.collection?.find((c) => c.lang === lang) ??
+    collection.collection?.find((c) => c.lang === "fr") ??
+    collection.collection?.[0];
   return entry?.title ?? collection.name;
 }
 

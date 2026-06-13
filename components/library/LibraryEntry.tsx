@@ -31,6 +31,8 @@ export type LibraryEntryItem = {
   icon: LibraryCatalogItem["icon"];
   soon?: boolean;
   disabled?: boolean;
+  invocationSlug?: string;
+  hadithCollectionName?: string;
 };
 
 type CardProps = {
@@ -111,7 +113,7 @@ function LibraryCard({ item, width, onPress }: CardProps) {
 type RowProps = {
   items: LibraryEntryItem[];
   cardWidth: number;
-  onPressItem: (id: string) => void;
+  onPressItem: (id: string, invocationSlug?: string, hadithCollectionName?: string) => void;
   contentStyle?: StyleProp<ViewStyle>;
 };
 
@@ -144,7 +146,7 @@ export function LibraryCategoryRow({
           key={item.id}
           item={item}
           width={cardWidth}
-          onPress={() => onPressItem(item.id)}
+          onPress={() => onPressItem(item.id, item.invocationSlug, item.hadithCollectionName)}
         />
       ))}
     </ScrollView>
@@ -167,7 +169,7 @@ type SectionProps = {
   section: LibraryCatalogSection;
   cardWidth: number;
   items: LibraryEntryItem[];
-  onPressItem: (id: string) => void;
+  onPressItem: (id: string, invocationSlug?: string, hadithCollectionName?: string) => void;
   rowPaddingStyle?: StyleProp<ViewStyle>;
   isFirst?: boolean;
 };

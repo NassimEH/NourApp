@@ -24,6 +24,8 @@ interface GlobalContextType {
   refetch: () => Promise<void>;
   isGuest: boolean;
   enterAsGuest: () => void;
+  /** Déconnexion complète — quitte aussi le mode invité */
+  signOut: () => Promise<boolean>;
 }
 
 const GlobalContext = createContext<GlobalContextType | undefined>(undefined);
@@ -84,6 +86,19 @@ export const GlobalProvider = ({ children }: { children: ReactNode }) => {
     })();
   }, []);
 
+  const signOut = useCallback(async () => {
+    setLoading(true);
+    try {
+      const ok = await supabaseLogout();
+      if (!ok) return false;
+      setIsGuest(false);
+      setUser(null);
+      return true;
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
   const isLogged = !isGuest && !!user && user.id !== "local";
 
   return (
@@ -95,6 +110,7 @@ export const GlobalProvider = ({ children }: { children: ReactNode }) => {
         refetch,
         isGuest,
         enterAsGuest,
+        signOut,
       }}
     >
       {children}

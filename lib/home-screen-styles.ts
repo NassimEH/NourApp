@@ -1,6 +1,7 @@
 import { StyleSheet } from "react-native";
 
 import type { AppThemeColors } from "@/lib/app-theme";
+import { SECTION_GAP } from "@/lib/ui/spacing";
 
 /** Styles de l'accueil dépendants du thème (contrastes lisibles en clair / sombre / spirituel). */
 export function createHomeStyles(c: AppThemeColors) {
@@ -41,6 +42,39 @@ export function createHomeStyles(c: AppThemeColors) {
       marginBottom: 6,
     },
     hadithVendrediSource: {
+      fontSize: 12,
+      fontFamily: "PlusJakartaSans-Regular",
+      color: c.textMuted,
+      lineHeight: 18,
+      fontStyle: "italic",
+    },
+    hadithDayBlock: {
+      marginTop: SECTION_GAP,
+    },
+    hadithDayHeader: {
+      marginBottom: 8,
+    },
+    hadithDayCard: {
+      borderRadius: 12,
+      borderWidth: StyleSheet.hairlineWidth,
+      borderColor: c.border,
+      padding: 14,
+      backgroundColor: c.usesBackgroundImage ? "transparent" : c.card,
+    },
+    hadithDayDate: {
+      fontSize: 12,
+      fontFamily: "PlusJakartaSans-SemiBold",
+      color: c.accent,
+      marginBottom: 8,
+    },
+    hadithDayText: {
+      fontSize: 14,
+      fontFamily: "PlusJakartaSans-Medium",
+      color: c.text,
+      lineHeight: 21,
+      marginBottom: 6,
+    },
+    hadithDaySource: {
       fontSize: 12,
       fontFamily: "PlusJakartaSans-Regular",
       color: c.textMuted,

@@ -1,4 +1,4 @@
-import { StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
+import { StyleSheet, Text, TouchableOpacity, View, ScrollView } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router } from "expo-router";
 import { AppIcon } from "@/components/AppIcon";
@@ -7,15 +7,13 @@ import { useMemo, useState } from "react";
 import { useCollections, getCollectionDisplayName } from "@/lib/hadith";
 import { ListRow } from "@/components/ListRow";
 import { HadithCollectionSkeleton } from "@/components/hadith/HadithCollectionSkeleton";
+import { ScreenSearchBar, screenSearchBarSpacing } from "@/components/ScreenSearchBar";
 import type { HadithCollection } from "@/lib/hadith/types";
 import { ScreenBackground } from "@/components/ScreenBackground";
 import { SCREEN_EDGE_PADDING } from "@/constants/screen-layout";
 import { ScreenPageHeader } from "@/components/ScreenPageHeader";
 import { useTranslation } from "@/lib/i18n";
 import { useAppTheme } from "@/lib/app-theme";
-
-const H_PADDING = SCREEN_EDGE_PADDING;
-const ACCENT = "#3d6b47";
 
 function filterCollections(
   list: HadithCollection[],
@@ -56,10 +54,10 @@ export default function HadithsCollectionsScreen() {
           <HadithCollectionSkeleton />
         ) : error && collections.length === 0 ? (
           <View style={styles.errorWrap}>
-            <Text style={styles.errorText}>{error}</Text>
+            <Text style={[styles.errorText, { color: colors.text }]}>{error}</Text>
             <TouchableOpacity
               onPress={() => refetch()}
-              style={styles.retryBtn}
+              style={[styles.retryBtn, { backgroundColor: colors.accent }]}
               activeOpacity={0.8}
             >
               <AppIcon name="refresh-cw" size={20} color="#fff" />
@@ -68,31 +66,19 @@ export default function HadithsCollectionsScreen() {
           </View>
         ) : (
           <>
-            <View style={styles.searchWrap}>
-              <AppIcon
-                name="search"
-                size={18}
-                color={colors.textMuted}
-                style={styles.searchIcon}
-              />
-              <TextInput
-                style={[styles.searchInput, { color: colors.text }]}
-                placeholder={t("library.searchCollectionPlaceholder")}
-                placeholderTextColor={colors.textMuted}
-                value={search}
-                onChangeText={setSearch}
-              />
-              {search.length > 0 && (
-                <TouchableOpacity
-                  onPress={() => setSearch("")}
-                  hitSlop={12}
-                >
-                  <AppIcon name="x" size={18} color={colors.textMuted} />
-                </TouchableOpacity>
-              )}
-            </View>
+            <ScreenSearchBar
+              value={search}
+              onChangeText={setSearch}
+              placeholder={t("library.searchCollectionPlaceholder")}
+              containerStyle={screenSearchBarSpacing}
+            />
 
-            <View style={styles.listWrap}>
+            <ScrollView
+              style={styles.listWrap}
+              contentContainerStyle={styles.listContent}
+              showsVerticalScrollIndicator={false}
+              keyboardShouldPersistTaps="handled"
+            >
               {filtered.length === 0 ? (
                 <View style={styles.empty}>
                   <Text style={[styles.emptyText, { color: colors.textMuted }]}>
@@ -104,14 +90,16 @@ export default function HadithsCollectionsScreen() {
                   {filtered.map((col) => {
                     const displayName = getCollectionDisplayName(col, "fr");
                     const totalHadith =
+                      col.collection?.find((e) => e.lang === "fr")?.totalAvailableHadith ??
                       col.collection?.[0]?.totalAvailableHadith ??
-                      col.collection?.[0]?.totalHadith ?? 0;
+                      col.collection?.[0]?.totalHadith ??
+                      0;
                     return (
                       <ListRow
                         key={col.name}
                         icon="book-open"
                         title={displayName}
-                        subtitle={`${totalHadith} ${t("screens.hadithsTitle").toLowerCase()}`}
+                        subtitle={t("library.hadithCount", { count: totalHadith })}
                         onPress={() =>
                           router.push({
                             pathname:
@@ -126,7 +114,7 @@ export default function HadithsCollectionsScreen() {
                   })}
                 </View>
               )}
-            </View>
+            </ScrollView>
           </>
         )}
       </SafeAreaView>
@@ -137,38 +125,9 @@ export default function HadithsCollectionsScreen() {
 const styles = StyleSheet.create({
   background: { flex: 1 },
   safeArea: { flex: 1, backgroundColor: "transparent" },
-  header: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingHorizontal: H_PADDING,
-    paddingVertical: 12,
-  },
-  backBtn: { padding: 8 },
-  title: {
-    fontSize: 20,
-    fontFamily: "PlusJakartaSans-Bold",
-  },
-  headerRight: { width: 42 },
-  searchWrap: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginHorizontal: H_PADDING,
-    marginBottom: 20,
-    paddingVertical: 10,
-    borderBottomWidth: 1,
-    borderBottomColor: "rgba(0,0,0,0.08)",
-  },
-  searchIcon: { marginRight: 10 },
-  searchInput: {
-    flex: 1,
-    fontSize: 15,
-    fontFamily: "PlusJakartaSans-Regular",
-    padding: 0,
-  },
-  listWrap: {
-    flex: 1,
-    paddingHorizontal: H_PADDING,
+  listWrap: { flex: 1 },
+  listContent: {
+    paddingHorizontal: SCREEN_EDGE_PADDING,
     paddingBottom: 120,
   },
   list: { gap: 2 },
@@ -192,7 +151,6 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
     paddingHorizontal: 24,
     borderRadius: 12,
-    backgroundColor: ACCENT,
   },
   retryText: {
     fontSize: 16,

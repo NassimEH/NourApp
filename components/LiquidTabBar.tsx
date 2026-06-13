@@ -14,6 +14,8 @@ import Animated, {
   useAnimatedStyle,
   useSharedValue,
   withSpring,
+  type SharedValue,
+  type WithSpringConfig,
 } from "react-native-reanimated";
 import type { BottomTabBarProps } from "@react-navigation/bottom-tabs";
 
@@ -24,8 +26,30 @@ import { useAppTheme } from "@/lib/app-theme";
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 const TAB_BAR_WIDTH = SCREEN_WIDTH * 0.92;
 const TAB_BAR_HEIGHT = 70;
+const BUBBLE_HEIGHT = 50;
 const BUBBLE_INSET = 8;
+const BUBBLE_TOP = (TAB_BAR_HEIGHT - BUBBLE_HEIGHT) / 2;
 const ICON_SIZE = 24;
+
+function getBubbleTranslateX(
+  index: number,
+  tabWidth: number,
+  bubbleWidth: number
+) {
+  return index * tabWidth + (tabWidth - bubbleWidth) / 2;
+}
+
+/** Ressort court, sans rebond — évite la traînée du indicateur */
+const BUBBLE_SPRING: WithSpringConfig = {
+  damping: 28,
+  stiffness: 320,
+  mass: 0.45,
+  overshootClamping: true,
+};
+
+function animateBubbleTo(translateX: SharedValue<number>, x: number) {
+  translateX.value = withSpring(x, BUBBLE_SPRING);
+}
 
 function useNativeGlassAvailable() {
   const [available, setAvailable] = useState(false);
@@ -46,25 +70,24 @@ function useNativeGlassAvailable() {
 export function LiquidTabBar({ state, descriptors, navigation }: BottomTabBarProps) {
   const colors = useAppTheme();
   const nativeGlass = useNativeGlassAvailable();
+  const [barWidth, setBarWidth] = useState(TAB_BAR_WIDTH);
   const tabCount = state.routes.length;
-  const tabWidth = TAB_BAR_WIDTH / tabCount;
+  const tabWidth = barWidth / tabCount;
   const bubbleWidth = tabWidth - BUBBLE_INSET * 2;
 
-  const translateX = useSharedValue(state.index * tabWidth);
+  const translateX = useSharedValue(
+    getBubbleTranslateX(state.index, tabWidth, bubbleWidth)
+  );
 
   useEffect(() => {
-    translateX.value = state.index * tabWidth;
-  }, [state.index, tabWidth, translateX]);
+    animateBubbleTo(
+      translateX,
+      getBubbleTranslateX(state.index, tabWidth, bubbleWidth)
+    );
+  }, [state.index, tabWidth, bubbleWidth, translateX]);
 
   const animatedBubbleStyle = useAnimatedStyle(() => ({
-    transform: [
-      {
-        translateX: withSpring(translateX.value, {
-          damping: 15,
-          stiffness: 120,
-        }),
-      },
-    ],
+    transform: [{ translateX: translateX.value }],
   }));
 
   const blurIntensity = useMemo(() => {
@@ -90,9 +113,13 @@ export function LiquidTabBar({ state, descriptors, navigation }: BottomTabBarPro
     ? "rgba(255, 255, 255, 0.45)"
     : colors.iconMuted;
 
+  const activeRoute = state.routes[state.index];
+  const activeIconName = TAB_BAR_ICONS[activeRoute?.name ?? ""] ?? "home";
+
   const tabRow = (
     <>
       <Animated.View
+        pointerEvents="none"
         style={[
           styles.liquidBubble,
           { width: bubbleWidth },
@@ -105,6 +132,13 @@ export function LiquidTabBar({ state, descriptors, navigation }: BottomTabBarPro
           end={{ x: 1, y: 1 }}
           style={StyleSheet.absoluteFillObject}
         />
+        <View style={styles.bubbleIconCenter}>
+          <AppIcon
+            name={activeIconName}
+            size={ICON_SIZE}
+            color={colors.onAccent}
+          />
+        </View>
       </Animated.View>
 
       {state.routes.map((route, index) => {
@@ -113,7 +147,10 @@ export function LiquidTabBar({ state, descriptors, navigation }: BottomTabBarPro
         const iconName = TAB_BAR_ICONS[route.name] ?? "home";
 
         const onPress = () => {
-          translateX.value = index * tabWidth;
+          animateBubbleTo(
+            translateX,
+            getBubbleTranslateX(index, tabWidth, bubbleWidth)
+          );
           if (Platform.OS === "ios") {
             Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
           }
@@ -152,14 +189,16 @@ export function LiquidTabBar({ state, descriptors, navigation }: BottomTabBarPro
             }
             onPress={onPress}
             onLongPress={onLongPress}
-            style={styles.tabItem}
+            style={[styles.tabItem, { width: tabWidth }]}
             activeOpacity={0.7}
           >
-            <AppIcon
-              name={iconName}
-              size={ICON_SIZE}
-              color={isFocused ? colors.onAccent : inactiveIconColor}
-            />
+            {!isFocused ? (
+              <AppIcon
+                name={iconName}
+                size={ICON_SIZE}
+                color={inactiveIconColor}
+              />
+            ) : null}
           </TouchableOpacity>
         );
       })}
@@ -174,6 +213,7 @@ export function LiquidTabBar({ state, descriptors, navigation }: BottomTabBarPro
       ]}
       glassEffectStyle="regular"
       isInteractive
+      onLayout={(e) => setBarWidth(e.nativeEvent.layout.width)}
     >
       {tabRow}
     </GlassView>
@@ -187,6 +227,7 @@ export function LiquidTabBar({ state, descriptors, navigation }: BottomTabBarPro
             Platform.OS === "ios" ? undefined : colors.glassSurfaceAndroid,
         },
       ]}
+      onLayout={(e) => setBarWidth(e.nativeEvent.layout.width)}
     >
       {Platform.OS !== "web" ? (
         <>
@@ -245,6 +286,7 @@ const styles = StyleSheet.create({
   },
   glassBackground: {
     flexDirection: "row",
+    width: "100%",
     height: "100%",
     alignItems: "center",
     borderWidth: 1,
@@ -252,7 +294,6 @@ const styles = StyleSheet.create({
     overflow: "hidden",
   },
   tabItem: {
-    flex: 1,
     justifyContent: "center",
     alignItems: "center",
     height: "100%",
@@ -260,10 +301,16 @@ const styles = StyleSheet.create({
   },
   liquidBubble: {
     position: "absolute",
-    height: 50,
+    top: BUBBLE_TOP,
+    left: 0,
+    height: BUBBLE_HEIGHT,
     borderRadius: 18,
-    left: BUBBLE_INSET,
-    zIndex: 1,
+    zIndex: 3,
     overflow: "hidden",
+  },
+  bubbleIconCenter: {
+    ...StyleSheet.absoluteFillObject,
+    alignItems: "center",
+    justifyContent: "center",
   },
 });

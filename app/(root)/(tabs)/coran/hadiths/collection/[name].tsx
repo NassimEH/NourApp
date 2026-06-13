@@ -2,7 +2,6 @@ import {
   FlatList,
   StyleSheet,
   Text,
-  TextInput,
   TouchableOpacity,
   View,
 } from "react-native";
@@ -23,13 +22,12 @@ import type { HadithBook } from "@/lib/hadith/types";
 import { useCollections } from "@/lib/hadith/hooks/useCollections";
 import { ScreenBackground } from "@/components/ScreenBackground";
 import { ScreenPageHeader } from "@/components/ScreenPageHeader";
+import { ScreenSearchBar, screenSearchBarSpacing } from "@/components/ScreenSearchBar";
 import { useTranslation } from "@/lib/i18n";
+import { useAppTheme } from "@/lib/app-theme";
 import { SCREEN_EDGE_PADDING } from "@/constants/screen-layout";
 
 const H_PADDING = SCREEN_EDGE_PADDING;
-const ICON_COLOR = "#191D31";
-const ACCENT = "#3d6b47";
-const TEXT_MUTED = "rgba(0,0,0,0.5)";
 
 function getBookDisplayName(book: HadithBook, preferFr = true): string {
   const fr = book.book?.find((b) => b.lang === "fr");
@@ -40,6 +38,7 @@ function getBookDisplayName(book: HadithBook, preferFr = true): string {
 
 export default function HadithsBooksScreen() {
   const { t } = useTranslation();
+  const colors = useAppTheme();
   const { name } = useLocalSearchParams<{ name: string }>();
   const collectionName = name ? decodeURIComponent(name) : null;
   const { collections } = useCollections();
@@ -66,8 +65,8 @@ export default function HadithsBooksScreen() {
     [collections, collectionName]
   );
   const collectionDisplayName = collection
-    ? getCollectionDisplayName(collection, "en")
-    : collectionName ?? "Livre";
+    ? getCollectionDisplayName(collection, "fr")
+    : collectionName ?? t("screens.hadithsTitle");
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
@@ -111,10 +110,10 @@ export default function HadithsBooksScreen() {
           <HadithListSkeleton />
         ) : error && books.length === 0 ? (
           <View style={styles.errorWrap}>
-            <Text style={styles.errorText}>{error}</Text>
+            <Text style={[styles.errorText, { color: colors.text }]}>{error}</Text>
             <TouchableOpacity
               onPress={() => refetch()}
-              style={styles.retryBtn}
+              style={[styles.retryBtn, { backgroundColor: colors.accent }]}
               activeOpacity={0.8}
             >
               <AppIcon name="refresh-cw" size={20} color="#fff" />
@@ -123,29 +122,12 @@ export default function HadithsBooksScreen() {
           </View>
         ) : (
           <>
-            <View style={styles.searchWrap}>
-              <AppIcon
-                name="search"
-                size={18}
-                color={TEXT_MUTED}
-                style={styles.searchIcon}
-              />
-              <TextInput
-                style={styles.searchInput}
-                placeholder="Rechercher un livre…"
-                placeholderTextColor={TEXT_MUTED}
-                value={search}
-                onChangeText={setSearch}
-              />
-              {search.length > 0 && (
-                <TouchableOpacity
-                  onPress={() => setSearch("")}
-                  hitSlop={12}
-                >
-                  <AppIcon name="x" size={18} color={TEXT_MUTED} />
-                </TouchableOpacity>
-              )}
-            </View>
+            <ScreenSearchBar
+              value={search}
+              onChangeText={setSearch}
+              placeholder={t("library.searchCollectionPlaceholder")}
+              containerStyle={screenSearchBarSpacing}
+            />
 
             <FlatList
               data={filtered}
@@ -154,13 +136,15 @@ export default function HadithsBooksScreen() {
               showsVerticalScrollIndicator={false}
               ListEmptyComponent={
                 <View style={styles.empty}>
-                  <Text style={styles.emptyText}>Aucun livre trouvé</Text>
+                  <Text style={[styles.emptyText, { color: colors.textMuted }]}>
+                    {t("library.searchNoResults")}
+                  </Text>
                 </View>
               }
               ListFooterComponent={
                 canLoadMore ? (
                   <TouchableOpacity
-                    style={styles.loadMoreBtn}
+                    style={[styles.loadMoreBtn, { backgroundColor: colors.accent }]}
                     onPress={handleLoadMore}
                     disabled={loadingMore}
                     activeOpacity={0.8}
@@ -184,18 +168,18 @@ export default function HadithsBooksScreen() {
                   onPress={() => goToBookOrHadiths(item)}
                   activeOpacity={0.7}
                 >
-                  <AppIcon name="book-open" size={22} color={ICON_COLOR} />
+                  <AppIcon name="book-open" size={22} color={colors.icon} />
                   <View style={styles.rowText}>
-                    <Text style={styles.rowTitle} numberOfLines={2}>
+                    <Text style={[styles.rowTitle, { color: colors.text }]} numberOfLines={2}>
                       {getBookDisplayName(item, true)}
                     </Text>
                     {item.book?.[0]?.numberOfHadith != null && (
-                      <Text style={styles.rowPreview}>
-                        {item.book[0].numberOfHadith} hadiths
+                      <Text style={[styles.rowPreview, { color: colors.textMuted }]}>
+                        {t("library.hadithCount", { count: item.book[0].numberOfHadith })}
                       </Text>
                     )}
                   </View>
-                  <AppIcon name="chevron-right" size={20} color={ICON_COLOR} />
+                  <AppIcon name="chevron-right" size={20} color={colors.iconMuted} />
                 </TouchableOpacity>
               )}
             />
@@ -221,27 +205,9 @@ const styles = StyleSheet.create({
     flex: 1,
     fontSize: 18,
     fontFamily: "PlusJakartaSans-Bold",
-    color: ICON_COLOR,
     textAlign: "center",
   },
   headerRight: { width: 42 },
-  searchWrap: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginHorizontal: H_PADDING,
-    marginBottom: 16,
-    paddingVertical: 10,
-    borderBottomWidth: 1,
-    borderBottomColor: "rgba(0,0,0,0.08)",
-  },
-  searchIcon: { marginRight: 10 },
-  searchInput: {
-    flex: 1,
-    fontSize: 15,
-    fontFamily: "PlusJakartaSans-Regular",
-    color: ICON_COLOR,
-    padding: 0,
-  },
   listContent: { paddingHorizontal: H_PADDING, paddingBottom: 120 },
   row: {
     flexDirection: "row",
@@ -253,12 +219,10 @@ const styles = StyleSheet.create({
   rowTitle: {
     fontSize: 17,
     fontFamily: "PlusJakartaSans-Medium",
-    color: ICON_COLOR,
   },
   rowPreview: {
     fontSize: 14,
     fontFamily: "PlusJakartaSans-Regular",
-    color: TEXT_MUTED,
     marginTop: 2,
   },
   errorWrap: {
@@ -270,7 +234,6 @@ const styles = StyleSheet.create({
   errorText: {
     fontSize: 16,
     fontFamily: "PlusJakartaSans-Regular",
-    color: ICON_COLOR,
     textAlign: "center",
     marginBottom: 20,
   },
@@ -281,7 +244,6 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
     paddingHorizontal: 24,
     borderRadius: 12,
-    backgroundColor: ACCENT,
   },
   retryText: {
     fontSize: 16,
@@ -292,7 +254,6 @@ const styles = StyleSheet.create({
   emptyText: {
     fontSize: 15,
     fontFamily: "PlusJakartaSans-Regular",
-    color: TEXT_MUTED,
   },
   loadMoreBtn: {
     flexDirection: "row",
@@ -304,7 +265,6 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
     paddingHorizontal: 24,
     borderRadius: 12,
-    backgroundColor: ACCENT,
     alignSelf: "center",
   },
   loadMoreText: {

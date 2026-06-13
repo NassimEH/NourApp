@@ -12,10 +12,22 @@ export type LibraryRoute =
   | "player"
   | "invocations"
   | "invocations-meteo"
+  | "invocations-morning"
+  | "invocations-evening"
+  | "invocations-sleep"
+  | "invocations-after-prayer"
+  | "invocations-protection"
+  | "invocations-travel"
+  | "invocations-before-meal"
   | "invocations-matin-soir"
   | "invocations-sommeil"
   | "hadiths"
   | "hadith-jour"
+  | "hadith-bukhari"
+  | "hadith-muslim"
+  | "hadith-abudawud"
+  | "hadith-tirmidhi"
+  | "hadith-ibnmajah"
   | "hadiths-theme";
 
 export type LibraryCatalogItem = {
@@ -25,6 +37,10 @@ export type LibraryCatalogItem = {
   icon: AppIconName;
   soon?: boolean;
   disabled?: boolean;
+  /** Navigation directe vers une catégorie d'invocations */
+  invocationSlug?: string;
+  /** Navigation directe vers un recueil de hadiths */
+  hadithCollectionName?: string;
 };
 
 export type LibraryCatalogSection = {
@@ -102,16 +118,55 @@ export const LIBRARY_CATALOG: LibraryCatalogSection[] = [
         titleKey: "library.invocationsWeather",
         shortKey: "library.invocationsWeatherShort",
         icon: "cloud",
-        soon: true,
-        disabled: true,
       },
       {
-        id: "invocations-matin-soir",
-        titleKey: "library.invocationsMorning",
-        shortKey: "library.invocationsMorningShort",
+        id: "invocations-morning",
+        titleKey: "screens.invocationsMorningCategory",
+        shortKey: "library.invocationsMorningCardShort",
         icon: "sun",
-        soon: true,
-        disabled: true,
+        invocationSlug: "invocations-du-matin",
+      },
+      {
+        id: "invocations-evening",
+        titleKey: "screens.invocationsEveningCategory",
+        shortKey: "library.invocationsEveningCardShort",
+        icon: "moon",
+        invocationSlug: "invocations-du-soir",
+      },
+      {
+        id: "invocations-sleep",
+        titleKey: "screens.invocationsSleepTitle",
+        shortKey: "library.invocationsSleepShort",
+        icon: "moon",
+        invocationSlug: "doua-avant-dormir",
+      },
+      {
+        id: "invocations-after-prayer",
+        titleKey: "library.invocationsAfterPrayer",
+        shortKey: "library.invocationsAfterPrayerShort",
+        icon: "heart",
+        invocationSlug: "doua-apres-priere",
+      },
+      {
+        id: "invocations-protection",
+        titleKey: "library.invocationsProtection",
+        shortKey: "library.invocationsProtectionShort",
+        icon: "shield",
+        invocationSlug: "doua-protection",
+      },
+      {
+        id: "invocations-travel",
+        titleKey: "library.invocationsTravel",
+        shortKey: "library.invocationsTravelShort",
+        icon: "map-pin",
+        invocationSlug: "invocations-voyage",
+      },
+      {
+        id: "invocations-before-meal",
+        titleKey: "library.invocationsBeforeMeal",
+        shortKey: "library.invocationsBeforeMealShort",
+        icon: "book-open",
+        invocationSlug: "doua-avant-manger",
       },
     ],
   },
@@ -130,16 +185,47 @@ export const LIBRARY_CATALOG: LibraryCatalogSection[] = [
         titleKey: "library.hadithDay",
         shortKey: "library.hadithDayShort",
         icon: "message-circle",
-        soon: true,
-        disabled: true,
       },
       {
         id: "hadiths-theme",
         titleKey: "library.hadithThemes",
         shortKey: "library.hadithThemesShort",
-        icon: "bookmark",
-        soon: true,
-        disabled: true,
+        icon: "layers",
+      },
+      {
+        id: "hadith-bukhari",
+        titleKey: "library.hadithBukhari",
+        shortKey: "library.hadithBukhariShort",
+        icon: "book",
+        hadithCollectionName: "bukhari",
+      },
+      {
+        id: "hadith-muslim",
+        titleKey: "library.hadithMuslim",
+        shortKey: "library.hadithMuslimShort",
+        icon: "book",
+        hadithCollectionName: "muslim",
+      },
+      {
+        id: "hadith-abudawud",
+        titleKey: "library.hadithAbudawud",
+        shortKey: "library.hadithAbudawudShort",
+        icon: "book-open",
+        hadithCollectionName: "abudawud",
+      },
+      {
+        id: "hadith-tirmidhi",
+        titleKey: "library.hadithTirmidhi",
+        shortKey: "library.hadithTirmidhiShort",
+        icon: "book-open",
+        hadithCollectionName: "tirmidhi",
+      },
+      {
+        id: "hadith-ibnmajah",
+        titleKey: "library.hadithIbnMajah",
+        shortKey: "library.hadithIbnMajahShort",
+        icon: "book-open",
+        hadithCollectionName: "ibnmajah",
       },
     ],
   },

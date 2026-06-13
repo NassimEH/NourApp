@@ -34,12 +34,7 @@ export default function IconStyleScreen() {
         <Text style={[styles.previewLabel, { color: colors.textMuted }, rtlTextStyle]}>
           {t("preferences.languagePreviewLabel")} — {getIconStyleLabelI18n(locale, iconStyle)}
         </Text>
-        <View
-          style={[
-            styles.previewRow,
-            { backgroundColor: colors.card, borderColor: colors.border },
-          ]}
-        >
+        <View style={styles.previewRow}>
           {PREVIEW_ICONS.map((name) => (
             <AppIcon
               key={name}
@@ -78,9 +73,6 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-around",
-    paddingVertical: 20,
-    paddingHorizontal: 12,
-    borderRadius: 16,
-    borderWidth: 1,
+    paddingVertical: 12,
   },
 });

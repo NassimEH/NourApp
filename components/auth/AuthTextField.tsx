@@ -12,6 +12,7 @@ import {
 
 import { AppIcon, type AppIconName } from "@/components/AppIcon";
 import { useAppTheme } from "@/lib/app-theme";
+import { SPACE } from "@/lib/ui/spacing";
 
 type Props = TextInputProps & {
   label: string;
@@ -46,8 +47,8 @@ export function AuthTextField({
           styles.field,
           isFlat && styles.fieldFlat,
           {
-            borderColor: isFlat ? colors.border : colors.border,
-            backgroundColor: isFlat ? colors.card : colors.backgroundSecondary,
+            borderColor: colors.border,
+            backgroundColor: isFlat ? "transparent" : colors.backgroundSecondary,
           },
           !editable && styles.fieldDisabled,
         ]}
@@ -84,19 +85,19 @@ export function AuthTextField({
 
 const styles = StyleSheet.create({
   wrap: {
-    marginBottom: 14,
+    marginBottom: SPACE.md,
   },
   wrapFlat: {
-    marginBottom: 16,
+    marginBottom: 0,
   },
   label: {
     fontSize: 13,
     fontFamily: "PlusJakartaSans-SemiBold",
-    marginBottom: 6,
+    marginBottom: SPACE.xs,
   },
   labelFlat: {
-    fontSize: 12,
-    marginBottom: 5,
+    fontSize: 13,
+    marginBottom: SPACE.xs,
     opacity: 0.9,
   },
   field: {
@@ -109,8 +110,13 @@ const styles = StyleSheet.create({
     minHeight: 50,
   },
   fieldFlat: {
-    minHeight: 52,
-    borderRadius: 12,
+    minHeight: 48,
+    borderWidth: 0,
+    borderRadius: 0,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    backgroundColor: "transparent",
+    paddingHorizontal: 0,
+    gap: 10,
   },
   fieldDisabled: {
     opacity: 0.7,

@@ -20,7 +20,6 @@ import { AppIcon, type AppIconName } from "@/components/AppIcon";
 
 import { getProfileAvatarUri, setProfileAvatarUri } from "@/lib/profile-avatar";
 import { useGlobalContext } from "@/lib/global-provider";
-import { logout as supabaseLogout } from "@/lib/supabase/auth";
 import { useAppPreferences } from "@/lib/app-preferences";
 import { useTabBarPreference } from "@/lib/tab-bar-preference";
 import { useAppTheme } from "@/lib/app-theme";
@@ -206,7 +205,7 @@ const PermissionRow = ({
 };
 
 export default function ProfileScreen() {
-  const { user, refetch, isLogged, isGuest, enterAsGuest } = useGlobalContext();
+  const { user, isLogged, isGuest, signOut, refetch } = useGlobalContext();
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const [localAvatarUri, setLocalAvatarUri] = useState<string | null>(null);
 
@@ -329,14 +328,12 @@ export default function ProfileScreen() {
   };
 
   const handleLogout = async () => {
-    const ok = await supabaseLogout();
-    if (ok) {
-      enterAsGuest();
-      Alert.alert(t("profile.logoutSuccess"), t("profile.logoutSuccessBody"));
-      await refetch();
-    } else {
+    const ok = await signOut();
+    if (!ok) {
       Alert.alert(t("profile.logoutError"), t("profile.logoutErrorBody"));
+      return;
     }
+    router.replace("/sign-in");
   };
 
   const handleSelectFavoriteReciter = () => {
@@ -365,7 +362,16 @@ export default function ProfileScreen() {
           title={t("profile.title")}
           subtitle={t("screens.profileSubtitle")}
           style={screenPageHeaderSpacing}
-          rightElement={<AppIcon name="bell" size={ICON_SIZE} color={colors.icon} />}
+          rightElement={
+            <TouchableOpacity
+              onPress={handleLogout}
+              hitSlop={12}
+              accessibilityRole="button"
+              accessibilityLabel={t("profile.logout")}
+            >
+              <AppIcon name="log-out" size={ICON_SIZE} color={colors.icon} />
+            </TouchableOpacity>
+          }
         />
         <ScrollView
           showsVerticalScrollIndicator={false}

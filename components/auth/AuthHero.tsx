@@ -3,6 +3,7 @@ import { StyleSheet, Text, View, type StyleProp, type ViewStyle } from "react-na
 import { AppIcon, type AppIconName } from "@/components/AppIcon";
 import { useAppTheme } from "@/lib/app-theme";
 import { useTranslation } from "@/lib/i18n";
+import { SPACE } from "@/lib/ui/spacing";
 
 type Props = {
   headline: string;
@@ -49,17 +50,17 @@ export function AuthHero({
 const styles = StyleSheet.create({
   wrap: {
     alignItems: "center",
-    marginBottom: 28,
+    marginBottom: SPACE.xl,
   },
   brand: {
     fontSize: 28,
     fontFamily: "PlusJakartaSans-ExtraBold",
     letterSpacing: 1.2,
-    marginBottom: 14,
+    marginBottom: SPACE.md,
     textAlign: "center",
   },
   emblem: {
-    marginBottom: 18,
+    marginBottom: SPACE.lg,
     opacity: 0.92,
   },
   headline: {
@@ -70,7 +71,7 @@ const styles = StyleSheet.create({
     maxWidth: 340,
   },
   subtitle: {
-    marginTop: 10,
+    marginTop: SPACE.sm,
     fontSize: 15,
     fontFamily: "PlusJakartaSans-Regular",
     lineHeight: 22,

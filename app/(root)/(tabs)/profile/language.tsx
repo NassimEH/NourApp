@@ -47,12 +47,7 @@ export default function LanguageScreen() {
         <Text style={[styles.previewLabel, { color: colors.textMuted }, rtlTextStyle]}>
           {t("preferences.languagePreviewLabel")} — {getLanguageLabelI18n(locale, locale)}
         </Text>
-        <View
-          style={[
-            styles.previewCard,
-            { backgroundColor: colors.card, borderColor: colors.border },
-          ]}
-        >
+        <View style={styles.previewContent}>
           <Text style={[styles.previewGreeting, { color: colors.text }, rtlTextStyle]}>
             {preview.greeting}
           </Text>
@@ -87,10 +82,8 @@ const styles = StyleSheet.create({
     fontFamily: "PlusJakartaSans-Medium",
     marginBottom: 10,
   },
-  previewCard: {
-    borderRadius: 16,
-    borderWidth: 1,
-    padding: 16,
+  previewContent: {
+    paddingVertical: 4,
   },
   previewGreeting: {
     fontSize: 18,

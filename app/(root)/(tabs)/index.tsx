@@ -1,6 +1,5 @@
 ﻿import {
   Alert,
-  Image,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -13,7 +12,7 @@ import { router, type Href } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { toHijri } from "hijri-converter";
 
-import icons from "@/constants/icons";
+import { AppIcon } from "@/components/AppIcon";
 import {
   isVendredi,
   getHadithVendrediDuJour,
@@ -21,6 +20,7 @@ import {
 import { HomeContinueSection } from "@/components/home/HomeContinueSection";
 import { HomePrayerWeatherCarousel } from "@/components/home/HomePrayerWeatherCarousel";
 import { HomeToolsSection } from "@/components/home/HomeToolsSection";
+import { HomeHadithDuJourSection } from "@/components/home/HomeHadithDuJourSection";
 import { HomeRamadanBanner } from "@/components/home/HomeRamadanBanner";
 import { rescheduleNextPrayerNotification } from "@/lib/notifications/prayer-notifications";
 import { useGlobalContext } from "@/lib/global-provider";
@@ -52,30 +52,25 @@ function useTodayDates(locale: "fr" | "en" | "ar") {
   }, [locale]);
 }
 
-const HeaderAvatarBell = React.memo(function HeaderAvatarBell({
-  avatarUri,
+const HeaderBell = React.memo(function HeaderBell({
   onBellPress,
   bellLabel,
 }: {
-  avatarUri: string | undefined;
   onBellPress: () => void;
   bellLabel: string;
 }) {
+  const colors = useAppTheme();
+
   return (
-    <View className="flex flex-row items-center gap-4 mt-2">
-      <Image
-        source={{ uri: avatarUri }}
-        className="size-14 rounded-full"
-      />
-      <TouchableOpacity
-        onPress={onBellPress}
-        accessibilityRole="button"
-        accessibilityLabel={bellLabel}
-        hitSlop={12}
-      >
-        <Image source={icons.bell} className="size-8" />
-      </TouchableOpacity>
-    </View>
+    <TouchableOpacity
+      onPress={onBellPress}
+      accessibilityRole="button"
+      accessibilityLabel={bellLabel}
+      hitSlop={12}
+      className="mt-2"
+    >
+      <AppIcon name="bell" size={32} color={colors.icon} />
+    </TouchableOpacity>
   );
 });
 
@@ -125,8 +120,7 @@ const HomeListHeader = React.memo(function HomeListHeader({
               : t("screens.homeSubtitle")
           }
           rightElement={
-            <HeaderAvatarBell
-              avatarUri={user?.avatar}
+            <HeaderBell
               onBellPress={onBellPress}
               bellLabel={bellLabel}
             />
@@ -227,6 +221,7 @@ const HomeListHeader = React.memo(function HomeListHeader({
         </Pressable>
       )}
 
+      <HomeHadithDuJourSection />
       <HomeToolsSection />
       <HomeContinueSection />
       </View>

@@ -2,7 +2,6 @@ import {
   FlatList,
   StyleSheet,
   Text,
-  TextInput,
   TouchableOpacity,
   View,
 } from "react-native";
@@ -22,13 +21,12 @@ import type { HadithRecord } from "@/lib/hadith/types";
 import { useCollections } from "@/lib/hadith/hooks/useCollections";
 import { ScreenBackground } from "@/components/ScreenBackground";
 import { ScreenPageHeader } from "@/components/ScreenPageHeader";
+import { ScreenSearchBar, screenSearchBarSpacing } from "@/components/ScreenSearchBar";
 import { useTranslation } from "@/lib/i18n";
+import { useAppTheme } from "@/lib/app-theme";
 import { SCREEN_EDGE_PADDING } from "@/constants/screen-layout";
 
 const H_PADDING = SCREEN_EDGE_PADDING;
-const ICON_COLOR = "#191D31";
-const ACCENT = "#3d6b47";
-const TEXT_MUTED = "rgba(0,0,0,0.5)";
 
 function getHadithPreview(record: HadithRecord): string {
   const en = record.hadith?.find((h) => h.lang === "en");
@@ -40,6 +38,7 @@ function getHadithPreview(record: HadithRecord): string {
 
 export default function HadithsListScreen() {
   const { t } = useTranslation();
+  const colors = useAppTheme();
   const { name, number, chapterId } = useLocalSearchParams<{
     name: string;
     number: string;
@@ -74,7 +73,7 @@ export default function HadithsListScreen() {
     [collections, collectionName]
   );
   const collectionDisplayName = collection
-    ? getCollectionDisplayName(collection, "en")
+    ? getCollectionDisplayName(collection, "fr")
     : collectionName ?? "Hadiths";
 
   const filtered = useMemo(() => {
@@ -100,10 +99,10 @@ export default function HadithsListScreen() {
           <HadithListSkeleton />
         ) : error && hadiths.length === 0 ? (
           <View style={styles.errorWrap}>
-            <Text style={styles.errorText}>{error}</Text>
+            <Text style={[styles.errorText, { color: colors.text }]}>{error}</Text>
             <TouchableOpacity
               onPress={() => refetch()}
-              style={styles.retryBtn}
+              style={[styles.retryBtn, { backgroundColor: colors.accent }]}
               activeOpacity={0.8}
             >
               <AppIcon name="refresh-cw" size={20} color="#fff" />
@@ -112,29 +111,12 @@ export default function HadithsListScreen() {
           </View>
         ) : (
           <>
-            <View style={styles.searchWrap}>
-              <AppIcon
-                name="search"
-                size={18}
-                color={TEXT_MUTED}
-                style={styles.searchIcon}
-              />
-              <TextInput
-                style={styles.searchInput}
-                placeholder="Rechercher un hadith…"
-                placeholderTextColor={TEXT_MUTED}
-                value={search}
-                onChangeText={setSearch}
-              />
-              {search.length > 0 && (
-                <TouchableOpacity
-                  onPress={() => setSearch("")}
-                  hitSlop={12}
-                >
-                  <AppIcon name="x" size={18} color={TEXT_MUTED} />
-                </TouchableOpacity>
-              )}
-            </View>
+            <ScreenSearchBar
+              value={search}
+              onChangeText={setSearch}
+              placeholder={t("library.searchCollectionPlaceholder")}
+              containerStyle={screenSearchBarSpacing}
+            />
 
             <FlatList
               data={filtered}
@@ -143,7 +125,7 @@ export default function HadithsListScreen() {
               showsVerticalScrollIndicator={false}
               ListEmptyComponent={
                 <View style={styles.empty}>
-                  <Text style={styles.emptyText}>
+                  <Text style={[styles.emptyText, { color: colors.textMuted }]}>
                     Aucun hadith trouvé
                   </Text>
                 </View>
@@ -151,7 +133,7 @@ export default function HadithsListScreen() {
               ListFooterComponent={
                 canLoadMore ? (
                   <TouchableOpacity
-                    style={styles.loadMoreBtn}
+                    style={[styles.loadMoreBtn, { backgroundColor: colors.accent }]}
                     onPress={handleLoadMore}
                     disabled={loadingMore}
                     activeOpacity={0.8}
@@ -184,17 +166,17 @@ export default function HadithsListScreen() {
                   }
                   activeOpacity={0.7}
                 >
-                  <View style={styles.numberBadge}>
-                    <Text style={styles.numberText}>
+                  <View style={[styles.numberBadge, { backgroundColor: colors.accentSurface }]}>
+                    <Text style={[styles.numberText, { color: colors.accent }]}>
                       {item.hadithNumber}
                     </Text>
                   </View>
                   <View style={styles.rowText}>
-                    <Text style={styles.rowPreview} numberOfLines={2}>
+                    <Text style={[styles.rowPreview, { color: colors.text }]} numberOfLines={2}>
                       {getHadithPreview(item)}
                     </Text>
                   </View>
-                  <AppIcon name="chevron-right" size={20} color={ICON_COLOR} />
+                  <AppIcon name="chevron-right" size={20} color={colors.iconMuted} />
                 </TouchableOpacity>
               )}
             />
@@ -220,7 +202,6 @@ const styles = StyleSheet.create({
     flex: 1,
     fontSize: 18,
     fontFamily: "PlusJakartaSans-Bold",
-    color: ICON_COLOR,
     textAlign: "center",
   },
   headerRight: { width: 42 },
@@ -238,7 +219,6 @@ const styles = StyleSheet.create({
     flex: 1,
     fontSize: 15,
     fontFamily: "PlusJakartaSans-Regular",
-    color: ICON_COLOR,
     padding: 0,
   },
   listContent: { paddingHorizontal: H_PADDING, paddingBottom: 120 },
@@ -259,13 +239,11 @@ const styles = StyleSheet.create({
   numberText: {
     fontSize: 13,
     fontFamily: "PlusJakartaSans-SemiBold",
-    color: ACCENT,
   },
   rowText: { flex: 1 },
   rowPreview: {
     fontSize: 15,
     fontFamily: "PlusJakartaSans-Regular",
-    color: ICON_COLOR,
     lineHeight: 22,
   },
   errorWrap: {
@@ -277,7 +255,6 @@ const styles = StyleSheet.create({
   errorText: {
     fontSize: 16,
     fontFamily: "PlusJakartaSans-Regular",
-    color: ICON_COLOR,
     textAlign: "center",
     marginBottom: 20,
   },
@@ -288,7 +265,6 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
     paddingHorizontal: 24,
     borderRadius: 12,
-    backgroundColor: ACCENT,
   },
   retryText: {
     fontSize: 16,
@@ -299,7 +275,6 @@ const styles = StyleSheet.create({
   emptyText: {
     fontSize: 15,
     fontFamily: "PlusJakartaSans-Regular",
-    color: TEXT_MUTED,
   },
   loadMoreBtn: {
     flexDirection: "row",
@@ -311,7 +286,6 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
     paddingHorizontal: 24,
     borderRadius: 12,
-    backgroundColor: ACCENT,
     alignSelf: "center",
   },
   loadMoreText: {

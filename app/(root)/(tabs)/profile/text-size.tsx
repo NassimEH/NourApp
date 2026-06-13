@@ -42,12 +42,7 @@ export default function TextSizeScreen() {
         <Text style={[styles.previewLabel, { color: colors.textMuted }, rtlTextStyle]}>
           {t("preferences.textSizePreviewLabel")} — {getTextSizeLabelI18n(locale, textSize)}
         </Text>
-        <View
-          style={[
-            styles.previewCard,
-            { backgroundColor: colors.card, borderColor: colors.border },
-          ]}
-        >
+        <View style={styles.previewContent}>
           <AppText
             variant="arabic"
             style={[styles.previewArabic, { color: colors.text }]}
@@ -92,10 +87,8 @@ const styles = StyleSheet.create({
     fontFamily: "PlusJakartaSans-Medium",
     marginBottom: 10,
   },
-  previewCard: {
-    borderRadius: 16,
-    borderWidth: 1,
-    padding: 16,
+  previewContent: {
+    paddingVertical: 4,
   },
   previewArabic: {
     fontFamily: "PlusJakartaSans-Regular",

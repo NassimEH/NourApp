@@ -10,9 +10,10 @@ import { router } from "expo-router";
 
 import { screenScrollContent } from "@/constants/screen-layout";
 import { ScreenPageHeader } from "@/components/ScreenPageHeader";
-import { useAppTheme } from "@/lib/app-theme";
 import { useTranslation } from "@/lib/i18n";
 import { ScreenBackground } from "@/components/ScreenBackground";
+
+export { PreferenceOptionDivider } from "@/components/PreferenceOptionDivider";
 
 interface PreferenceScreenLayoutProps {
   title: string;
@@ -27,7 +28,6 @@ export function PreferenceScreenLayout({
   children,
   contentStyle,
 }: PreferenceScreenLayoutProps) {
-  const colors = useAppTheme();
   const { rtlViewStyle } = useTranslation();
 
   return (
@@ -42,29 +42,13 @@ export function PreferenceScreenLayout({
           style={[styles.scroll, rtlViewStyle]}
           contentContainerStyle={[styles.content, contentStyle]}
           showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
         >
-          <View
-            style={[
-              styles.optionsCard,
-              {
-                backgroundColor: colors.usesBackgroundImage
-                  ? colors.card
-                  : colors.cardElevated,
-                borderColor: colors.border,
-              },
-            ]}
-          >
-            {children}
-          </View>
+          <View style={styles.optionsList}>{children}</View>
         </ScrollView>
       </SafeAreaView>
     </ScreenBackground>
   );
-}
-
-export function PreferenceOptionDivider() {
-  const colors = useAppTheme();
-  return <View style={[styles.divider, { borderBottomColor: colors.border }]} />;
 }
 
 const styles = StyleSheet.create({
@@ -72,13 +56,8 @@ const styles = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: "transparent" },
   scroll: { flex: 1 },
   content: { ...screenScrollContent, paddingTop: 8, paddingBottom: 40 },
-  optionsCard: {
-    borderRadius: 16,
-    borderWidth: StyleSheet.hairlineWidth,
-    paddingHorizontal: 12,
-    paddingVertical: 4,
-  },
-  divider: {
-    borderBottomWidth: 1,
+  optionsList: {
+    width: "100%",
+    alignSelf: "stretch",
   },
 });

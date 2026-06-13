@@ -28,9 +28,7 @@ function RootNavigation() {
         screenOptions={{
           headerShown: false,
           contentStyle: {
-            backgroundColor: colors.usesBackgroundImage
-              ? "transparent"
-              : colors.background,
+            backgroundColor: "transparent",
           },
         }}
       />

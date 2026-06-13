@@ -38,6 +38,8 @@ function mapCatalogItems(
     icon: item.icon,
     soon: item.soon,
     disabled: item.disabled,
+    invocationSlug: item.invocationSlug,
+    hadithCollectionName: item.hadithCollectionName,
   }));
 }
 
@@ -55,7 +57,25 @@ export default function BibliothequeScreen() {
     [t]
   );
 
-  const onPressItem = (id: string) => {
+  const onPressItem = (
+    id: string,
+    invocationSlug?: string,
+    hadithCollectionName?: string
+  ) => {
+    if (hadithCollectionName) {
+      router.push({
+        pathname: "/(root)/(tabs)/coran/hadiths/collection/[name]",
+        params: { name: hadithCollectionName },
+      });
+      return;
+    }
+    if (invocationSlug) {
+      router.push({
+        pathname: "/(root)/(tabs)/coran/invocations/category/[slug]",
+        params: { slug: invocationSlug },
+      });
+      return;
+    }
     pushLibraryRoute(id as LibraryRoute);
   };
 

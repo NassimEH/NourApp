@@ -54,7 +54,7 @@ export default function HadithDetailScreen() {
     [collections, collectionName]
   );
   const collectionDisplayName = collection
-    ? getCollectionDisplayName(collection, "en")
+    ? getCollectionDisplayName(collection, "fr")
     : collectionName ?? "";
 
   const isFav =

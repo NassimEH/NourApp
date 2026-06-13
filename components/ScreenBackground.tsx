@@ -6,6 +6,7 @@ import {
   type ViewStyle,
 } from "react-native";
 
+import { DarkModeScreenGradient } from "@/components/auth/AuthGradientBackdrop";
 import { useAppTheme } from "@/lib/app-theme";
 
 const homeBackground = require("@/assets/images/home-background.png");
@@ -24,27 +25,39 @@ export function ScreenBackground({
   variant = "screen",
 }: ScreenBackgroundProps) {
   const colors = useAppTheme();
-
-  if (colors.usesBackgroundImage) {
-    const source = variant === "root" ? rootBackground : homeBackground;
-    return (
-      <ImageBackground
-        source={source}
-        style={[styles.fill, style]}
-        resizeMode="cover"
-      >
-        {children}
-      </ImageBackground>
-    );
-  }
+  const source = variant === "root" ? rootBackground : homeBackground;
 
   return (
-    <View style={[styles.fill, { backgroundColor: colors.background }, style]}>
-      {children}
+    <View
+      style={[
+        styles.fill,
+        !colors.usesBackgroundImage && { backgroundColor: colors.background },
+        style,
+      ]}
+    >
+      {colors.usesBackgroundImage ? (
+        <ImageBackground
+          source={source}
+          style={styles.backgroundImage}
+          resizeMode="cover"
+          pointerEvents="none"
+        />
+      ) : (
+        <DarkModeScreenGradient />
+      )}
+      <View style={styles.content} pointerEvents="box-none">
+        {children}
+      </View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   fill: { flex: 1 },
+  backgroundImage: {
+    ...StyleSheet.absoluteFillObject,
+  },
+  content: {
+    flex: 1,
+  },
 });

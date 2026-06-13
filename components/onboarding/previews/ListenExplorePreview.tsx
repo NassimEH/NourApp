@@ -59,7 +59,7 @@ export function ListenExplorePreview() {
         ))}
       </View>
 
-      <Text style={styles.sectionTitle}>Sourates populaires</Text>
+      <Text style={styles.sectionTitle}>Sourates</Text>
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}

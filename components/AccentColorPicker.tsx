@@ -73,15 +73,16 @@ const styles = StyleSheet.create({
   grid: {
     flexDirection: "row",
     flexWrap: "wrap",
-    gap: 16,
-    paddingVertical: 8,
-    justifyContent: "space-between",
+    gap: 12,
+    paddingVertical: 12,
+    width: "100%",
   },
   item: {
-    width: "22%",
-    minWidth: 72,
+    width: "23%",
+    minWidth: 76,
     alignItems: "center",
     gap: 8,
+    paddingVertical: 4,
   },
   swatch: {
     width: 48,
@@ -89,11 +90,6 @@ const styles = StyleSheet.create({
     borderRadius: 24,
     alignItems: "center",
     justifyContent: "center",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.12,
-    shadowRadius: 4,
-    elevation: 3,
   },
   swatchSelected: {
     borderWidth: 3,

@@ -147,17 +147,22 @@ export default function SignUpScreen() {
           <TouchableOpacity
             style={[
               authSharedStyles.pillButton,
-              styles.primaryBtn,
-              { backgroundColor: colors.text },
+              authSharedStyles.pillButtonInverted,
+              { borderColor: colors.text },
             ]}
             onPress={handleSignUp}
             disabled={busy}
             activeOpacity={0.88}
           >
             {busy ? (
-              <ActivityIndicator color="#fff" />
+              <ActivityIndicator color={colors.text} />
             ) : (
-              <Text style={authSharedStyles.pillButtonText}>
+              <Text
+                style={[
+                  authSharedStyles.pillButtonInvertedText,
+                  { color: colors.text },
+                ]}
+              >
                 {t("auth.signUpSubmit")}
               </Text>
             )}
@@ -193,8 +198,5 @@ const styles = StyleSheet.create({
     fontFamily: "PlusJakartaSans-Medium",
     marginBottom: 16,
     lineHeight: 20,
-  },
-  primaryBtn: {
-    marginTop: 6,
   },
 });

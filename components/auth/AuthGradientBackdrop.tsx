@@ -3,11 +3,10 @@ import { LinearGradient } from "expo-linear-gradient";
 
 import { useAppTheme } from "@/lib/app-theme";
 
-/** Lueur verticale discrète en haut d’écran (onboarding / auth). */
-export function AuthGradientBackdrop() {
+function ScreenTopGradient({ enabled }: { enabled: boolean }) {
   const colors = useAppTheme();
 
-  if (colors.usesBackgroundImage) return null;
+  if (!enabled || colors.usesBackgroundImage) return null;
 
   return (
     <LinearGradient
@@ -21,6 +20,18 @@ export function AuthGradientBackdrop() {
       pointerEvents="none"
     />
   );
+}
+
+/** Lueur verticale en haut d’écran — mode sombre (clair en haut, sombre en bas). */
+export function DarkModeScreenGradient() {
+  const colors = useAppTheme();
+  return <ScreenTopGradient enabled={colors.isDark} />;
+}
+
+/** Lueur discrète sur les écrans auth / onboarding en mode clair. */
+export function AuthGradientBackdrop() {
+  const colors = useAppTheme();
+  return <ScreenTopGradient enabled={!colors.isDark} />;
 }
 
 const styles = StyleSheet.create({
