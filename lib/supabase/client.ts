@@ -10,6 +10,7 @@ const supabaseAnonKey = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY ?? "";
 /** `true` lorsque URL + clé anon sont renseignées dans `.env.local`. */
 export const isSupabaseConfigured = Boolean(supabaseUrl && supabaseAnonKey);
 const isWeb = Platform.OS === "web";
+const hasNativeWebSocket = typeof WebSocket !== "undefined";
 
 /**
  * Client Supabase (Auth + API).
@@ -26,5 +27,7 @@ export const supabase = createClient(
       detectSessionInUrl: isWeb,
       flowType: "pkce",
     },
+    // Jest/Node < 22 n'a pas WebSocket natif ; l'app n'utilise pas Realtime.
+    ...(hasNativeWebSocket ? {} : { realtime: { enabled: false } }),
   }
 );
