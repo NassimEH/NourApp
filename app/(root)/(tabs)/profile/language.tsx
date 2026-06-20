@@ -19,15 +19,15 @@ const PREVIEW_BY_LOCALE: Record<
   { greeting: string; subtitle: string }
 > = {
   fr: {
-    greeting: "Bienvenue sur Nûr",
+    greeting: "Bienvenue sur Louma",
     subtitle: "Horaires de prière, Coran, invocations et plus.",
   },
   en: {
-    greeting: "Welcome to Nûr",
+    greeting: "Welcome to Louma",
     subtitle: "Prayer times, Quran, invocations and more.",
   },
   ar: {
-    greeting: "مرحباً بك في نور",
+    greeting: "مرحباً بك في لومة",
     subtitle: "أوقات الصلاة، القرآن، الأذكار والمزيد.",
   },
 };

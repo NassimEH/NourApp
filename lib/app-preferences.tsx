@@ -10,6 +10,8 @@ import React, {
 import { Platform } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
+import { syncAppPreferencesToCloud } from "@/lib/supabase/sync";
+import { getAuthenticatedUserId } from "@/lib/supabase/user-data";
 import {
   isAccentColorKey,
   type AccentColorKey,
@@ -95,6 +97,10 @@ async function saveStored(prefs: AppPreferencesState) {
   if (Platform.OS === "web") return;
   try {
     await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(prefs));
+    const userId = await getAuthenticatedUserId();
+    if (userId) {
+      void syncAppPreferencesToCloud(userId, prefs as unknown as Record<string, unknown>);
+    }
   } catch {}
 }
 

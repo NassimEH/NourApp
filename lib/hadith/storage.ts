@@ -1,8 +1,15 @@
 /**
- * Persistance locale : langue d'affichage des hadiths (EN/FR) et favoris.
+ * Persistance : langue d'affichage des hadiths (EN/FR) et favoris.
  */
 
 import AsyncStorage from "@react-native-async-storage/async-storage";
+
+import {
+  getAuthenticatedUserId,
+  replaceFavorites,
+  fetchFavorites,
+} from "@/lib/supabase/user-data";
+
 import type { HadithFavorite } from "./types";
 
 const KEY_FAVORITES = "@hadith_favorites";
@@ -25,6 +32,17 @@ export async function setHadithLanguage(lang: HadithLanguage): Promise<void> {
 }
 
 export async function getHadithFavorites(): Promise<HadithFavorite[]> {
+  const userId = await getAuthenticatedUserId();
+  if (userId) {
+    try {
+      const rows = await fetchFavorites(userId, "hadith");
+      const list = rows.map((r) => r.metadata as unknown as HadithFavorite);
+      await AsyncStorage.setItem(KEY_FAVORITES, JSON.stringify(list));
+      return list;
+    } catch (e) {
+      console.warn("getHadithFavorites cloud", e);
+    }
+  }
   try {
     const raw = await AsyncStorage.getItem(KEY_FAVORITES);
     if (!raw) return [];
@@ -39,6 +57,18 @@ export async function setHadithFavorites(
 ): Promise<void> {
   try {
     await AsyncStorage.setItem(KEY_FAVORITES, JSON.stringify(list));
+    const userId = await getAuthenticatedUserId();
+    if (userId) {
+      await replaceFavorites(
+        userId,
+        "hadith",
+        list.map((f) => ({
+          refKey: getHadithFavoriteKey(f.collectionName, f.hadithNumber),
+          metadata: f as unknown as Record<string, unknown>,
+          addedAt: f.addedAt,
+        }))
+      );
+    }
   } catch {}
 }
 

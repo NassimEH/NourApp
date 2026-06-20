@@ -1,7 +1,26 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
+import { getAuthenticatedUserId, upsertWorshipTools } from "@/lib/supabase/user-data";
+
 const KEY_AMOUNT = "@sadaqa_monthly_goal";
 const KEY_DONE = "@sadaqa_month_done";
+
+async function syncSadaqaToCloud(): Promise<void> {
+  const userId = await getAuthenticatedUserId();
+  if (!userId) return;
+  const [goal, done] = await Promise.all([
+    getSadaqaMonthlyGoal(),
+    getSadaqaMonthDone(),
+  ]);
+  try {
+    await upsertWorshipTools(userId, {
+      sadaqa_monthly_goal: goal,
+      sadaqa_month_done: { month: monthKey(), amount: done },
+    });
+  } catch (e) {
+    console.warn("syncSadaqaToCloud", e);
+  }
+}
 
 function monthKey(): string {
   const d = new Date();
@@ -20,6 +39,7 @@ export async function getSadaqaMonthlyGoal(): Promise<number> {
 
 export async function setSadaqaMonthlyGoal(amount: number): Promise<void> {
   await AsyncStorage.setItem(KEY_AMOUNT, String(Math.max(0, amount)));
+  await syncSadaqaToCloud();
 }
 
 export async function getSadaqaMonthDone(): Promise<number> {
@@ -39,4 +59,5 @@ export async function setSadaqaMonthDone(amount: number): Promise<void> {
     KEY_DONE,
     JSON.stringify({ month: monthKey(), amount: Math.max(0, amount) })
   );
+  await syncSadaqaToCloud();
 }

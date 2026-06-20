@@ -1,4 +1,4 @@
-# Features à implémenter — NourApp
+# Features à implémenter — Louma
 
 Légende : `[ ]` à faire · `[OK]` fait
 

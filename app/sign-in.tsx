@@ -16,6 +16,7 @@ import { AuthFeatureList } from "@/components/auth/AuthFeatureList";
 import { AuthHero } from "@/components/auth/AuthHero";
 import { authSharedStyles, getAuthPrimaryButtonColors } from "@/components/auth/auth-styles";
 import { AuthTextField } from "@/components/auth/AuthTextField";
+import { AppleSignInButton } from "@/components/auth/AppleSignInButton";
 import { GoogleSignInButton } from "@/components/auth/GoogleSignInButton";
 import { ScreenBackground } from "@/components/ScreenBackground";
 import { SCREEN_EDGE_PADDING } from "@/constants/screen-layout";
@@ -27,6 +28,7 @@ import { useGlobalContext } from "@/lib/global-provider";
 import { useTranslation } from "@/lib/i18n";
 import { isSupabaseConfigured } from "@/lib/supabase/client";
 import {
+  loginWithApple,
   loginWithEmailPassword,
   loginWithGoogle,
 } from "@/lib/supabase/auth";
@@ -78,6 +80,21 @@ export default function SignInScreen() {
     setBusy(true);
     try {
       const user = await loginWithGoogle();
+      if (user) {
+        await refetch();
+        router.replace("/(root)/(tabs)" as const);
+      }
+    } catch (e) {
+      showAuthError(resolveAuthErrorKey(e));
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const handleApple = async () => {
+    setBusy(true);
+    try {
+      const user = await loginWithApple();
       if (user) {
         await refetch();
         router.replace("/(root)/(tabs)" as const);
@@ -180,10 +197,13 @@ export default function SignInScreen() {
             />
           </View>
 
+          <AppleSignInButton onPress={handleApple} disabled={busy} />
+
           <GoogleSignInButton
             label={t("auth.loginGoogle")}
             onPress={handleGoogle}
             disabled={busy}
+            style={styles.socialButtonSpacing}
           />
 
           <View style={authSharedStyles.authFooter}>
@@ -251,5 +271,8 @@ const styles = StyleSheet.create({
     fontFamily: "PlusJakartaSans-Medium",
     marginBottom: SPACE.md,
     lineHeight: 20,
+  },
+  socialButtonSpacing: {
+    marginTop: 12,
   },
 });

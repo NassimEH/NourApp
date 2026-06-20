@@ -1,7 +1,25 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
+import { getAuthenticatedUserId, upsertWorshipTools } from "@/lib/supabase/user-data";
+
 const KEY_WEEKLY_GOAL = "@learn_weekly_goal";
 const KEY_WEEKLY_DONE = "@learn_weekly_done";
+
+async function syncWeeklyToCloud(): Promise<void> {
+  const userId = await getAuthenticatedUserId();
+  if (!userId) return;
+  const [goal, done] = await Promise.all([
+    getWeeklyGoalLessons(),
+    getWeeklyLessonsDone(),
+  ]);
+  try {
+    await upsertWorshipTools(userId, {
+      weekly_learning: { goal, done },
+    });
+  } catch (e) {
+    console.warn("syncWeeklyToCloud", e);
+  }
+}
 
 function currentWeekKey(): string {
   const d = new Date();
@@ -26,9 +44,11 @@ export async function setWeeklyGoalLessons(count: number): Promise<void> {
   const n = Math.max(0, Math.min(21, Math.round(count)));
   if (n === 0) {
     await AsyncStorage.removeItem(KEY_WEEKLY_GOAL);
+    await syncWeeklyToCloud();
     return;
   }
   await AsyncStorage.setItem(KEY_WEEKLY_GOAL, String(n));
+  await syncWeeklyToCloud();
 }
 
 export async function getWeeklyLessonsDone(): Promise<{
@@ -59,4 +79,5 @@ export async function incrementWeeklyLessonsDone(): Promise<void> {
     KEY_WEEKLY_DONE,
     JSON.stringify({ weekKey, count: count + 1 })
   );
+  await syncWeeklyToCloud();
 }

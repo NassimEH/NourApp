@@ -5,6 +5,8 @@
 
 import * as FileSystem from "expo-file-system/legacy";
 
+import { getAuthenticatedUserId, uploadAvatar } from "@/lib/supabase/user-data";
+
 const AVATAR_FILENAME = "profile_avatar.jpg";
 
 function avatarPath(): string {
@@ -30,6 +32,10 @@ export async function setProfileAvatarUri(localUri: string): Promise<string | nu
   try {
     const destUri = avatarPath();
     await FileSystem.copyAsync({ from: localUri, to: destUri });
+    const userId = await getAuthenticatedUserId();
+    if (userId) {
+      await uploadAvatar(userId, destUri);
+    }
     return destUri;
   } catch (e) {
     console.error("setProfileAvatarUri", e);

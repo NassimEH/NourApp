@@ -1,5 +1,4 @@
 import {
-  ImageBackground,
   StyleSheet,
   View,
   type StyleProp,
@@ -7,25 +6,19 @@ import {
 } from "react-native";
 
 import { DarkModeScreenGradient } from "@/components/auth/AuthGradientBackdrop";
+import { SpiritualBackgroundGradient } from "@/components/SpiritualBackgroundGradient";
 import { useAppTheme } from "@/lib/app-theme";
-
-const homeBackground = require("@/assets/images/home-background.png");
-const rootBackground = require("@/assets/images/background.png");
 
 interface ScreenBackgroundProps {
   children: React.ReactNode;
   style?: StyleProp<ViewStyle>;
-  /** Image de fond racine (layout principal) vs écran standard */
-  variant?: "screen" | "root";
 }
 
 export function ScreenBackground({
   children,
   style,
-  variant = "screen",
 }: ScreenBackgroundProps) {
   const colors = useAppTheme();
-  const source = variant === "root" ? rootBackground : homeBackground;
 
   return (
     <View
@@ -36,11 +29,7 @@ export function ScreenBackground({
       ]}
     >
       {colors.usesBackgroundImage ? (
-        <ImageBackground
-          source={source}
-          style={[styles.backgroundImage, styles.nonInteractive]}
-          resizeMode="cover"
-        />
+        <SpiritualBackgroundGradient />
       ) : (
         <DarkModeScreenGradient />
       )}
@@ -53,12 +42,6 @@ export function ScreenBackground({
 
 const styles = StyleSheet.create({
   fill: { flex: 1 },
-  backgroundImage: {
-    ...StyleSheet.absoluteFillObject,
-  },
-  nonInteractive: {
-    pointerEvents: "none",
-  },
   content: {
     flex: 1,
   },

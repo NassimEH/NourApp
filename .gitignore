@@ -29,7 +29,8 @@ yarn-error.*
 .DS_Store
 *.pem
 
-# local env files
+# local env files (secrets — ne jamais committer)
+.env
 .env*.local
 
 # typescript

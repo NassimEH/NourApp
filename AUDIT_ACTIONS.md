@@ -2,7 +2,7 @@
 
 Légende : `[ ]` à faire · `[~]` en cours · `[OK]` fait
 
-Dernière mise à jour : juin 2026. Source : audit complet NourApp.
+Dernière mise à jour : juin 2026. Source : audit complet Louma.
 
 ---
 

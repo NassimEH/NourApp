@@ -5,6 +5,8 @@ export type AuthErrorKey =
   | "weakPassword"
   | "network"
   | "notConfigured"
+  | "oauthCancelled"
+  | "oauthProvider"
   | "unknown";
 
 export function resolveAuthErrorKey(error: unknown): AuthErrorKey {
@@ -40,6 +42,24 @@ export function resolveAuthErrorKey(error: unknown): AuthErrorKey {
     message.includes("failed to fetch")
   ) {
     return "network";
+  }
+  if (
+    message.includes("provider") &&
+    (message.includes("not enabled") || message.includes("disabled"))
+  ) {
+    return "oauthProvider";
+  }
+  if (
+    message.includes("redirect") ||
+    message.includes("oauth") ||
+    message.includes("id_token") ||
+    message.includes("nonce") ||
+    message.includes("audience")
+  ) {
+    return "oauthProvider";
+  }
+  if (message.includes("cancel") || message.includes("dismiss")) {
+    return "oauthCancelled";
   }
   return "unknown";
 }

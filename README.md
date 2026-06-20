@@ -1,6 +1,6 @@
-# Nûr (NourApp)
+# Louma
 
-Application mobile islamique construite avec **Expo** et **React Native**. Nûr regroupe lecture et écoute du Coran, horaires de prière, Qibla, hadiths, invocations, parcours d’apprentissage et une boîte à outils pratique (zakat, dhikr, dates hijriennes, etc.).
+Application mobile islamique construite avec **Expo** et **React Native**. Louma regroupe lecture et écoute du Coran, horaires de prière, Qibla, hadiths, invocations, parcours d’apprentissage et une boîte à outils pratique (zakat, dhikr, dates hijriennes, etc.).
 
 Interface en **français**, **anglais** et **arabe** (RTL), avec thème clair / sombre personnalisable.
 
@@ -107,7 +107,7 @@ Permissions utiles en développement : **localisation** (horaires, météo, Qibl
 
 ```bash
 git clone <url-du-repo>
-cd NourApp
+cd react_native-restate
 npm install
 ```
 
@@ -150,7 +150,7 @@ Sans ces variables, l’app affiche un message sur les écrans de connexion ; le
 
 Les APIs Coran, hadiths et prières ne nécessitent pas de clé supplémentaire.
 
-**Google OAuth** : activer le fournisseur Google dans Supabase Auth et ajouter l’URL de redirection `nourapp://` (schéma dans `app.json`).
+**Google OAuth** : activer le fournisseur Google dans Supabase Auth et ajouter l’URL de redirection `louma://` (schéma dans `app.json`).
 
 ---
 
@@ -248,6 +248,7 @@ Le mode **hors-ligne** des récitations est prévu (`offline-recitations.tsx`, p
 |---------|---------|
 | [ACTIONS.md](./ACTIONS.md) | Roadmap et tâches (`[OK]` / `[ ]`) |
 | [docs/PRODUCT.md](./docs/PRODUCT.md) | Choix produit (auth, sync, héritage, Ramadan…) |
+| [docs/APP_STORE.md](./docs/APP_STORE.md) | Guide déploiement App Store / Play Store (EAS) |
 | [docs/ui-screenshots.md](./docs/ui-screenshots.md) | Checklist captures d’écran pour la doc visuelle |
 
 ---

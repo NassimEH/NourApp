@@ -1,5 +1,9 @@
-import * as Linking from "expo-linking";
+import * as AppleAuthentication from "expo-apple-authentication";
+import { makeRedirectUri } from "expo-auth-session";
+import * as QueryParams from "expo-auth-session/build/QueryParams";
+import * as Crypto from "expo-crypto";
 import * as WebBrowser from "expo-web-browser";
+import { Platform } from "react-native";
 import type { Session, User } from "@supabase/supabase-js";
 
 import { getProfileAvatarUri } from "@/lib/profile-avatar";
@@ -8,6 +12,40 @@ import { isSupabaseConfigured, supabase } from "./client";
 import type { AppUser } from "./types";
 
 WebBrowser.maybeCompleteAuthSession();
+
+/** URI de retour OAuth — doit être listée dans Supabase (ex. `louma://**`). */
+function getOAuthRedirectUri(): string {
+  return makeRedirectUri({ scheme: "louma", path: "auth/callback" });
+}
+
+async function createSessionFromOAuthUrl(url: string): Promise<Session> {
+  const { params, errorCode } = QueryParams.getQueryParams(url);
+  if (errorCode) {
+    throw new Error(params.error_description ?? errorCode);
+  }
+
+  const code = params.code;
+  if (code) {
+    const { data, error } = await supabase.auth.exchangeCodeForSession(code);
+    if (error) throw error;
+    if (!data.session) throw new Error("OAuth: session manquante après échange du code");
+    return data.session;
+  }
+
+  const accessToken = params.access_token;
+  const refreshToken = params.refresh_token;
+  if (accessToken && refreshToken) {
+    const { data, error } = await supabase.auth.setSession({
+      access_token: accessToken,
+      refresh_token: refreshToken,
+    });
+    if (error) throw error;
+    if (!data.session) throw new Error("OAuth: session manquante");
+    return data.session;
+  }
+
+  throw new Error("OAuth: code ou jetons absents dans l'URL de retour");
+}
 
 function assertConfigured(): void {
   if (!isSupabaseConfigured) {
@@ -99,7 +137,7 @@ export async function registerWithEmail(
 
 export async function loginWithGoogle(): Promise<AppUser | null> {
   assertConfigured();
-  const redirectTo = Linking.createURL("/");
+  const redirectTo = getOAuthRedirectUri();
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider: "google",
     options: {
@@ -108,28 +146,81 @@ export async function loginWithGoogle(): Promise<AppUser | null> {
     },
   });
   if (error) throw error;
-  if (!data.url) return null;
+  if (!data.url) throw new Error("OAuth Google: URL d'autorisation manquante");
 
   const result = await WebBrowser.openAuthSessionAsync(data.url, redirectTo);
-  if (result.type !== "success" || !result.url) return null;
+  if (result.type === "cancel" || result.type === "dismiss") return null;
+  if (result.type !== "success" || !result.url) {
+    throw new Error("OAuth Google: connexion interrompue");
+  }
 
-  const hashParams = new URLSearchParams(result.url.split("#")[1] ?? "");
-  const queryParams = new URLSearchParams(result.url.split("?")[1] ?? "");
-  const accessToken =
-    hashParams.get("access_token") ?? queryParams.get("access_token");
-  const refreshToken =
-    hashParams.get("refresh_token") ?? queryParams.get("refresh_token");
+  const session = await createSessionFromOAuthUrl(result.url);
+  if (!session.user) return null;
+  return mapSupabaseUser(session.user);
+}
 
-  if (!accessToken || !refreshToken) return null;
+/** Sign in with Apple (iOS natif) — requis App Store si Google OAuth est proposé. */
+export async function loginWithApple(): Promise<AppUser | null> {
+  assertConfigured();
+  if (Platform.OS !== "ios") return null;
 
-  const { data: sessionData, error: sessionError } =
-    await supabase.auth.setSession({
-      access_token: accessToken,
-      refresh_token: refreshToken,
+  const available = await AppleAuthentication.isAvailableAsync();
+  if (!available) return null;
+
+  const rawNonce = Crypto.randomUUID();
+  const hashedNonce = await Crypto.digestStringAsync(
+    Crypto.CryptoDigestAlgorithm.SHA256,
+    rawNonce
+  );
+
+  let credential: AppleAuthentication.AppleAuthenticationCredential;
+  try {
+    credential = await AppleAuthentication.signInAsync({
+      requestedScopes: [
+        AppleAuthentication.AppleAuthenticationScope.FULL_NAME,
+        AppleAuthentication.AppleAuthenticationScope.EMAIL,
+      ],
+      nonce: hashedNonce,
     });
-  if (sessionError) throw sessionError;
-  if (!sessionData.user) return null;
-  return mapSupabaseUser(sessionData.user);
+  } catch (e) {
+    const code =
+      e && typeof e === "object" && "code" in e
+        ? String((e as { code: unknown }).code)
+        : "";
+    if (code === "ERR_REQUEST_CANCELED") return null;
+    throw e;
+  }
+
+  if (!credential.identityToken) {
+    throw new Error("Apple Sign In: missing identity token");
+  }
+
+  const { data, error } = await supabase.auth.signInWithIdToken({
+    provider: "apple",
+    token: credential.identityToken,
+    nonce: rawNonce,
+  });
+  if (error) throw error;
+  if (!data.user) return null;
+
+  const fullName = [
+    credential.fullName?.givenName,
+    credential.fullName?.familyName,
+  ]
+    .filter(Boolean)
+    .join(" ")
+    .trim();
+
+  if (fullName) {
+    await supabase.auth.updateUser({
+      data: {
+        full_name: fullName,
+        name: fullName,
+      },
+    });
+  }
+
+  return mapSupabaseUser(data.user);
 }
 
 export async function logout(): Promise<boolean> {

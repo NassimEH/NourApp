@@ -380,7 +380,7 @@ const fr = {
     title: "Profil",
     blessing: "Qu'Allah vous accorde Sa bénédiction",
     guestModeHint:
-      "Mode invité : favoris, progression et préférences restent sur cet appareil. Connectez-vous pour synchroniser (bientôt).",
+      "Mode invité : vos données restent sur cet appareil. Connectez-vous pour les synchroniser avec votre compte Louma.",
     offlineRecitations: "Récitations hors-ligne",
     defaultUser: "Utilisateur",
     sectionMySpace: "Mon espace",
@@ -406,7 +406,7 @@ const fr = {
     notifications: "Notifications",
     location: "Localisation",
     securityLocalBody:
-      "Nûr ne demande pas de compte en ligne. Votre photo de profil, vos favoris, votre progression Apprendre et vos préférences sont enregistrés uniquement sur cet appareil.",
+      "En mode invité, votre photo, favoris, progression et préférences restent sur cet appareil. Connectez-vous pour tout sauvegarder dans votre compte Louma (Supabase).",
     securitySignInRequired:
       "Connectez-vous avec un compte Supabase pour modifier votre mot de passe.",
     securityPasswordHint:
@@ -416,9 +416,9 @@ const fr = {
     passwordChangedBody: "Votre mot de passe a été mis à jour.",
     passwordChangeFailed: "Impossible de modifier le mot de passe.",
     logout: "Déconnexion",
-    shareTitle: "Partager Nûr",
+    shareTitle: "Partager Louma",
     shareMessage:
-      "Découvrez Nûr — horaires de prière, Qibla, lecture et bien plus. Téléchargez l'application !",
+      "Découvrez Louma — horaires de prière, Qibla, lecture et bien plus. Téléchargez l'application !",
     logoutSuccess: "Déconnexion",
     logoutSuccessBody: "Vous avez été déconnecté avec succès.",
     logoutError: "Erreur",
@@ -621,7 +621,7 @@ const fr = {
       "Thème spirituel, langue, taille du texte et style d'icônes — tout se règle dans le profil.",
   },
   auth: {
-    brand: "Nûr",
+    brand: "Louma",
     tagline: "Votre compagnon spirituel au quotidien",
     intro:
       "Prière, lecture, apprentissage et invocations réunis dans une seule application, pensée pour accompagner votre routine.",
@@ -643,7 +643,7 @@ const fr = {
     noAccount: "Pas encore de compte ?",
     signUpLink: "Créer un compte",
     signUpPageTitle: "Créer un compte",
-    signUpPageSubtitle: "Rejoignez Nûr en quelques secondes",
+    signUpPageSubtitle: "Rejoignez Louma en quelques secondes",
     signUpPanelTitle: "Inscription",
     signUpHint: "Vos favoris et votre progression seront synchronisés sur tous vos appareils.",
     signUpSubmit: "Créer mon compte",
@@ -667,6 +667,9 @@ const fr = {
       network: "Problème de connexion. Réessayez.",
       notConfigured:
         "Supabase n'est pas configuré. Ajoutez EXPO_PUBLIC_SUPABASE_URL et EXPO_PUBLIC_SUPABASE_ANON_KEY dans .env.local.",
+      oauthProvider:
+        "Connexion Google/Apple indisponible. Vérifiez les providers et les URLs de redirection (louma://**) dans Supabase.",
+      oauthCancelled: "Connexion annulée.",
       unknown: "Une erreur est survenue. Réessayez.",
       generic: "Une erreur est survenue. Réessayez.",
     },
@@ -1062,7 +1065,7 @@ const en: TranslationMessages = {
     title: "Profile",
     blessing: "May Allah grant you His blessings",
     guestModeHint:
-      "Guest mode: favorites, progress and preferences stay on this device. Sign in to sync (coming soon).",
+      "Guest mode: data stays on this device. Sign in to sync with your Louma account.",
     offlineRecitations: "Offline recitations",
     defaultUser: "User",
     sectionMySpace: "My space",
@@ -1088,7 +1091,7 @@ const en: TranslationMessages = {
     notifications: "Notifications",
     location: "Location",
     securityLocalBody:
-      "Nûr does not require an online account. Your profile photo, favorites, learning progress, and preferences are stored only on this device.",
+      "In guest mode, your photo, favorites, progress and preferences stay on this device. Sign in to save everything to your Louma account (Supabase).",
     securitySignInRequired:
       "Sign in with a Supabase account to change your password.",
     securityPasswordHint:
@@ -1098,9 +1101,9 @@ const en: TranslationMessages = {
     passwordChangedBody: "Your password has been updated.",
     passwordChangeFailed: "Could not update the password.",
     logout: "Log out",
-    shareTitle: "Share Nûr",
+    shareTitle: "Share Louma",
     shareMessage:
-      "Discover Nûr — prayer times, Qibla, reading and more. Download the app!",
+      "Discover Louma — prayer times, Qibla, reading and more. Download the app!",
     logoutSuccess: "Logged out",
     logoutSuccessBody: "You have been logged out successfully.",
     logoutError: "Error",
@@ -1300,7 +1303,7 @@ const en: TranslationMessages = {
       "Spiritual theme, language, text size and icon style — all customizable in your profile.",
   },
   auth: {
-    brand: "Nûr",
+    brand: "Louma",
     tagline: "Your daily spiritual companion",
     intro:
       "Prayer, reading, learning and invocations in one app designed to support your daily routine.",
@@ -1322,7 +1325,7 @@ const en: TranslationMessages = {
     noAccount: "Don't have an account?",
     signUpLink: "Create account",
     signUpPageTitle: "Create account",
-    signUpPageSubtitle: "Join Nûr in seconds",
+    signUpPageSubtitle: "Join Louma in seconds",
     signUpPanelTitle: "Sign up",
     signUpHint: "Your favorites and progress sync across your devices.",
     signUpSubmit: "Create my account",
@@ -1346,6 +1349,9 @@ const en: TranslationMessages = {
       network: "Connection problem. Please try again.",
       notConfigured:
         "Supabase is not configured. Add EXPO_PUBLIC_SUPABASE_URL and EXPO_PUBLIC_SUPABASE_ANON_KEY to .env.local.",
+      oauthProvider:
+        "Google/Apple sign-in is unavailable. Check providers and redirect URLs (louma://**) in Supabase.",
+      oauthCancelled: "Sign-in cancelled.",
       unknown: "Something went wrong. Please try again.",
       generic: "Something went wrong. Please try again.",
     },
@@ -1758,7 +1764,7 @@ const ar: TranslationMessages = {
     notifications: "الإشعارات",
     location: "الموقع",
     securityLocalBody:
-      "لا يتطلب نور حساباً على الإنترنت. صورة ملفك والمفضلات وتقدم التعلّم والإعدادات تُحفظ على هذا الجهاز فقط.",
+      "لا يتطلب لومة حساباً على الإنترنت. صورة ملفك والمفضلات وتقدم التعلّم والإعدادات تُحفظ على هذا الجهاز فقط.",
     securitySignInRequired:
       "سجّل الدخول بحساب Supabase لتغيير كلمة المرور.",
     securityPasswordHint:
@@ -1768,9 +1774,9 @@ const ar: TranslationMessages = {
     passwordChangedBody: "تم تحديث كلمة المرور بنجاح.",
     passwordChangeFailed: "تعذّر تحديث كلمة المرور.",
     logout: "تسجيل الخروج",
-    shareTitle: "مشاركة نور",
+    shareTitle: "مشاركة لومة",
     shareMessage:
-      "اكتشف نور — أوقات الصلاة، القبلة، القراءة والمزيد. حمّل التطبيق!",
+      "اكتشف لومة — أوقات الصلاة، القبلة، القراءة والمزيد. حمّل التطبيق!",
     logoutSuccess: "تم تسجيل الخروج",
     logoutSuccessBody: "تم تسجيل خروجك بنجاح.",
     logoutError: "خطأ",
@@ -1970,7 +1976,7 @@ const ar: TranslationMessages = {
       "مظهر روحاني، لغة، حجم النص ونمط الأيقونات — كلّها من ملفك.",
   },
   auth: {
-    brand: "نور",
+    brand: "لومة",
     tagline: "رفيقك الروحاني اليومي",
     intro:
       "صلاة وقراءة وتعلّم وأذكار في تطبيق واحد يرافقك في يومك.",
@@ -1992,7 +1998,7 @@ const ar: TranslationMessages = {
     noAccount: "ليس لديك حساب؟",
     signUpLink: "إنشاء حساب",
     signUpPageTitle: "إنشاء حساب",
-    signUpPageSubtitle: "انضم إلى نور في ثوانٍ",
+    signUpPageSubtitle: "انضم إلى لومة في ثوانٍ",
     signUpPanelTitle: "التسجيل",
     signUpHint: "ستُزامَن مفضلتك وتقدّمك على جميع أجهزتك.",
     signUpSubmit: "إنشاء حسابي",
@@ -2016,6 +2022,9 @@ const ar: TranslationMessages = {
       network: "مشكلة في الاتصال. حاول مجدداً.",
       notConfigured:
         "لم يُضبط Supabase. أضف EXPO_PUBLIC_SUPABASE_URL و EXPO_PUBLIC_SUPABASE_ANON_KEY في .env.local.",
+      oauthProvider:
+        "تسجيل Google/Apple غير متاح. تحقق من المزودين وعناوين إعادة التوجيه (louma://**) في Supabase.",
+      oauthCancelled: "تم إلغاء تسجيل الدخول.",
       unknown: "حدث خطأ. حاول مجدداً.",
       generic: "حدث خطأ. حاول مجدداً.",
     },

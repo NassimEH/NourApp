@@ -4,6 +4,7 @@ import { Platform } from "react-native";
 
 import type { PrayerKey, PrayerTimes } from "@/lib/usePrayerTimes";
 import { getNextPrayerInfo } from "@/lib/prayerUtils";
+import { syncNotificationPrefsToCloud } from "@/lib/notifications/cloud-sync";
 
 const KEY_ENABLED = "@prayer_notifications_enabled";
 const CHANNEL_ID = "prayer-reminders";
@@ -32,6 +33,7 @@ export async function setPrayerNotificationsEnabled(
   if (!enabled) {
     await AsyncStorage.setItem(KEY_ENABLED, "false");
     await Notifications.cancelAllScheduledNotificationsAsync();
+    await syncNotificationPrefsToCloud();
     return true;
   }
 
@@ -42,6 +44,7 @@ export async function setPrayerNotificationsEnabled(
   }
 
   await AsyncStorage.setItem(KEY_ENABLED, "true");
+  await syncNotificationPrefsToCloud();
   return true;
 }
 

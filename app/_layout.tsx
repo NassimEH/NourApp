@@ -62,7 +62,7 @@ export default function RootLayout() {
         <TabBarPreferenceProvider>
           <AppPreferencesProvider>
             <LocaleSync />
-            <ScreenBackground variant="root" style={styles.background}>
+            <ScreenBackground style={styles.background}>
               <View style={styles.overlay}>
                 <RootNavigation />
               </View>

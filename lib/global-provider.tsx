@@ -9,6 +9,7 @@ import React, {
 
 import { loadLocalUser, type LocalUser } from "./local-profile";
 import { getCurrentUser, logout as supabaseLogout } from "./supabase/auth";
+import { syncUserDataWithCloud } from "./supabase/sync";
 import { supabase } from "./supabase/client";
 import type { AppUser } from "./supabase/types";
 
@@ -46,6 +47,7 @@ export const GlobalProvider = ({ children }: { children: ReactNode }) => {
       if (sessionUser) {
         setUser(sessionUser);
         setIsGuest(false);
+        void syncUserDataWithCloud(sessionUser.id);
         return;
       }
       if (isGuest) {

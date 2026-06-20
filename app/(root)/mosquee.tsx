@@ -2,7 +2,6 @@
   ActivityIndicator,
   Dimensions,
   Image,
-  ImageBackground,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -24,9 +23,9 @@ import {
   getNextPrayerTimestamp,
   formatCountdownHM,
 } from "@/lib/prayerUtils";
+import { SpiritualBackgroundGradient } from "@/components/SpiritualBackgroundGradient";
 import { useAppTheme } from "@/lib/app-theme";
 
-const homeBackground = require("@/assets/images/home-background.png");
 const mosqueImage = require("@/assets/images/mosquee.png");
 const { width: screenWidth } = Dimensions.get("window");
 const H_PADDING = 24;
@@ -84,7 +83,8 @@ export default function MosqueeScreen() {
   }, [prayerTimes, nextPrayer]);
 
   return (
-    <ImageBackground source={homeBackground} style={styles.background} resizeMode="cover">
+    <View style={styles.background}>
+      <SpiritualBackgroundGradient />
       <SafeAreaView style={styles.safeArea} edges={["top"]}>
         <View style={styles.header}>
           <Text style={[styles.headerTitle, { color: colors.text }]}>Ma mosquée</Text>
@@ -209,7 +209,7 @@ export default function MosqueeScreen() {
           </View>
         </ScrollView>
       </SafeAreaView>
-    </ImageBackground>
+    </View>
   );
 }
 
