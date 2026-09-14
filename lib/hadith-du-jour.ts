@@ -5,7 +5,10 @@ import {
 import { getLocaleDateString } from "@/lib/i18n";
 import type { LanguageLocale } from "@/lib/app-preferences";
 
-export { getHadithDuJour } from "@/constants/hadithsJour";
+export {
+  getHadithDuJour,
+  getHadithLocalizedText,
+} from "@/constants/hadithsJour";
 export type { HadithJourItem };
 
 export type HadithDuJourEntry = {

@@ -8,7 +8,7 @@ import {
 } from "../weekly-goal";
 
 export function useWeeklyGoal() {
-  const [goal, setGoal] = useState(0);
+  const [goal, setGoalState] = useState(0);
   const [done, setDone] = useState(0);
 
   const refresh = useCallback(async () => {
@@ -16,7 +16,7 @@ export function useWeeklyGoal() {
       getWeeklyGoalLessons(),
       getWeeklyLessonsDone(),
     ]);
-    setGoal(g);
+    setGoalState(g);
     setDone(d.count);
   }, []);
 
@@ -34,5 +34,13 @@ export function useWeeklyGoal() {
     await refresh();
   }, [goal, refresh]);
 
-  return { goal, done, refresh, cycleGoal };
+  const setGoal = useCallback(
+    async (nextGoal: number) => {
+      await setWeeklyGoalLessons(nextGoal);
+      await refresh();
+    },
+    [refresh]
+  );
+
+  return { goal, done, refresh, cycleGoal, setGoal };
 }

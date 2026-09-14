@@ -1,13 +1,17 @@
 import { useEffect, useRef } from "react";
 import { View, StyleSheet, Animated } from "react-native";
 
-const H_PADDING = 24;
-const SKELETON_BG = "rgba(0,0,0,0.06)";
+import { SCREEN_EDGE_PADDING } from "@/constants/screen-layout";
+import { useAppTheme } from "@/lib/app-theme";
+
+const H_PADDING = SCREEN_EDGE_PADDING;
 
 function SkeletonLine({
+  color,
   width = "100%",
   style,
 }: {
+  color: string;
   width?: string | number;
   style?: object;
 }) {
@@ -25,7 +29,7 @@ function SkeletonLine({
   return (
     <Animated.View
       style={[
-        { height: 14, borderRadius: 7, backgroundColor: SKELETON_BG, width, opacity },
+        { height: 14, borderRadius: 7, backgroundColor: color, width, opacity },
         style,
       ]}
     />
@@ -33,14 +37,16 @@ function SkeletonLine({
 }
 
 export function HadithListSkeleton() {
+  const colors = useAppTheme();
+
   return (
     <View style={styles.container}>
       {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
         <View key={i} style={styles.row}>
-          <View style={styles.iconWrap} />
+          <View style={[styles.iconWrap, { backgroundColor: colors.accentSurface }]} />
           <View style={styles.textBlock}>
-            <SkeletonLine width="80%" />
-            <SkeletonLine width="50%" style={{ marginTop: 8 }} />
+            <SkeletonLine color={colors.divider} width="80%" />
+            <SkeletonLine color={colors.divider} width="50%" style={{ marginTop: 8 }} />
           </View>
         </View>
       ))}
@@ -60,7 +66,6 @@ const styles = StyleSheet.create({
     width: 22,
     height: 22,
     borderRadius: 4,
-    backgroundColor: SKELETON_BG,
   },
   textBlock: { flex: 1 },
 });

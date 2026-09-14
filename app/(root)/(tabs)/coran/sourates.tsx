@@ -2,7 +2,6 @@ import {
   FlatList,
   StyleSheet,
   Text,
-  TextInput,
   TouchableOpacity,
   View,
 } from "react-native";
@@ -16,7 +15,10 @@ import { useRandomAyah } from "@/lib/quran/hooks/useRandomAyah";
 import type { SuraMeta } from "@/lib/quran/types";
 import { SuraRow } from "@/components/quran/SuraRow";
 import { SuraListSkeleton } from "@/components/quran/SuraListSkeleton";
+import { EmptyState } from "@/components/EmptyState";
+import { ErrorState } from "@/components/ErrorState";
 import { ScreenBackground } from "@/components/ScreenBackground";
+import { ScreenSearchBar, screenSearchBarSpacing } from "@/components/ScreenSearchBar";
 import { SCREEN_EDGE_PADDING } from "@/constants/screen-layout";
 import { ScreenPageHeader } from "@/components/ScreenPageHeader";
 import { useAppTheme } from "@/lib/app-theme";
@@ -77,41 +79,19 @@ export default function SouratesScreen() {
         {loading && list.length === 0 ? (
           <SuraListSkeleton />
         ) : error && list.length === 0 ? (
-          <View style={styles.errorBlock}>
-            <Text style={[styles.errorText, { color: colors.text }]}>{error}</Text>
-            <TouchableOpacity
-              style={[styles.retryButton, { backgroundColor: colors.accent }]}
-              onPress={() => refetch()}
-              activeOpacity={0.8}
-            >
-              <AppIcon name="refresh-cw" size={20} color="#fff" />
-              <Text style={styles.retryText}>{t("home.retry")}</Text>
-            </TouchableOpacity>
-          </View>
+          <ErrorState
+            message={error}
+            onRetry={refetch}
+            retryLabel={t("home.retry")}
+          />
         ) : (
           <>
-            <View
-              style={[styles.searchWrap, { borderBottomColor: colors.border }]}
-            >
-              <AppIcon
-                name="search"
-                size={18}
-                color={colors.textMuted}
-                style={styles.searchIcon}
-              />
-              <TextInput
-                style={[styles.searchInput, { color: colors.text }]}
-                placeholder="Rechercher…"
-                placeholderTextColor={colors.textMuted}
-                value={search}
-                onChangeText={setSearch}
-              />
-              {search.length > 0 && (
-                <TouchableOpacity onPress={() => setSearch("")} hitSlop={12}>
-                  <AppIcon name="x" size={18} color={colors.textMuted} />
-                </TouchableOpacity>
-              )}
-            </View>
+            <ScreenSearchBar
+              value={search}
+              onChangeText={setSearch}
+              placeholder={t("quran.searchSuraPlaceholder")}
+              containerStyle={screenSearchBarSpacing}
+            />
 
             <FlatList
               data={filtered}
@@ -132,7 +112,7 @@ export default function SouratesScreen() {
                       <Text
                         style={[styles.verseOfDayLabel, { color: colors.accent }]}
                       >
-                        Verset du jour
+                        {t("quran.verseOfDay")}
                       </Text>
                       <Text
                         style={[
@@ -152,7 +132,10 @@ export default function SouratesScreen() {
                       <Text
                         style={[styles.verseOfDayRef, { color: colors.textMuted }]}
                       >
-                        Sourate {randomAyah.suraNumber}, verset {randomAyah.ayahNumber}
+                        {t("quran.verseReference", {
+                          sura: randomAyah.suraNumber,
+                          ayah: randomAyah.ayahNumber,
+                        })}
                       </Text>
                     </TouchableOpacity>
                     <TouchableOpacity
@@ -163,7 +146,9 @@ export default function SouratesScreen() {
                       <Text
                         style={[styles.verseOfDayToggleText, { color: colors.accent }]}
                       >
-                        {verseOfDayInArabic ? "Voir en français" : "Voir en arabe"}
+                        {verseOfDayInArabic
+                          ? t("quran.showFrench")
+                          : t("quran.showArabic")}
                       </Text>
                     </TouchableOpacity>
                   </View>
@@ -175,11 +160,7 @@ export default function SouratesScreen() {
               contentContainerStyle={styles.listContent}
               showsVerticalScrollIndicator={false}
               ListEmptyComponent={
-                <View style={styles.empty}>
-                  <Text style={[styles.emptyText, { color: colors.textMuted }]}>
-                    Aucune sourate trouvée
-                  </Text>
-                </View>
+                <EmptyState message={t("quran.noSuraFound")} icon="search" />
               }
             />
           </>
@@ -202,21 +183,6 @@ const styles = StyleSheet.create({
   juzLinkText: {
     fontSize: 15,
     fontFamily: "PlusJakartaSans-SemiBold",
-  },
-  searchWrap: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginHorizontal: H_PADDING,
-    marginBottom: 20,
-    paddingVertical: 10,
-    borderBottomWidth: 1,
-  },
-  searchIcon: { marginRight: 10 },
-  searchInput: {
-    flex: 1,
-    fontSize: 15,
-    fontFamily: "PlusJakartaSans-Regular",
-    padding: 0,
   },
   verseOfDayBlock: {
     paddingTop: 20,
@@ -254,35 +220,5 @@ const styles = StyleSheet.create({
   listContent: {
     paddingHorizontal: H_PADDING,
     paddingBottom: 120,
-  },
-  errorBlock: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    paddingHorizontal: 32,
-  },
-  errorText: {
-    fontSize: 16,
-    fontFamily: "PlusJakartaSans-Regular",
-    textAlign: "center",
-    marginBottom: 20,
-  },
-  retryButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-    paddingVertical: 14,
-    paddingHorizontal: 24,
-    borderRadius: 14,
-  },
-  retryText: {
-    fontSize: 16,
-    fontFamily: "PlusJakartaSans-SemiBold",
-    color: "#fff",
-  },
-  empty: { paddingVertical: 40, alignItems: "center" },
-  emptyText: {
-    fontSize: 15,
-    fontFamily: "PlusJakartaSans-Regular",
   },
 });

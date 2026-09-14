@@ -36,6 +36,6 @@ export function AuthGradientBackdrop() {
 
 const styles = StyleSheet.create({
   gradient: {
-    ...StyleSheet.absoluteFillObject,
+    ...StyleSheet.absoluteFill,
   },
 });

@@ -1,8 +1,11 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState } from "react";
 import { View, Text, StyleSheet, Platform, Animated } from "react-native";
 import * as Location from "expo-location";
+
+import { useAppTheme } from "@/lib/app-theme";
+import { useTranslation } from "@/lib/i18n";
 
 interface QiblaCompassProps {
   /** Bearing vers la Mecque en degrés (0-360, nord = 0) */
@@ -13,13 +16,14 @@ interface QiblaCompassProps {
 }
 
 export default function QiblaCompass({ bearing, size = 64, hideLabel }: QiblaCompassProps) {
+  const colors = useAppTheme();
+  const { t } = useTranslation();
   const [heading, setHeading] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const needleAnim = useRef(new Animated.Value(0)).current;
+  const [needleAnim] = useState(() => new Animated.Value(0));
 
   useEffect(() => {
     if (Platform.OS === "web") {
-      setError("Boussole non disponible sur le web");
       return;
     }
     let subscription: { remove: () => void } | null = null;
@@ -27,7 +31,7 @@ export default function QiblaCompass({ bearing, size = 64, hideLabel }: QiblaCom
       try {
         const { status } = await Location.requestForegroundPermissionsAsync();
         if (status !== "granted") {
-          setError("Permission refusée");
+          setError(t("qibla.locationPermissionDenied"));
           return;
         }
         subscription = await Location.watchHeadingAsync((data) => {
@@ -35,13 +39,13 @@ export default function QiblaCompass({ bearing, size = 64, hideLabel }: QiblaCom
           if (h >= 0) setHeading(h);
         });
       } catch {
-        setError("Boussole indisponible");
+        setError(t("qibla.compassUnavailable"));
       }
     })();
     return () => {
       subscription?.remove();
     };
-  }, []);
+  }, [t]);
 
   // Angle de l'aiguille : pointe vers le haut quand le téléphone est dirigé vers la Mecque
   const needleAngle = heading !== null ? (bearing - heading + 360) % 360 : 0;
@@ -54,10 +58,12 @@ export default function QiblaCompass({ bearing, size = 64, hideLabel }: QiblaCom
     }).start();
   }, [needleAngle, needleAnim]);
 
-  if (error) {
+  if (error || Platform.OS === "web") {
     return (
       <View style={[styles.wrapper, { width: size, height: size }]}>
-        <Text style={styles.fallback}>Qibla {Math.round(bearing)}°</Text>
+        <Text style={[styles.fallback, { color: colors.text }]}>
+          {t("qibla.bearing", { angle: Math.round(bearing) })}
+        </Text>
       </View>
     );
   }
@@ -65,12 +71,24 @@ export default function QiblaCompass({ bearing, size = 64, hideLabel }: QiblaCom
   const needleLength = size / 2 - 8;
   return (
     <View style={[styles.wrapper, { width: size, height: hideLabel ? size : size + 18 }]}>
-      <View style={[styles.circle, { width: size, height: size, borderRadius: size / 2 }]}>
-        <View style={[styles.northDot, { top: 4 }]} />
+      <View
+        style={[
+          styles.circle,
+          {
+            width: size,
+            height: size,
+            borderRadius: size / 2,
+            borderColor: colors.accentBorder,
+            backgroundColor: colors.card,
+          },
+        ]}
+      >
+        <View style={[styles.northDot, { top: 4, backgroundColor: colors.iconMuted }]} />
         <Animated.View
           style={[
             styles.needle,
             {
+              backgroundColor: colors.accent,
               width: 4,
               height: needleLength,
               marginLeft: -2,
@@ -87,7 +105,11 @@ export default function QiblaCompass({ bearing, size = 64, hideLabel }: QiblaCom
           ]}
         />
       </View>
-      {!hideLabel && <Text style={styles.label}>Qibla</Text>}
+      {!hideLabel && (
+        <Text style={[styles.label, { color: colors.textMuted }]}>
+          {t("qibla.title")}
+        </Text>
+      )}
     </View>
   );
 }
@@ -99,8 +121,6 @@ const styles = StyleSheet.create({
   },
   circle: {
     borderWidth: 1.5,
-    borderColor: "rgba(61, 107, 71, 0.4)",
-    backgroundColor: "rgba(255,255,255,0.15)",
     alignItems: "center",
     justifyContent: "center",
     overflow: "hidden",
@@ -110,11 +130,9 @@ const styles = StyleSheet.create({
     width: 6,
     height: 6,
     borderRadius: 3,
-    backgroundColor: "rgba(0,0,0,0.2)",
   },
   needle: {
     position: "absolute",
-    backgroundColor: "rgba(61, 107, 71, 0.9)",
     borderRadius: 2,
     top: "50%",
     left: "50%",
@@ -122,12 +140,10 @@ const styles = StyleSheet.create({
   label: {
     fontSize: 10,
     fontFamily: "PlusJakartaSans-Medium",
-    color: "rgba(0,0,0,0.6)",
     marginTop: 4,
   },
   fallback: {
     fontSize: 12,
     fontFamily: "PlusJakartaSans-Medium",
-    color: "rgba(0,0,0,0.7)",
   },
 });

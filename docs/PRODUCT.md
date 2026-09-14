@@ -2,13 +2,13 @@
 
 ## Compte & synchronisation (Supabase Auth + Postgres)
 
-- **Auth** : Supabase (`@supabase/supabase-js`) avec session persistée dans AsyncStorage.
+- **Auth** : Supabase (`@supabase/supabase-js`) avec session persistée dans **SecureStore** (natif) / AsyncStorage (web).
 - Variables : `EXPO_PUBLIC_SUPABASE_URL`, `EXPO_PUBLIC_SUPABASE_ANON_KEY` dans `.env`.
-- Connexion e-mail / mot de passe, inscription, Google OAuth, Sign in with Apple.
+- Connexion e-mail / mot de passe, inscription, Google OAuth (PKCE only), Sign in with Apple.
 - **Mode invité** : données locales uniquement (pas de `user_id`).
-- **Connecté** : sync automatique vers Postgres (voir `supabase/migrations/`).
+- **Connecté** : prompt d’import des données locales, puis sync vers Postgres (voir `supabase/migrations/`).
 
-### Tables Supabase (RLS activé)
+### Tables Supabase (RLS activé — vérifier en dashboard prod)
 
 | Table | Contenu |
 |-------|---------|
@@ -25,7 +25,7 @@
 Migration SQL : `supabase/migrations/20260303120000_louma_initial_schema.sql`  
 → à exécuter dans **Supabase → SQL Editor** si le MCP n’est pas lié au projet.
 
-Sync au login : `lib/supabase/sync.ts` (`syncUserDataWithCloud`).
+Sync au login : `lib/supabase/sync.ts` (`syncUserDataWithCloud`) après confirmation utilisateur.
 
 ## Parcours Apprendre
 

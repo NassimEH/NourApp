@@ -24,9 +24,6 @@ import { SCREEN_EDGE_PADDING } from "@/constants/screen-layout";
 import { bodyLineHeight } from "@/lib/ui/typography";
 
 const H_PADDING = SCREEN_EDGE_PADDING;
-const ICON_COLOR = "#191D31";
-const ACCENT = "#3d6b47";
-const TEXT_MUTED = "rgba(0,0,0,0.5)";
 
 export default function InvocationDetailScreen() {
   const { t } = useTranslation();
@@ -62,8 +59,8 @@ export default function InvocationDetailScreen() {
       .join("\n\n");
     if (!text) return;
     await Clipboard.setStringAsync(text);
-    Alert.alert("Copié", "Le texte a été copié dans le presse-papiers.");
-  }, [detail]);
+    Alert.alert(t("common.copiedTitle"), t("common.copiedBody"));
+  }, [detail, t]);
 
   const handleFavorite = useCallback(() => {
     if (detail) toggleFavorite(detail);
@@ -72,9 +69,9 @@ export default function InvocationDetailScreen() {
   if (slugDecoded == null || idNum == null) {
     return (
       <View style={styles.centered}>
-        <Text style={styles.errorText}>Invocation invalide</Text>
+        <Text style={[styles.errorText, { color: colors.text }]}>{t("dua.invalid")}</Text>
         <TouchableOpacity onPress={() => router.back()} style={styles.backLink} activeOpacity={0.7}>
-          <Text style={styles.backLinkText}>Retour</Text>
+          <Text style={[styles.backLinkText, { color: colors.accent }]}>{t("common.back")}</Text>
         </TouchableOpacity>
       </View>
     );
@@ -93,14 +90,14 @@ export default function InvocationDetailScreen() {
                 <AppIcon
                   name="heart"
                   size={22}
-                  color={isFav ? ACCENT : ICON_COLOR}
+                  color={isFav ? colors.accent : colors.icon}
                 />
               </TouchableOpacity>
               <TouchableOpacity onPress={handleShare} style={styles.iconBtn} activeOpacity={0.7}>
-                <AppIcon name="share-2" size={22} color={ICON_COLOR} />
+                <AppIcon name="share-2" size={22} color={colors.icon} />
               </TouchableOpacity>
               <TouchableOpacity onPress={handleCopy} style={styles.iconBtn} activeOpacity={0.7}>
-                <AppIcon name="copy" size={22} color={ICON_COLOR} />
+                <AppIcon name="copy" size={22} color={colors.icon} />
               </TouchableOpacity>
             </>
           }
@@ -108,14 +105,18 @@ export default function InvocationDetailScreen() {
 
         {loading && !detail ? (
           <View style={styles.loadingWrap}>
-            <ActivityIndicator size="large" color={ACCENT} />
-            <Text style={styles.loadingText}>Chargement…</Text>
+            <ActivityIndicator size="large" color={colors.accent} />
+            <Text style={[styles.loadingText, { color: colors.textMuted }]}>{t("common.loading")}</Text>
           </View>
         ) : error && !detail ? (
           <View style={styles.errorWrap}>
-            <Text style={styles.errorText}>{error}</Text>
-            <TouchableOpacity onPress={() => refetch()} style={styles.retryBtn} activeOpacity={0.8}>
-              <Text style={styles.retryText}>Réessayer</Text>
+            <Text style={[styles.errorText, { color: colors.text }]}>{error}</Text>
+            <TouchableOpacity
+              onPress={() => refetch()}
+              style={[styles.retryBtn, { backgroundColor: colors.accent }]}
+              activeOpacity={0.8}
+            >
+              <Text style={[styles.retryText, { color: colors.onAccent }]}>{t("common.retry")}</Text>
             </TouchableOpacity>
           </View>
         ) : detail ? (
@@ -125,12 +126,13 @@ export default function InvocationDetailScreen() {
             showsVerticalScrollIndicator={false}
           >
             {detail.arabic ? (
-              <View style={styles.block}>
-                <Text style={styles.blockLabel}>Arabe</Text>
+              <View style={[styles.block, { borderTopColor: colors.divider }]}>
+                <Text style={[styles.blockLabel, { color: colors.accent }]}>{t("dua.arabic")}</Text>
                 <Text
                   style={[
                     styles.arabicText,
                     {
+                      color: colors.text,
                       fontSize: arabicSize,
                       lineHeight: arabicSize * typography.lineHeightArabic,
                     },
@@ -143,8 +145,8 @@ export default function InvocationDetailScreen() {
             ) : null}
 
             {detail.latin ? (
-              <View style={styles.block}>
-                <Text style={styles.blockLabel}>Translittération</Text>
+              <View style={[styles.block, { borderTopColor: colors.divider }]}>
+                <Text style={[styles.blockLabel, { color: colors.accent }]}>{t("dua.transliteration")}</Text>
                 <Text
                   style={[styles.latinText, { color: colors.text, fontSize: transSize, lineHeight: transLh }]}
                   selectable
@@ -155,8 +157,8 @@ export default function InvocationDetailScreen() {
             ) : null}
 
             {detail.translation ? (
-              <View style={styles.block}>
-                <Text style={styles.blockLabel}>Traduction</Text>
+              <View style={[styles.block, { borderTopColor: colors.divider }]}>
+                <Text style={[styles.blockLabel, { color: colors.accent }]}>{t("dua.translation")}</Text>
                 <Text
                   style={[styles.translationText, { color: colors.textMuted, fontSize: transSize, lineHeight: transLh }]}
                   selectable
@@ -167,27 +169,27 @@ export default function InvocationDetailScreen() {
             ) : null}
 
             {detail.notes ? (
-              <View style={styles.block}>
-                <Text style={styles.blockLabel}>Notes</Text>
-                <Text style={styles.notesText} selectable>
+              <View style={[styles.block, { borderTopColor: colors.divider }]}>
+                <Text style={[styles.blockLabel, { color: colors.accent }]}>{t("dua.notes")}</Text>
+                <Text style={[styles.notesText, { color: colors.textMuted }]} selectable>
                   {detail.notes}
                 </Text>
               </View>
             ) : null}
 
             {detail.fawaid ? (
-              <View style={styles.block}>
-                <Text style={styles.blockLabel}>Vertus / Bénéfices</Text>
-                <Text style={styles.notesText} selectable>
+              <View style={[styles.block, { borderTopColor: colors.divider }]}>
+                <Text style={[styles.blockLabel, { color: colors.accent }]}>{t("dua.benefits")}</Text>
+                <Text style={[styles.notesText, { color: colors.textMuted }]} selectable>
                   {detail.fawaid}
                 </Text>
               </View>
             ) : null}
 
             {detail.source ? (
-              <View style={styles.block}>
-                <Text style={styles.blockLabel}>Référence</Text>
-                <Text style={styles.sourceText} selectable>
+              <View style={[styles.block, { borderTopColor: colors.divider }]}>
+                <Text style={[styles.blockLabel, { color: colors.accent }]}>{t("dua.reference")}</Text>
+                <Text style={[styles.sourceText, { color: colors.textMuted }]} selectable>
                   {detail.source}
                 </Text>
               </View>
@@ -216,7 +218,6 @@ const styles = StyleSheet.create({
     flex: 1,
     fontSize: 18,
     fontFamily: "PlusJakartaSans-SemiBold",
-    color: ICON_COLOR,
     textAlign: "center",
     marginHorizontal: 8,
   },
@@ -228,43 +229,36 @@ const styles = StyleSheet.create({
     marginTop: 24,
     paddingTop: 20,
     borderTopWidth: 1,
-    borderTopColor: "rgba(0,0,0,0.08)",
   },
   blockLabel: {
     fontSize: 11,
     fontFamily: "PlusJakartaSans-SemiBold",
-    color: "rgba(61, 107, 71, 0.9)",
     textTransform: "uppercase",
     letterSpacing: 0.5,
     marginBottom: 10,
   },
   arabicText: {
-    fontFamily: "PlusJakartaSans-Regular",
-    color: ICON_COLOR,
+    fontFamily: "Amiri_400Regular",
     textAlign: "right",
     writingDirection: "rtl",
   },
   latinText: {
     fontFamily: "PlusJakartaSans-Regular",
-    color: ICON_COLOR,
     fontStyle: "italic",
     lineHeight: 26,
   },
   translationText: {
     fontFamily: "PlusJakartaSans-Regular",
-    color: TEXT_MUTED,
     lineHeight: 24,
   },
   notesText: {
     fontSize: 15,
     fontFamily: "PlusJakartaSans-Regular",
-    color: TEXT_MUTED,
     lineHeight: 22,
   },
   sourceText: {
     fontSize: 14,
     fontFamily: "PlusJakartaSans-Regular",
-    color: "#5b5d5e",
     fontStyle: "italic",
     lineHeight: 20,
   },
@@ -278,7 +272,6 @@ const styles = StyleSheet.create({
   loadingText: {
     fontSize: 16,
     fontFamily: "PlusJakartaSans-Regular",
-    color: TEXT_MUTED,
   },
   errorWrap: {
     flex: 1,
@@ -289,7 +282,6 @@ const styles = StyleSheet.create({
   errorText: {
     fontSize: 16,
     fontFamily: "PlusJakartaSans-Regular",
-    color: ICON_COLOR,
     textAlign: "center",
     marginBottom: 20,
   },
@@ -297,18 +289,15 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
     paddingHorizontal: 28,
     borderRadius: 12,
-    backgroundColor: ACCENT,
   },
   retryText: {
     fontSize: 16,
     fontFamily: "PlusJakartaSans-SemiBold",
-    color: "#fff",
   },
   centered: { flex: 1, justifyContent: "center", alignItems: "center" },
   backLink: { marginTop: 12 },
   backLinkText: {
     fontSize: 16,
     fontFamily: "PlusJakartaSans-SemiBold",
-    color: ACCENT,
   },
 });

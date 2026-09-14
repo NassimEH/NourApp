@@ -1,46 +1,80 @@
-﻿import { useMemo, useState } from "react";
+﻿import { useEffect, useMemo, useState } from "react";
 import {
+  ActivityIndicator,
+  Pressable,
   ScrollView,
   StyleSheet,
   Text,
+  View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router } from "expo-router";
 
-import { ScreenPageHeader } from "@/components/ScreenPageHeader";
 import { ScreenBackground } from "@/components/ScreenBackground";
-import { ScreenSearchBar, screenSearchBarSpacing } from "@/components/ScreenSearchBar";
+import { ScreenPageHeader } from "@/components/ScreenPageHeader";
+import {
+  ScreenSearchBar,
+  screenSearchBarSpacing,
+} from "@/components/ScreenSearchBar";
 import { SuraRow } from "@/components/quran/SuraRow";
 import { screenScrollContent } from "@/constants/screen-layout";
+import { useAppPreferences } from "@/lib/app-preferences";
 import { useAppTheme } from "@/lib/app-theme";
 import { useTranslation } from "@/lib/i18n";
 import { useSuraList } from "@/lib/quran/hooks/useSuraList";
-import type { SuraMeta } from "@/lib/quran/types";
-
-function filterSuras(list: SuraMeta[], query: string): SuraMeta[] {
-  const q = query.trim().toLowerCase();
-  if (!q) return [];
-  const asNum = parseInt(q, 10);
-  return list.filter((sura) => {
-    if (!Number.isNaN(asNum) && sura.number === asNum) return true;
-    return (
-      sura.name.toLowerCase().includes(q) ||
-      sura.englishName.toLowerCase().includes(q) ||
-      sura.englishNameTranslation.toLowerCase().includes(q) ||
-      String(sura.number).includes(q)
-    );
-  });
-}
+import {
+  searchVerses,
+  type VerseSearchResult,
+} from "@/lib/quran/searchVerses";
+import { filterSurasByQuery } from "@/lib/quran/searchSuras";
 
 export default function RechercheCoranScreen() {
   const [query, setQuery] = useState("");
+  const [verses, setVerses] = useState<VerseSearchResult[]>([]);
+  const [verseLoading, setVerseLoading] = useState(false);
+  const [verseError, setVerseError] = useState(false);
   const { t, rtlTextStyle, rtlViewStyle } = useTranslation();
+  const { locale } = useAppPreferences();
   const colors = useAppTheme();
   const { list, loading } = useSuraList();
+  const trimmedQuery = query.trim();
+  const suras = useMemo(() => filterSurasByQuery(list, query), [list, query]);
 
-  const results = useMemo(() => filterSuras(list, query), [list, query]);
-  const showHint = query.trim().length === 0;
-  const showEmpty = query.trim().length > 0 && results.length === 0 && !loading;
+  useEffect(() => {
+    if (trimmedQuery.length < 3) {
+      setVerses([]);
+      setVerseError(false);
+      setVerseLoading(false);
+      return;
+    }
+
+    const controller = new AbortController();
+    const timeout = setTimeout(() => {
+      setVerseLoading(true);
+      setVerseError(false);
+      void searchVerses(trimmedQuery, locale, controller.signal)
+        .then(setVerses)
+        .catch((error: unknown) => {
+          if (error instanceof Error && error.name === "AbortError") return;
+          setVerses([]);
+          setVerseError(true);
+        })
+        .finally(() => {
+          if (!controller.signal.aborted) setVerseLoading(false);
+        });
+    }, 400);
+
+    return () => {
+      clearTimeout(timeout);
+      controller.abort();
+    };
+  }, [locale, trimmedQuery]);
+
+  const openSura = (number: number) =>
+    router.push({
+      pathname: "/(root)/(tabs)/coran/[number]",
+      params: { number: String(number) },
+    });
 
   return (
     <ScreenBackground style={styles.background}>
@@ -50,11 +84,10 @@ export default function RechercheCoranScreen() {
           subtitle={t("screens.searchSubtitle")}
           onBack={() => router.back()}
         />
-
         <ScreenSearchBar
           value={query}
           onChangeText={setQuery}
-          placeholder={t("screens.searchSuraPlaceholder")}
+          placeholder={t("screens.searchVersesHint")}
           containerStyle={screenSearchBarSpacing}
         />
 
@@ -64,30 +97,65 @@ export default function RechercheCoranScreen() {
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
         >
-          {showHint ? (
+          {trimmedQuery.length === 0 ? (
             <Text style={[styles.hint, rtlTextStyle, { color: colors.textMuted }]}>
-              {t("screens.searchSuraHint")}
+              {t("screens.searchVersesHint")}
             </Text>
           ) : null}
 
-          {showEmpty ? (
-            <Text style={[styles.hint, rtlTextStyle, { color: colors.textMuted }]}>
-              {t("library.searchNoResults")}
-            </Text>
+          {trimmedQuery.length > 0 ? (
+            <>
+              <Text style={[styles.sectionTitle, rtlTextStyle, { color: colors.text }]}>
+                {t("screens.searchSurasSection")}
+              </Text>
+              {!loading && suras.length === 0 ? (
+                <Text style={[styles.hint, rtlTextStyle, { color: colors.textMuted }]}>
+                  {t("library.searchNoResults")}
+                </Text>
+              ) : null}
+              {suras.map((sura) => (
+                <SuraRow key={sura.number} sura={sura} onPress={() => openSura(sura.number)} />
+              ))}
+            </>
           ) : null}
 
-          {results.map((sura) => (
-            <SuraRow
-              key={sura.number}
-              sura={sura}
-              onPress={() =>
-                router.push({
-                  pathname: "/(root)/(tabs)/coran/[number]",
-                  params: { number: String(sura.number) },
-                })
-              }
-            />
-          ))}
+          {trimmedQuery.length >= 3 ? (
+            <>
+              <Text style={[styles.sectionTitle, rtlTextStyle, { color: colors.text }]}>
+                {t("screens.searchVersesSection")}
+              </Text>
+              {verseLoading ? <ActivityIndicator color={colors.accent} /> : null}
+              {verseError ? (
+                <Text style={[styles.hint, rtlTextStyle, { color: colors.danger }]}>
+                  {t("common.retry")}
+                </Text>
+              ) : null}
+              {!verseLoading && !verseError && verses.length === 0 ? (
+                <Text style={[styles.hint, rtlTextStyle, { color: colors.textMuted }]}>
+                  {t("library.searchNoResults")}
+                </Text>
+              ) : null}
+              {verses.map((verse, index) => (
+                <Pressable
+                  key={`${verse.surahNumber}-${verse.ayahNumber}-${index}`}
+                  onPress={() => openSura(verse.surahNumber)}
+                  style={[styles.verseRow, { borderColor: colors.border }]}
+                >
+                  <Text style={[styles.reference, { color: colors.accent }]}>
+                    {verse.surahNumber}:{verse.ayahNumber}
+                  </Text>
+                  <View style={styles.flex}>
+                    <Text
+                      numberOfLines={3}
+                      style={[styles.verseText, rtlTextStyle, { color: colors.text }]}
+                    >
+                      {verse.text}
+                    </Text>
+                  </View>
+                </Pressable>
+              ))}
+            </>
+          ) : null}
         </ScrollView>
       </SafeAreaView>
     </ScreenBackground>
@@ -99,10 +167,29 @@ const styles = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: "transparent" },
   scroll: { flex: 1 },
   content: { ...screenScrollContent, paddingTop: 0, paddingBottom: 40 },
+  flex: { flex: 1 },
   hint: {
     fontSize: 14,
     fontFamily: "PlusJakartaSans-Regular",
     lineHeight: 20,
     marginBottom: 8,
+  },
+  sectionTitle: {
+    fontSize: 18,
+    fontFamily: "PlusJakartaSans-Bold",
+    marginTop: 16,
+    marginBottom: 10,
+  },
+  verseRow: {
+    flexDirection: "row",
+    gap: 12,
+    paddingVertical: 14,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+  },
+  reference: { fontSize: 13, fontFamily: "PlusJakartaSans-Bold" },
+  verseText: {
+    fontSize: 15,
+    lineHeight: 22,
+    fontFamily: "PlusJakartaSans-Regular",
   },
 });

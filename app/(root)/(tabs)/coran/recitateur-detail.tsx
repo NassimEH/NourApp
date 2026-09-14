@@ -33,7 +33,7 @@ export default function RecitateurDetailScreen() {
   return (
     <ScreenStackLayout
       title={reciter.name}
-      subtitle={reciter.style}
+      subtitle={t(reciter.styleKey)}
     >
       <View
         style={[
@@ -42,7 +42,9 @@ export default function RecitateurDetailScreen() {
         ]}
       >
         <AppIcon name="mic" size={40} color={colors.accent} />
-        <Text style={[styles.styleLabel, { color: colors.textMuted }]}>{reciter.style}</Text>
+        <Text style={[styles.styleLabel, { color: colors.textMuted }]}>
+          {t(reciter.styleKey)}
+        </Text>
       </View>
 
       <TouchableOpacity
@@ -50,7 +52,7 @@ export default function RecitateurDetailScreen() {
         onPress={onPlay}
         activeOpacity={0.85}
       >
-        <AppIcon name="play" size={22} color="#fff" />
+        <AppIcon name="play" size={22} color={colors.onAccent} />
         <Text style={styles.primaryBtnText}>{t("screens.reciterPlaySample")}</Text>
       </TouchableOpacity>
 
@@ -95,7 +97,7 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   primaryBtnText: {
-    color: "#fff",
+
     fontSize: 16,
     fontFamily: "PlusJakartaSans-SemiBold",
   },

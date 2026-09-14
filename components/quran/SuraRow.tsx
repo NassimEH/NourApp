@@ -70,8 +70,10 @@ function createStyles(colors: ReturnType<typeof useAppTheme>) {
     textBlock: { flex: 1 },
     title: {
       fontSize: 17,
-      fontFamily: "PlusJakartaSans-Medium",
+      fontFamily: "Amiri_400Regular",
       color: colors.text,
+      textAlign: "right",
+      writingDirection: "rtl",
     },
     subtitle: {
       fontSize: 14,

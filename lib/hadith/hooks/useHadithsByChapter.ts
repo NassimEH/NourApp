@@ -5,6 +5,7 @@ import {
   setCachedHadithsByChapter,
 } from "../cache";
 import type { HadithRecord } from "../types";
+import { useHadithLanguage } from "./useHadithLanguage";
 
 export function useHadithsByChapter(
   collectionName: string | null,
@@ -16,6 +17,7 @@ export function useHadithsByChapter(
   error: string | null;
   refetch: () => Promise<void>;
 } {
+  const { language } = useHadithLanguage();
   const [hadiths, setHadiths] = useState<HadithRecord[]>([]);
   const [loading, setLoading] = useState(
     !!(collectionName && bookNumber && chapterId)
@@ -30,7 +32,7 @@ export function useHadithsByChapter(
     }
     setError(null);
     const cached = await getCachedHadithsByChapter(
-      collectionName,
+      `${collectionName}_${language}`,
       bookNumber,
       chapterId
     );
@@ -46,12 +48,13 @@ export function useHadithsByChapter(
         bookNumber,
         chapterId,
         1,
-        200
+        200,
+        language
       );
       setHadiths(data);
       if (data.length)
         await setCachedHadithsByChapter(
-          collectionName,
+          `${collectionName}_${language}`,
           bookNumber,
           chapterId,
           data
@@ -64,7 +67,7 @@ export function useHadithsByChapter(
     } finally {
       setLoading(false);
     }
-  }, [collectionName, bookNumber, chapterId]);
+  }, [collectionName, bookNumber, chapterId, language]);
 
   useEffect(() => {
     load();

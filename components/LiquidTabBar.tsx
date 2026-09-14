@@ -17,7 +17,7 @@ import Animated, {
   type SharedValue,
   type WithSpringConfig,
 } from "react-native-reanimated";
-import type { BottomTabBarProps } from "@react-navigation/bottom-tabs";
+import type { BottomTabBarProps } from "expo-router/build/react-navigation/bottom-tabs";
 
 import { AppIcon } from "@/components/AppIcon";
 import { TAB_BAR_ICONS } from "@/constants/tab-bar";
@@ -130,7 +130,7 @@ export function LiquidTabBar({ state, descriptors, navigation }: BottomTabBarPro
           colors={bubbleGradient}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
-          style={StyleSheet.absoluteFillObject}
+          style={StyleSheet.absoluteFill}
         />
         <View style={styles.bubbleIconCenter}>
           <AppIcon
@@ -239,7 +239,7 @@ export function LiquidTabBar({ state, descriptors, navigation }: BottomTabBarPro
           <View
             pointerEvents="none"
             style={[
-              StyleSheet.absoluteFillObject,
+              StyleSheet.absoluteFill,
               { backgroundColor: liquidGlassOverlay },
             ]}
           />
@@ -248,7 +248,7 @@ export function LiquidTabBar({ state, descriptors, navigation }: BottomTabBarPro
         <View
           pointerEvents="none"
           style={[
-            StyleSheet.absoluteFillObject,
+            StyleSheet.absoluteFill,
             { backgroundColor: liquidGlassOverlay },
           ]}
         />
@@ -309,7 +309,7 @@ const styles = StyleSheet.create({
     overflow: "hidden",
   },
   bubbleIconCenter: {
-    ...StyleSheet.absoluteFillObject,
+    ...StyleSheet.absoluteFill,
     alignItems: "center",
     justifyContent: "center",
   },

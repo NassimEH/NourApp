@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import { ScrollView, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { AppIcon } from "@/components/AppIcon";
@@ -12,14 +13,27 @@ import { ScreenPageHeader } from "@/components/ScreenPageHeader";
 import { useAppTheme } from "@/lib/app-theme";
 import { useTranslation } from "@/lib/i18n";
 import { useLearnCatalog } from "@/lib/learn/hooks/useLearnCatalog";
+import {
+  getLearnStreakInfo,
+  type LearnStreakInfo,
+} from "@/lib/learn/streak";
 
 export default function ApprendreStatsScreen() {
   const colors = useAppTheme();
   const { t } = useTranslation();
   const { courses, completedIds, totalCompleted, totalLessons, loading } =
     useLearnCatalog();
+  const [streakInfo, setStreakInfo] = useState<LearnStreakInfo>({
+    streak: 0,
+    weekDays: Array(7).fill(false),
+    lastActiveDay: null,
+  });
   const pct =
     totalLessons > 0 ? Math.round((totalCompleted / totalLessons) * 100) : 0;
+
+  useEffect(() => {
+    void getLearnStreakInfo().then(setStreakInfo);
+  }, []);
 
   return (
     <ScreenBackground style={styles.background}>
@@ -35,6 +49,42 @@ export default function ApprendreStatsScreen() {
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
         >
+          <View
+            style={[
+              styles.card,
+              {
+                backgroundColor: colors.usesBackgroundImage
+                  ? colors.card
+                  : colors.cardElevated,
+                borderColor: colors.border,
+              },
+            ]}
+          >
+            <Text style={[styles.cardTitle, { color: colors.text }]}>
+              {t("learn.streakTitle")}
+            </Text>
+            <Text style={[styles.streakValue, { color: colors.accent }]}>
+              {t("learn.streakDays", { count: streakInfo.streak })}
+            </Text>
+            <Text style={[styles.weekLabel, { color: colors.textMuted }]}>
+              {t("learn.weekActivity")}
+            </Text>
+            <View style={styles.weekDots}>
+              {streakInfo.weekDays.map((active, index) => (
+                <View
+                  key={index}
+                  style={[
+                    styles.weekDot,
+                    {
+                      backgroundColor: active ? colors.accent : colors.divider,
+                      borderColor: active ? colors.accent : colors.border,
+                    },
+                  ]}
+                />
+              ))}
+            </View>
+          </View>
+
           <View
             style={[
               styles.card,
@@ -150,6 +200,26 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontFamily: "PlusJakartaSans-Bold",
     marginBottom: 16,
+  },
+  streakValue: {
+    fontSize: 28,
+    fontFamily: "PlusJakartaSans-Bold",
+    marginBottom: 14,
+  },
+  weekLabel: {
+    fontSize: 13,
+    fontFamily: "PlusJakartaSans-Medium",
+    marginBottom: 10,
+  },
+  weekDots: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+  },
+  weekDot: {
+    width: 22,
+    height: 22,
+    borderRadius: 11,
+    borderWidth: 1,
   },
   courseMeta: {
     fontSize: 14,

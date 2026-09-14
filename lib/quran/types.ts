@@ -97,16 +97,22 @@ export const AUDIO_BITRATE = "128";
 export interface Reciter {
   id: string;
   name: string;
-  style: string;
+  styleKey:
+    | "quran.reciterStyleMurattal"
+    | "quran.reciterStylePopular"
+    | "quran.reciterStyleClassic"
+    | "quran.reciterStyleMujawwad"
+    | "quran.reciterStyleMeccaImam"
+    | "quran.reciterStyleSoft";
 }
 
 export const AVAILABLE_RECITERS: Reciter[] = [
-  { id: "ar.abdulbasitmurattal", name: "Abdul Basit", style: "Murattal" },
-  { id: "ar.alafasy", name: "Mishary Alafasy", style: "Populaire" },
-  { id: "ar.husary", name: "Mahmoud Khalil Al-Husary", style: "Classique" },
-  { id: "ar.minshawi", name: "Mohamed Siddiq Al-Minshawi", style: "Mujawwad" },
-  { id: "ar.abdurrahmaansudais", name: "Abdurrahman As-Sudais", style: "Imam Mecque" },
-  { id: "ar.saaborig", name: "Saad Al-Ghamdi", style: "Populaire" },
-  { id: "ar.ahmedajamy", name: "Ahmed Al-Ajamy", style: "Doux" },
-  { id: "ar.maaborig", name: "Maher Al-Muaiqly", style: "Imam Mecque" },
+  { id: "ar.abdulbasitmurattal", name: "Abdul Basit", styleKey: "quran.reciterStyleMurattal" },
+  { id: "ar.alafasy", name: "Mishary Alafasy", styleKey: "quran.reciterStylePopular" },
+  { id: "ar.husary", name: "Mahmoud Khalil Al-Husary", styleKey: "quran.reciterStyleClassic" },
+  { id: "ar.minshawi", name: "Mohamed Siddiq Al-Minshawi", styleKey: "quran.reciterStyleMujawwad" },
+  { id: "ar.abdurrahmaansudais", name: "Abdurrahman As-Sudais", styleKey: "quran.reciterStyleMeccaImam" },
+  { id: "ar.saaborig", name: "Saad Al-Ghamdi", styleKey: "quran.reciterStylePopular" },
+  { id: "ar.ahmedajamy", name: "Ahmed Al-Ajamy", styleKey: "quran.reciterStyleSoft" },
+  { id: "ar.maaborig", name: "Maher Al-Muaiqly", styleKey: "quran.reciterStyleMeccaImam" },
 ];

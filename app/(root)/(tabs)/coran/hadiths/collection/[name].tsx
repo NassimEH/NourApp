@@ -10,6 +10,8 @@ import { router, useLocalSearchParams } from "expo-router";
 import { AppIcon } from "@/components/AppIcon";
 import { useCallback, useMemo, useState } from "react";
 
+import { EmptyState } from "@/components/EmptyState";
+import { ErrorState } from "@/components/ErrorState";
 import {
   useBooks,
   useChapters,
@@ -29,11 +31,15 @@ import { SCREEN_EDGE_PADDING } from "@/constants/screen-layout";
 
 const H_PADDING = SCREEN_EDGE_PADDING;
 
-function getBookDisplayName(book: HadithBook, preferFr = true): string {
+function getBookDisplayName(
+  book: HadithBook,
+  fallback: string,
+  preferFr = true
+): string {
   const fr = book.book?.find((b) => b.lang === "fr");
   const en = book.book?.find((b) => b.lang === "en");
   if (preferFr && fr?.name) return fr.name;
-  return en?.name ?? fr?.name ?? `Livre ${book.bookNumber}`;
+  return en?.name ?? fr?.name ?? fallback;
 }
 
 export default function HadithsBooksScreen() {
@@ -72,9 +78,15 @@ export default function HadithsBooksScreen() {
     const q = search.trim().toLowerCase();
     if (!q) return books;
     return books.filter((b) =>
-      getBookDisplayName(b, true).toLowerCase().includes(q)
+      getBookDisplayName(
+        b,
+        t("hadith.bookFallback", { number: b.bookNumber }),
+        true
+      )
+        .toLowerCase()
+        .includes(q)
     );
-  }, [books, search]);
+  }, [books, search, t]);
 
   const goToBookOrHadiths = (item: HadithBook) => {
     const hasOneChapter = chapters.length === 1 && firstBookNumber === item.bookNumber;
@@ -109,17 +121,7 @@ export default function HadithsBooksScreen() {
         {loading && books.length === 0 ? (
           <HadithListSkeleton />
         ) : error && books.length === 0 ? (
-          <View style={styles.errorWrap}>
-            <Text style={[styles.errorText, { color: colors.text }]}>{error}</Text>
-            <TouchableOpacity
-              onPress={() => refetch()}
-              style={[styles.retryBtn, { backgroundColor: colors.accent }]}
-              activeOpacity={0.8}
-            >
-              <AppIcon name="refresh-cw" size={20} color="#fff" />
-              <Text style={styles.retryText}>Réessayer</Text>
-            </TouchableOpacity>
-          </View>
+          <ErrorState message={error} onRetry={refetch} retryLabel={t("common.retry")} />
         ) : (
           <>
             <ScreenSearchBar
@@ -135,11 +137,7 @@ export default function HadithsBooksScreen() {
               contentContainerStyle={styles.listContent}
               showsVerticalScrollIndicator={false}
               ListEmptyComponent={
-                <View style={styles.empty}>
-                  <Text style={[styles.emptyText, { color: colors.textMuted }]}>
-                    {t("library.searchNoResults")}
-                  </Text>
-                </View>
+                <EmptyState message={t("library.searchNoResults")} icon="search" />
               }
               ListFooterComponent={
                 canLoadMore ? (
@@ -150,12 +148,12 @@ export default function HadithsBooksScreen() {
                     activeOpacity={0.8}
                   >
                     {loadingMore ? (
-                      <Text style={styles.loadMoreText}>Chargement…</Text>
+                      <Text style={styles.loadMoreText}>{t("common.loading")}</Text>
                     ) : (
                       <>
-                        <AppIcon name="download" size={18} color="#fff" />
+                        <AppIcon name="download" size={18} color={colors.onAccent} />
                         <Text style={styles.loadMoreText}>
-                          Charger plus de hadiths
+                          {t("hadith.loadMore")}
                         </Text>
                       </>
                     )}
@@ -171,7 +169,11 @@ export default function HadithsBooksScreen() {
                   <AppIcon name="book-open" size={22} color={colors.icon} />
                   <View style={styles.rowText}>
                     <Text style={[styles.rowTitle, { color: colors.text }]} numberOfLines={2}>
-                      {getBookDisplayName(item, true)}
+                      {getBookDisplayName(
+                        item,
+                        t("hadith.bookFallback", { number: item.bookNumber }),
+                        true
+                      )}
                     </Text>
                     {item.book?.[0]?.numberOfHadith != null && (
                       <Text style={[styles.rowPreview, { color: colors.textMuted }]}>
@@ -225,36 +227,6 @@ const styles = StyleSheet.create({
     fontFamily: "PlusJakartaSans-Regular",
     marginTop: 2,
   },
-  errorWrap: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    paddingHorizontal: 32,
-  },
-  errorText: {
-    fontSize: 16,
-    fontFamily: "PlusJakartaSans-Regular",
-    textAlign: "center",
-    marginBottom: 20,
-  },
-  retryBtn: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-    paddingVertical: 14,
-    paddingHorizontal: 24,
-    borderRadius: 12,
-  },
-  retryText: {
-    fontSize: 16,
-    fontFamily: "PlusJakartaSans-SemiBold",
-    color: "#fff",
-  },
-  empty: { paddingVertical: 40, alignItems: "center" },
-  emptyText: {
-    fontSize: 15,
-    fontFamily: "PlusJakartaSans-Regular",
-  },
   loadMoreBtn: {
     flexDirection: "row",
     alignItems: "center",
@@ -270,6 +242,6 @@ const styles = StyleSheet.create({
   loadMoreText: {
     fontSize: 15,
     fontFamily: "PlusJakartaSans-SemiBold",
-    color: "#fff",
+
   },
 });

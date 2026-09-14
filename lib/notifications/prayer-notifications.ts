@@ -7,17 +7,39 @@ import { getNextPrayerInfo } from "@/lib/prayerUtils";
 import { syncNotificationPrefsToCloud } from "@/lib/notifications/cloud-sync";
 
 const KEY_ENABLED = "@prayer_notifications_enabled";
+const KEY_ADHAN = "@prayer_adhan_enabled";
 const CHANNEL_ID = "prayer-reminders";
+const PRAYER_NOTIF_ID = "next-prayer-reminder";
+
+async function cancelPrayerNotificationsOnly(): Promise<void> {
+  try {
+    await Notifications.cancelScheduledNotificationAsync(PRAYER_NOTIF_ID);
+  } catch {
+    /* ignore */
+  }
+}
 
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
     shouldShowAlert: true,
-    shouldPlaySound: true,
+    shouldPlaySound: await getAdhanEnabled(),
     shouldSetBadge: false,
     shouldShowBanner: true,
     shouldShowList: true,
   }),
 });
+
+export async function getAdhanEnabled(): Promise<boolean> {
+  try {
+    return (await AsyncStorage.getItem(KEY_ADHAN)) === "true";
+  } catch {
+    return false;
+  }
+}
+
+export async function setAdhanEnabled(enabled: boolean): Promise<void> {
+  await AsyncStorage.setItem(KEY_ADHAN, enabled ? "true" : "false");
+}
 
 export async function arePrayerNotificationsEnabled(): Promise<boolean> {
   try {
@@ -32,7 +54,7 @@ export async function setPrayerNotificationsEnabled(
 ): Promise<boolean> {
   if (!enabled) {
     await AsyncStorage.setItem(KEY_ENABLED, "false");
-    await Notifications.cancelAllScheduledNotificationsAsync();
+    await cancelPrayerNotificationsOnly();
     await syncNotificationPrefsToCloud();
     return true;
   }
@@ -87,7 +109,7 @@ export async function rescheduleNextPrayerNotification(
   const enabled = await arePrayerNotificationsEnabled();
   if (!enabled) return;
 
-  await Notifications.cancelAllScheduledNotificationsAsync();
+  await cancelPrayerNotificationsOnly();
 
   const next = getNextPrayerInfo(prayerTimes);
   if (!next) return;
@@ -97,12 +119,14 @@ export async function rescheduleNextPrayerNotification(
 
   const triggerDate = parsePrayerTimeToday(timeStr);
   if (!triggerDate) return;
+  const adhanEnabled = await getAdhanEnabled();
 
   await Notifications.scheduleNotificationAsync({
+    identifier: PRAYER_NOTIF_ID,
     content: {
       title: "Heure de prière",
       body: `C'est l'heure de ${next.label} (${timeStr})`,
-      sound: true,
+      sound: adhanEnabled,
     },
     trigger: {
       type: Notifications.SchedulableTriggerInputTypes.DATE,

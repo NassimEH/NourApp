@@ -29,10 +29,10 @@ import { SCREEN_EDGE_PADDING } from "@/constants/screen-layout";
 const H_PADDING = SCREEN_EDGE_PADDING;
 
 function getHadithPreview(record: HadithRecord): string {
-  const en = record.hadith?.find((h) => h.lang === "en");
   const fr = record.hadith?.find((h) => h.lang === "fr");
+  const en = record.hadith?.find((h) => h.lang === "en");
   const ar = record.hadith?.find((h) => h.lang === "ar");
-  const body = en?.body ?? fr?.body ?? ar?.body ?? "";
+  const body = fr?.body ?? en?.body ?? ar?.body ?? "";
   return body.length > 80 ? `${body.slice(0, 80)}…` : body;
 }
 
@@ -105,8 +105,8 @@ export default function HadithsListScreen() {
               style={[styles.retryBtn, { backgroundColor: colors.accent }]}
               activeOpacity={0.8}
             >
-              <AppIcon name="refresh-cw" size={20} color="#fff" />
-              <Text style={styles.retryText}>Réessayer</Text>
+              <AppIcon name="refresh-cw" size={20} color={colors.onAccent} />
+              <Text style={[styles.retryText, { color: colors.onAccent }]}>{t("common.retry")}</Text>
             </TouchableOpacity>
           </View>
         ) : (
@@ -126,7 +126,7 @@ export default function HadithsListScreen() {
               ListEmptyComponent={
                 <View style={styles.empty}>
                   <Text style={[styles.emptyText, { color: colors.textMuted }]}>
-                    Aucun hadith trouvé
+                    {t("hadith.noHadithFound")}
                   </Text>
                 </View>
               }
@@ -139,12 +139,12 @@ export default function HadithsListScreen() {
                     activeOpacity={0.8}
                   >
                     {loadingMore ? (
-                      <Text style={styles.loadMoreText}>Chargement…</Text>
+                      <Text style={styles.loadMoreText}>{t("common.loading")}</Text>
                     ) : (
                       <>
-                        <AppIcon name="download" size={18} color="#fff" />
-                        <Text style={styles.loadMoreText}>
-                          Charger plus de hadiths
+                        <AppIcon name="download" size={18} color={colors.onAccent} />
+                        <Text style={[styles.loadMoreText, { color: colors.onAccent }]}>
+                          {t("hadith.loadMore")}
                         </Text>
                       </>
                     )}
@@ -232,7 +232,6 @@ const styles = StyleSheet.create({
     minWidth: 36,
     height: 36,
     borderRadius: 8,
-    backgroundColor: "rgba(61, 107, 71, 0.15)",
     alignItems: "center",
     justifyContent: "center",
   },
@@ -269,7 +268,6 @@ const styles = StyleSheet.create({
   retryText: {
     fontSize: 16,
     fontFamily: "PlusJakartaSans-SemiBold",
-    color: "#fff",
   },
   empty: { paddingVertical: 40, alignItems: "center" },
   emptyText: {
@@ -291,6 +289,5 @@ const styles = StyleSheet.create({
   loadMoreText: {
     fontSize: 15,
     fontFamily: "PlusJakartaSans-SemiBold",
-    color: "#fff",
   },
 });

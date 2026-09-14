@@ -3,9 +3,9 @@ import { isSupabaseConfigured, supabase } from "./client";
 /** ID utilisateur connecté, ou null (invité / non configuré). */
 export async function getAuthenticatedUserId(): Promise<string | null> {
   if (!isSupabaseConfigured) return null;
-  const { data, error } = await supabase.auth.getSession();
+  const { data, error } = await supabase.auth.getUser();
   if (error) return null;
-  return data.session?.user?.id ?? null;
+  return data.user?.id ?? null;
 }
 
 export type FavoriteKind = "quran" | "hadith" | "dua";

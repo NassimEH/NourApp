@@ -5,7 +5,6 @@ export type ToolId =
   | "zakat-mal"
   | "dhikr"
   | "date-converter"
-  | "prayer-summary"
   | "sadaqa"
   | "asma-names"
   | "qibla-shortcut"
@@ -48,13 +47,6 @@ export const TOOLS_REGISTRY: ToolDefinition[] = [
     titleKey: "tools.dateConverter.toolTitle",
     subtitleKey: "tools.dateConverter.toolSubtitle",
     route: "/(root)/date-converter",
-  },
-  {
-    id: "prayer-summary",
-    icon: "clock",
-    titleKey: "tools.prayerSummary.toolTitle",
-    subtitleKey: "tools.prayerSummary.toolSubtitle",
-    route: "/(root)/prayer-summary",
   },
   {
     id: "sadaqa",

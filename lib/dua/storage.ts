@@ -15,12 +15,12 @@ import type { DuaFavorite } from "./types";
 const KEY_FAVORITES = "@dua_favorites";
 const KEY_LANGUAGE = "@dua_language";
 
-export type DuaLanguage = "fr" | "en";
+export type DuaLanguage = "fr" | "en" | "ar";
 
 export async function getDuaLanguage(): Promise<DuaLanguage> {
   try {
     const raw = await AsyncStorage.getItem(KEY_LANGUAGE);
-    if (raw === "fr" || raw === "en") return raw;
+    if (raw === "fr" || raw === "en" || raw === "ar") return raw;
   } catch {}
   return "fr";
 }

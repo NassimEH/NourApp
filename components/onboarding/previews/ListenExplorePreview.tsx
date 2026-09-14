@@ -145,7 +145,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     overflow: "hidden",
   },
-  featuredImg: { ...StyleSheet.absoluteFillObject, width: "100%", height: "100%" },
+  featuredImg: { ...StyleSheet.absoluteFill, width: "100%", height: "100%" },
   featuredOverlay: {
     flex: 1,
     justifyContent: "flex-end",

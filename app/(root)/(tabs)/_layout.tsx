@@ -129,7 +129,7 @@ export default function TabsLayout() {
           tabBarIcon: ({ color }) => {
             const iconName = TAB_ICONS[route.name] ?? "home";
             return (
-              <AppIcon name={iconName} size={NATIVE_TAB_ICON_SIZE} color={color} />
+              <AppIcon name={iconName} size={NATIVE_TAB_ICON_SIZE} color={color as string} />
             );
           },
         }),

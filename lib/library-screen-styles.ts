@@ -1,13 +1,17 @@
 import { StyleSheet } from "react-native";
 
 import type { AppThemeColors } from "@/lib/app-theme";
+import type { AppTypography } from "@/lib/app-typography";
 import { CARD_RADIUS, SECTION_GAP, SPACE } from "@/lib/ui/spacing";
 import {
   LIBRARY_CARD_HEIGHT,
   LIBRARY_ICON_SIZE,
 } from "@/lib/library/catalog";
 
-export function createLibraryScreenStyles(c: AppThemeColors) {
+export function createLibraryScreenStyles(
+  c: AppThemeColors,
+  typography: AppTypography
+) {
   return StyleSheet.create({
     section: {
       marginTop: 0,
@@ -66,7 +70,7 @@ export function createLibraryScreenStyles(c: AppThemeColors) {
       marginTop: SPACE.sm,
     },
     title: {
-      fontSize: 15,
+      fontSize: typography.bodyMedium,
       fontFamily: "PlusJakartaSans-Bold",
       color: c.text,
       textAlign: "center",
@@ -74,7 +78,7 @@ export function createLibraryScreenStyles(c: AppThemeColors) {
       lineHeight: 19,
     },
     subtitle: {
-      fontSize: 12,
+      fontSize: typography.caption,
       fontFamily: "PlusJakartaSans-Regular",
       color: c.textMuted,
       textAlign: "center",
@@ -98,7 +102,7 @@ export function createLibraryScreenStyles(c: AppThemeColors) {
       alignSelf: "stretch",
     },
     action: {
-      fontSize: 12,
+      fontSize: typography.caption,
       fontFamily: "PlusJakartaSans-SemiBold",
       color: c.accent,
     },
@@ -111,7 +115,7 @@ export function createLibraryScreenStyles(c: AppThemeColors) {
       borderColor: c.accentBorder,
     },
     soonText: {
-      fontSize: 11,
+      fontSize: typography.caption,
       fontFamily: "PlusJakartaSans-SemiBold",
       color: c.accent,
     },

@@ -16,8 +16,9 @@ import { useAppTypography } from "@/lib/app-typography";
 import { useGlobalContext } from "@/lib/global-provider";
 import { useTranslation } from "@/lib/i18n";
 import { bodyLineHeight } from "@/lib/ui/typography";
-import { updateUserPassword } from "@/lib/supabase/auth";
+import { deleteOwnAccount, updateUserPassword } from "@/lib/supabase/auth";
 import { isSupabaseConfigured } from "@/lib/supabase/client";
+import { resolveAuthErrorKey } from "@/lib/auth-errors";
 import { ScreenBackground } from "@/components/ScreenBackground";
 import { ScreenPageHeader } from "@/components/ScreenPageHeader";
 
@@ -29,16 +30,55 @@ export default function SecurityScreen() {
   const { t } = useTranslation();
   const { isLogged } = useGlobalContext();
   const lh = bodyLineHeight(typography.body);
+  const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+
+  const handleDeleteAccount = () => {
+    Alert.alert(
+      t("profile.deleteAccountTitle"),
+      t("profile.deleteAccountConfirm"),
+      [
+        { text: t("common.cancel"), style: "cancel" },
+        {
+          text: t("profile.deleteAccountAction"),
+          style: "destructive",
+          onPress: () => {
+            setDeleting(true);
+            void deleteOwnAccount()
+              .then(() => router.replace("/sign-in"))
+              .catch(() =>
+                Alert.alert(
+                  t("profile.deleteAccountTitle"),
+                  t("auth.errors.deleteFailed")
+                )
+              )
+              .finally(() => setDeleting(false));
+          },
+        },
+      ]
+    );
+  };
 
   const handleChangePassword = async () => {
+    const current = currentPassword.trim();
     const newP = newPassword.trim();
     const confirm = confirmPassword.trim();
 
+    if (!current) {
+      Alert.alert(
+        t("auth.validationTitle"),
+        t("profile.securityCurrentPasswordRequired")
+      );
+      return;
+    }
     if (!newP) {
-      Alert.alert(t("auth.validationTitle"), t("auth.validationPassword", { min: MIN_PASSWORD_LENGTH }));
+      Alert.alert(
+        t("auth.validationTitle"),
+        t("auth.validationPassword", { min: MIN_PASSWORD_LENGTH })
+      );
       return;
     }
     if (newP.length < MIN_PASSWORD_LENGTH) {
@@ -55,16 +95,19 @@ export default function SecurityScreen() {
 
     setLoading(true);
     try {
-      const ok = await updateUserPassword(newP);
-      if (ok) {
-        Alert.alert(t("profile.passwordChangedTitle"), t("profile.passwordChangedBody"), [
-          { text: "OK", onPress: () => router.back() },
-        ]);
-        setNewPassword("");
-        setConfirmPassword("");
-      } else {
-        Alert.alert(t("profile.logoutError"), t("profile.passwordChangeFailed"));
-      }
+      await updateUserPassword(current, newP);
+      Alert.alert(t("profile.passwordChangedTitle"), t("profile.passwordChangedBody"), [
+        { text: "OK", onPress: () => router.back() },
+      ]);
+      setCurrentPassword("");
+      setNewPassword("");
+      setConfirmPassword("");
+                } catch (e) {
+      const key = resolveAuthErrorKey(e);
+      Alert.alert(
+        t("profile.logoutError"),
+        t(`auth.errors.${key}`) || t("profile.passwordChangeFailed")
+      );
     } finally {
       setLoading(false);
     }
@@ -113,7 +156,29 @@ export default function SecurityScreen() {
               </Text>
 
               <Text style={[styles.inputLabel, { color: colors.text }]}>
-                {t("auth.password")}
+                {t("profile.currentPassword")}
+              </Text>
+              <TextInput
+                style={[
+                  styles.input,
+                  {
+                    color: colors.text,
+                    borderColor: colors.border,
+                    backgroundColor: colors.card,
+                  },
+                ]}
+                value={currentPassword}
+                onChangeText={setCurrentPassword}
+                placeholder="••••••••"
+                placeholderTextColor={colors.textMuted}
+                secureTextEntry
+                textContentType="password"
+                autoComplete="password"
+                editable={!loading}
+              />
+
+              <Text style={[styles.inputLabel, { color: colors.text }]}>
+                {t("profile.newPassword")}
               </Text>
               <TextInput
                 style={[
@@ -129,6 +194,8 @@ export default function SecurityScreen() {
                 placeholder="••••••••"
                 placeholderTextColor={colors.textMuted}
                 secureTextEntry
+                textContentType="newPassword"
+                autoComplete="password-new"
                 editable={!loading}
               />
 
@@ -149,6 +216,8 @@ export default function SecurityScreen() {
                 placeholder="••••••••"
                 placeholderTextColor={colors.textMuted}
                 secureTextEntry
+                textContentType="newPassword"
+                autoComplete="password-new"
                 editable={!loading}
               />
 
@@ -163,9 +232,37 @@ export default function SecurityScreen() {
                 activeOpacity={0.8}
               >
                 {loading ? (
-                  <ActivityIndicator size="small" color="#fff" />
+                  <ActivityIndicator size="small" color={colors.onAccent} />
                 ) : (
-                  <Text style={styles.submitLabel}>{t("profile.changePassword")}</Text>
+                  <Text style={[styles.submitLabel, { color: colors.onAccent }]}>
+                    {t("profile.changePassword")}
+                  </Text>
+                )}
+              </TouchableOpacity>
+
+              <Text style={[styles.dangerTitle, { color: colors.danger }]}>
+                {t("profile.deleteAccountTitle")}
+              </Text>
+              <Text
+                style={[
+                  styles.paragraph,
+                  { color: colors.textMuted, fontSize: typography.body, lineHeight: lh },
+                ]}
+              >
+                {t("profile.deleteAccountHint")}
+              </Text>
+              <TouchableOpacity
+                style={[styles.dangerButton, { borderColor: colors.danger }]}
+                onPress={handleDeleteAccount}
+                disabled={loading || deleting}
+                activeOpacity={0.8}
+              >
+                {deleting ? (
+                  <ActivityIndicator size="small" color={colors.danger} />
+                ) : (
+                  <Text style={[styles.submitLabel, { color: colors.danger }]}>
+                    {t("profile.deleteAccountAction")}
+                  </Text>
                 )}
               </TouchableOpacity>
             </>
@@ -211,9 +308,22 @@ const styles = StyleSheet.create({
     minHeight: 52,
   },
   submitButtonDisabled: { opacity: 0.7 },
+  dangerTitle: {
+    fontSize: 18,
+    fontFamily: "PlusJakartaSans-Bold",
+    marginTop: 36,
+    marginBottom: 8,
+  },
+  dangerButton: {
+    borderRadius: 12,
+    borderWidth: 1,
+    paddingVertical: 15,
+    alignItems: "center",
+    justifyContent: "center",
+    minHeight: 52,
+  },
   submitLabel: {
     fontSize: 16,
     fontFamily: "PlusJakartaSans-SemiBold",
-    color: "#fff",
   },
 });

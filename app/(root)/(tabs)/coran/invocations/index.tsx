@@ -1,15 +1,13 @@
 import {
   StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
   ScrollView,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router } from "expo-router";
-import { AppIcon } from "@/components/AppIcon";
 import { useMemo, useState } from "react";
 
+import { EmptyState } from "@/components/EmptyState";
+import { ErrorState } from "@/components/ErrorState";
 import {
   useDuaCategories,
   type DuaCategory,
@@ -21,7 +19,6 @@ import { SCREEN_EDGE_PADDING } from "@/constants/screen-layout";
 import { ScreenPageHeader } from "@/components/ScreenPageHeader";
 import { ScreenSearchBar, screenSearchBarSpacing } from "@/components/ScreenSearchBar";
 import { useTranslation } from "@/lib/i18n";
-import { useAppTheme } from "@/lib/app-theme";
 
 function filterCategories(list: DuaCategory[], query: string) {
   const q = query.trim().toLowerCase();
@@ -36,7 +33,6 @@ function filterCategories(list: DuaCategory[], query: string) {
 
 export default function InvocationsCategoriesScreen() {
   const { t } = useTranslation();
-  const colors = useAppTheme();
   const { categories, loading, error, refetch } = useDuaCategories("fr");
   const [search, setSearch] = useState("");
 
@@ -57,17 +53,7 @@ export default function InvocationsCategoriesScreen() {
         {loading && categories.length === 0 ? (
           <DuaCategorySkeleton />
         ) : error && categories.length === 0 ? (
-          <View style={styles.errorWrap}>
-            <Text style={styles.errorText}>{error}</Text>
-            <TouchableOpacity
-              onPress={() => refetch()}
-              style={[styles.retryBtn, { backgroundColor: colors.accent }]}
-              activeOpacity={0.8}
-            >
-              <AppIcon name="refresh-cw" size={20} color="#fff" />
-              <Text style={styles.retryText}>{t("home.retry")}</Text>
-            </TouchableOpacity>
-          </View>
+          <ErrorState message={error} onRetry={refetch} retryLabel={t("home.retry")} />
         ) : (
           <>
             <ScreenSearchBar
@@ -84,11 +70,7 @@ export default function InvocationsCategoriesScreen() {
               keyboardShouldPersistTaps="handled"
             >
               {filtered.length === 0 ? (
-                <View style={styles.empty}>
-                  <Text style={[styles.emptyText, { color: colors.textMuted }]}>
-                    {t("library.searchNoResults")}
-                  </Text>
-                </View>
+                <EmptyState message={t("library.searchNoResults")} icon="search" />
               ) : (
                 filtered.map((cat) => (
                   <ListRow
@@ -124,34 +106,4 @@ const styles = StyleSheet.create({
     paddingBottom: 120,
   },
   row: { paddingVertical: 8 },
-  errorWrap: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    paddingHorizontal: 32,
-  },
-  errorText: {
-    fontSize: 16,
-    fontFamily: "PlusJakartaSans-Regular",
-    textAlign: "center",
-    marginBottom: 20,
-  },
-  retryBtn: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-    paddingVertical: 14,
-    paddingHorizontal: 24,
-    borderRadius: 12,
-  },
-  retryText: {
-    fontSize: 16,
-    fontFamily: "PlusJakartaSans-SemiBold",
-    color: "#fff",
-  },
-  empty: { paddingVertical: 40, alignItems: "center" },
-  emptyText: {
-    fontSize: 15,
-    fontFamily: "PlusJakartaSans-Regular",
-  },
 });

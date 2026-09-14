@@ -42,27 +42,34 @@ export function ScreenPageHeader({
   const titleSize = typography.pageTitle;
   const subtitleSize = typography.subtitle;
 
-  const rightSlot =
+  const backButton = onBack ? (
+    <TouchableOpacity
+      onPress={onBack}
+      style={styles.backButton}
+      activeOpacity={0.7}
+      hitSlop={8}
+      accessibilityRole="button"
+      accessibilityLabel="Back"
+    >
+      <AppIcon name={backIcon} size={28} color={colors.icon} />
+    </TouchableOpacity>
+  ) : null;
+
+  const actionsSlot =
     rightElement ??
-    (onBack || headerActions ? (
-      <View style={styles.rightRow}>
-        {headerActions}
-        {onBack ? (
-          <TouchableOpacity
-            onPress={onBack}
-            style={styles.backButton}
-            activeOpacity={0.7}
-            hitSlop={8}
-          >
-            <AppIcon name={backIcon} size={28} color={colors.icon} />
-          </TouchableOpacity>
-        ) : null}
-      </View>
+    (headerActions ? (
+      <View style={styles.actionsRow}>{headerActions}</View>
     ) : null);
 
   return (
     <View style={[styles.header, rtlViewStyle, style]}>
-      <View style={[styles.textBlock, rightSlot ? styles.textBlockWithRight : null]}>
+      {backButton}
+      <View
+        style={[
+          styles.textBlock,
+          backButton || actionsSlot ? styles.textBlockWithSides : null,
+        ]}
+      >
         <Text
           style={[
             styles.title,
@@ -93,7 +100,7 @@ export function ScreenPageHeader({
           {subtitle}
         </Text>
       </View>
-      {rightSlot}
+      {actionsSlot}
     </View>
   );
 }
@@ -107,14 +114,14 @@ const styles = StyleSheet.create({
     paddingHorizontal: SCREEN_EDGE_PADDING,
     paddingTop: 20,
     paddingBottom: 16,
-    gap: 12,
+    gap: 8,
   },
   textBlock: {
     flex: 1,
     justifyContent: "flex-start",
   },
-  textBlockWithRight: {
-    paddingRight: 4,
+  textBlockWithSides: {
+    paddingHorizontal: 4,
   },
   title: {
     fontFamily: "PlusJakartaSans-Bold",
@@ -123,7 +130,7 @@ const styles = StyleSheet.create({
     fontFamily: "PlusJakartaSans-Medium",
     marginTop: 6,
   },
-  rightRow: {
+  actionsRow: {
     flexDirection: "row",
     alignItems: "center",
     gap: 4,

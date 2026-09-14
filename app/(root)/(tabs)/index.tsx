@@ -1,5 +1,4 @@
 ﻿import {
-  Alert,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -16,6 +15,7 @@ import { AppIcon } from "@/components/AppIcon";
 import {
   isVendredi,
   getHadithVendrediDuJour,
+  getHadithVendrediText,
 } from "@/constants/hadithsVendredi";
 import { HomeContinueSection } from "@/components/home/HomeContinueSection";
 import { HomePrayerWeatherCarousel } from "@/components/home/HomePrayerWeatherCarousel";
@@ -24,15 +24,15 @@ import { HomeHadithDuJourSection } from "@/components/home/HomeHadithDuJourSecti
 import { HomeRamadanBanner } from "@/components/home/HomeRamadanBanner";
 import { rescheduleNextPrayerNotification } from "@/lib/notifications/prayer-notifications";
 import { useGlobalContext } from "@/lib/global-provider";
-import { usePrayerTimes, type PrayerTimes } from "@/lib/usePrayerTimes";
+import { usePrayerTimes } from "@/lib/usePrayerTimes";
 import { ScreenBackground } from "@/components/ScreenBackground";
 import { SCREEN_EDGE_PADDING } from "@/constants/screen-layout";
-import { ScreenPageHeader } from "@/components/ScreenPageHeader";
 import { useAppTypography } from "@/lib/app-typography";
 import { useAppTheme } from "@/lib/app-theme";
 import { createHomeStyles } from "@/lib/home-screen-styles";
 import { addActivityLog } from "@/lib/activity-log";
 import { useTranslation, getLocaleDateString, TRANSLATIONS } from "@/lib/i18n";
+import { MIN_TOUCH_TARGET } from "@/lib/ui/spacing";
 
 function useTodayDates(locale: "fr" | "en" | "ar") {
   return useMemo(() => {
@@ -67,9 +67,9 @@ const HeaderBell = React.memo(function HeaderBell({
       accessibilityRole="button"
       accessibilityLabel={bellLabel}
       hitSlop={12}
-      className="mt-2"
+      style={styles.bellButton}
     >
-      <AppIcon name="bell" size={32} color={colors.icon} />
+      <AppIcon name="bell" size={28} color={colors.icon} />
     </TouchableOpacity>
   );
 });
@@ -78,10 +78,7 @@ type HomeListHeaderProps = {
   user: { name?: string; avatar?: string } | null;
   gregorian: string;
   hijri: string;
-  todayIndex: number;
   prayerLoading: boolean;
-  prayerTimes: PrayerTimes | null;
-  prayerCity: string | null;
   prayerCoords: { latitude: number; longitude: number } | null;
   onRequestLocation: () => void;
   onBellPress: () => void;
@@ -92,10 +89,7 @@ const HomeListHeader = React.memo(function HomeListHeader({
   user,
   gregorian,
   hijri,
-  todayIndex,
   prayerLoading,
-  prayerTimes,
-  prayerCity,
   prayerCoords,
   onRequestLocation,
   onBellPress,
@@ -108,122 +102,99 @@ const HomeListHeader = React.memo(function HomeListHeader({
   const colors = useAppTheme();
   const themed = useMemo(() => createHomeStyles(colors), [colors]);
   const { t, locale, rtlTextStyle, rtlViewStyle } = useTranslation();
-  const weekDays = TRANSLATIONS[locale].home.weekDays;
+
+  const welcomeTitle = `${t("home.welcome")}${
+    user?.name ? ` ${user.name}` : ` ${t("home.defaultUser")}`
+  }`;
+  const subtitle = vendredi
+    ? `${t("home.goodFriday")} · ${gregorian}`
+    : gregorian;
+
   return (
     <View>
       <View style={[styles.homeHeaderBlock, rtlViewStyle]}>
-        <ScreenPageHeader
-          title={t("home.title")}
-          subtitle={
-            vendredi
-              ? `${t("home.goodFriday")} · ${t("screens.homeSubtitle")}`
-              : t("screens.homeSubtitle")
-          }
-          rightElement={
-            <HeaderBell
-              onBellPress={onBellPress}
-              bellLabel={bellLabel}
-            />
-          }
-        />
-      </View>
-      <View style={[styles.homeBody, rtlViewStyle]}>
-      <View className="flex flex-col items-start mt-1.5">
-        <Text
-          style={[
-            themed.welcomeTitle,
-            rtlTextStyle,
-            { fontSize: typography.title, lineHeight: typography.title * 1.25 },
-          ]}
-        >
-          {t("home.welcome")}
-          {user?.name ? ` ${user.name}` : ` ${t("home.defaultUser")}`}
-        </Text>
-        <Text
-          style={[
-            themed.welcomeDate,
-            rtlTextStyle,
-            {
-              fontSize: typography.subtitle,
-              lineHeight: typography.subtitle * 1.35,
-            },
-          ]}
-        >
-          {gregorian}
-        </Text>
-        {hijri ? (
-          <Text
-            style={[
-              themed.welcomeHijri,
-              rtlTextStyle,
-              { fontSize: typography.body, lineHeight: typography.body * 1.4 },
-            ]}
-          >
-            {hijri}
-          </Text>
-        ) : null}
-      </View>
-
-      <View className="flex flex-row justify-between mt-6 mb-2">
-        {weekDays.map((day, index) => {
-          const isToday = index === todayIndex;
-          const isPassed = index <= todayIndex;
-          return (
-            <View key={day} className="flex-1 items-center">
+        <View style={[styles.heroHeaderRow, rtlViewStyle]}>
+          <View style={styles.heroTextBlock}>
+            <Text
+              style={[
+                themed.welcomeTitle,
+                rtlTextStyle,
+                {
+                  fontSize: typography.pageTitle,
+                  lineHeight: typography.pageTitle * 1.2,
+                },
+              ]}
+              numberOfLines={2}
+            >
+              {welcomeTitle}
+            </Text>
+            <Text
+              style={[
+                themed.welcomeDate,
+                rtlTextStyle,
+                {
+                  fontSize: typography.subtitle,
+                  lineHeight: typography.subtitle * 1.35,
+                  marginTop: 6,
+                },
+              ]}
+            >
+              {subtitle}
+            </Text>
+            {hijri ? (
               <Text
-                style={{
-                  fontSize: 12,
-                  fontFamily: isToday
-                    ? "PlusJakartaSans-Bold"
-                    : "PlusJakartaSans-Regular",
-                  color: isToday ? colors.text : colors.textMuted,
-                }}
-              >
-                {day}
-              </Text>
-              <View
                 style={[
-                  styles.dayPill,
-                  isPassed
-                    ? { backgroundColor: colors.accent }
-                    : {
-                        backgroundColor: "transparent",
-                        borderWidth: 2,
-                        borderColor: colors.border,
-                      },
+                  themed.welcomeHijri,
+                  rtlTextStyle,
+                  {
+                    fontSize: typography.body,
+                    lineHeight: typography.body * 1.4,
+                    marginTop: 2,
+                  },
                 ]}
-              />
-            </View>
-          );
-        })}
+              >
+                {hijri}
+              </Text>
+            ) : null}
+          </View>
+          <HeaderBell onBellPress={onBellPress} bellLabel={bellLabel} />
+        </View>
       </View>
-      <HomePrayerWeatherCarousel
-        prayerLoading={prayerLoading}
-        prayerCoords={prayerCoords}
-        onRequestLocation={onRequestLocation}
-      />
 
-      <HomeRamadanBanner />
+      <View style={[styles.homeBody, rtlViewStyle]}>
+        <HomePrayerWeatherCarousel
+          prayerLoading={prayerLoading}
+          prayerCoords={prayerCoords}
+          onRequestLocation={onRequestLocation}
+        />
 
-      {vendredi && hadithVendredi && (
-        <Pressable
-          onPress={() => router.push("/(root)/hadith-friday" as Href)}
-          style={({ pressed }) => [
-            themed.hadithVendrediBlock,
-            pressed && { opacity: 0.92 },
-          ]}
-          accessibilityRole="button"
-          accessibilityLabel={t("home.hadithFridayLabel")}
-        >
-          <Text style={themed.hadithVendrediLabel}>{t("home.hadithFridayLabel")}</Text>
-          <Text style={themed.hadithVendrediText}>{hadithVendredi.text}</Text>
-          <Text style={themed.hadithVendrediSource}>{hadithVendredi.source}</Text>
-        </Pressable>
-      )}
+        <HomeContinueSection />
 
-      <HomeHadithDuJourSection />
-      <HomeToolsSection />
-      <HomeContinueSection />
+        {vendredi && hadithVendredi ? (
+          <Pressable
+            onPress={() => router.push("/(root)/hadith-friday" as Href)}
+            style={({ pressed }) => [
+              themed.hadithVendrediBlock,
+              pressed && { opacity: 0.92 },
+            ]}
+            accessibilityRole="button"
+            accessibilityLabel={t("home.hadithFridayLabel")}
+          >
+            <Text style={themed.hadithVendrediLabel}>
+              {t("home.hadithFridayLabel")}
+            </Text>
+            <Text style={themed.hadithVendrediText}>
+              {getHadithVendrediText(hadithVendredi, locale)}
+            </Text>
+            <Text style={themed.hadithVendrediSource}>
+              {hadithVendredi.source}
+            </Text>
+          </Pressable>
+        ) : null}
+
+        <HomeHadithDuJourSection />
+        <HomeToolsSection />
+        <HomeRamadanBanner />
       </View>
     </View>
   );
@@ -231,17 +202,14 @@ const HomeListHeader = React.memo(function HomeListHeader({
 
 const Home = () => {
   const { user } = useGlobalContext();
-  const { locale } = useTranslation();
+  const { locale, t: tHome } = useTranslation();
   const { gregorian, hijri } = useTodayDates(locale);
-  const todayIndex = useMemo(() => (new Date().getDay() + 6) % 7, []);
   const {
     timings: prayerTimes,
     loading: prayerLoading,
-    cityName: prayerCity,
     coords: prayerCoords,
     refetch: refetchLocation,
   } = usePrayerTimes();
-  const { t: tHome } = useTranslation();
 
   useEffect(() => {
     if (prayerTimes) {
@@ -250,32 +218,16 @@ const Home = () => {
   }, [prayerTimes]);
 
   const handleBellPress = () => {
-    Alert.alert(
-      tHome("home.bellMenuTitle"),
-      tHome("home.bellMenuBody"),
-      [
-        { text: tHome("common.cancel"), style: "cancel" },
-        {
-          text: tHome("home.bellMenuReminders"),
-          onPress: () => {
-            void addActivityLog(tHome("home.bellMenuReminders"));
-            router.push("/(root)/reminders");
-          },
-        },
-        {
-          text: tHome("home.bellMenuNotifications"),
-          onPress: () => {
-            void addActivityLog(tHome("home.bellMenuNotifications"));
-            router.push("/(root)/(tabs)/profile");
-          },
-        },
-      ]
-    );
+    void addActivityLog(tHome("reminders.title"));
+    router.push("/(root)/reminders");
   };
 
   return (
     <ScreenBackground style={styles.background}>
-      <SafeAreaView className="h-full bg-transparent" edges={["top", "left", "right"]}>
+      <SafeAreaView
+        className="h-full bg-transparent"
+        edges={["top", "left", "right"]}
+      >
         <ScrollView
           showsVerticalScrollIndicator={false}
           contentContainerStyle={styles.scrollContent}
@@ -284,10 +236,7 @@ const Home = () => {
             user={user}
             gregorian={gregorian}
             hijri={hijri}
-            todayIndex={todayIndex}
             prayerLoading={prayerLoading}
-            prayerTimes={prayerTimes}
-            prayerCity={prayerCity}
             prayerCoords={prayerCoords}
             onRequestLocation={refetchLocation}
             onBellPress={handleBellPress}
@@ -301,15 +250,27 @@ const Home = () => {
 
 const styles = StyleSheet.create({
   background: { flex: 1 },
-  homeHeaderBlock: { paddingTop: 12, marginTop: 8 },
+  homeHeaderBlock: {
+    paddingTop: 20,
+    paddingHorizontal: SCREEN_EDGE_PADDING,
+    marginTop: 8,
+    marginBottom: 8,
+  },
+  heroHeaderRow: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    justifyContent: "space-between",
+    gap: 12,
+  },
+  heroTextBlock: { flex: 1 },
+  bellButton: {
+    minWidth: MIN_TOUCH_TARGET,
+    minHeight: MIN_TOUCH_TARGET,
+    alignItems: "center",
+    justifyContent: "center",
+  },
   homeBody: { paddingHorizontal: SCREEN_EDGE_PADDING },
   scrollContent: { paddingBottom: 120 },
-  dayPill: {
-    width: 24,
-    height: 36,
-    borderRadius: 12,
-    marginTop: 6,
-  },
 });
 
 export default Home;

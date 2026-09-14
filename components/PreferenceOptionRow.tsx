@@ -82,7 +82,6 @@ const styles = StyleSheet.create({
   },
   label: {
     flex: 1,
-    fontSize: 17,
     fontFamily: "PlusJakartaSans-Medium",
   },
   description: {

@@ -6,7 +6,6 @@ export type LibraryRoute =
   | "recitateurs"
   | "recitateur-detail"
   | "tafsir"
-  | "traduction"
   | "memorisation"
   | "juz"
   | "player"
@@ -66,12 +65,6 @@ export const LIBRARY_CATALOG: LibraryCatalogSection[] = [
         icon: "book-open",
       },
       {
-        id: "recitateurs",
-        titleKey: "library.reciters",
-        shortKey: "library.recitersShort",
-        icon: "mic",
-      },
-      {
         id: "recherche",
         titleKey: "screens.searchTitle",
         shortKey: "library.searchShort",
@@ -80,14 +73,8 @@ export const LIBRARY_CATALOG: LibraryCatalogSection[] = [
       {
         id: "tafsir",
         titleKey: "screens.tafsirTitle",
-        shortKey: "library.tafsirShort",
+        shortKey: "library.tafsirExternal",
         icon: "book",
-      },
-      {
-        id: "traduction",
-        titleKey: "screens.translationTitle",
-        shortKey: "library.translationShort",
-        icon: "globe",
       },
       {
         id: "memorisation",

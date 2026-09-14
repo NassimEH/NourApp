@@ -23,12 +23,16 @@ import { SCREEN_EDGE_PADDING } from "@/constants/screen-layout";
 
 const H_PADDING = SCREEN_EDGE_PADDING;
 
-function getChapterDisplayName(ch: HadithChapter, preferFr = true): string {
+function getChapterDisplayName(
+  ch: HadithChapter,
+  fallback: string,
+  preferFr = true
+): string {
   const fr = ch.chapter?.find((c) => c.lang === "fr");
   const en = ch.chapter?.find((c) => c.lang === "en");
   const num = (preferFr ? fr?.chapterNumber : en?.chapterNumber) ?? en?.chapterNumber ?? ch.chapterId;
   const title = (preferFr ? fr?.chapterTitle : en?.chapterTitle) ?? en?.chapterTitle ?? "";
-  return title ? `${num} – ${title}` : `Chapitre ${ch.chapterId}`;
+  return title ? `${num} – ${title}` : fallback;
 }
 
 export default function HadithsChaptersScreen() {
@@ -53,15 +57,21 @@ export default function HadithsChaptersScreen() {
   );
   const collectionDisplayName = collection
     ? getCollectionDisplayName(collection, "fr")
-    : collectionName ?? "Chapitres";
+    : collectionName ?? t("hadith.chaptersTitle");
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
     if (!q) return chapters;
     return chapters.filter((ch) =>
-      getChapterDisplayName(ch, true).toLowerCase().includes(q)
+      getChapterDisplayName(
+        ch,
+        t("hadith.chapterFallback", { number: ch.chapterId }),
+        true
+      )
+        .toLowerCase()
+        .includes(q)
     );
-  }, [chapters, search]);
+  }, [chapters, search, t]);
 
   return (
     <ScreenBackground style={styles.background}>
@@ -82,8 +92,8 @@ export default function HadithsChaptersScreen() {
               style={[styles.retryBtn, { backgroundColor: colors.accent }]}
               activeOpacity={0.8}
             >
-              <AppIcon name="refresh-cw" size={20} color="#fff" />
-              <Text style={styles.retryText}>Réessayer</Text>
+              <AppIcon name="refresh-cw" size={20} color={colors.onAccent} />
+              <Text style={[styles.retryText, { color: colors.onAccent }]}>{t("common.retry")}</Text>
             </TouchableOpacity>
           </View>
         ) : (
@@ -103,7 +113,7 @@ export default function HadithsChaptersScreen() {
               ListEmptyComponent={
                 <View style={styles.empty}>
                   <Text style={[styles.emptyText, { color: colors.textMuted }]}>
-                    Aucun chapitre trouvé
+                    {t("hadith.noChapterFound")}
                   </Text>
                 </View>
               }
@@ -126,7 +136,11 @@ export default function HadithsChaptersScreen() {
                   <AppIcon name="file-text" size={22} color={colors.icon} />
                   <View style={styles.rowText}>
                     <Text style={[styles.rowTitle, { color: colors.text }]} numberOfLines={2}>
-                      {getChapterDisplayName(item, true)}
+                      {getChapterDisplayName(
+                        item,
+                        t("hadith.chapterFallback", { number: item.chapterId }),
+                        true
+                      )}
                     </Text>
                   </View>
                   <AppIcon name="chevron-right" size={20} color={colors.iconMuted} />
@@ -178,7 +192,7 @@ const styles = StyleSheet.create({
   retryText: {
     fontSize: 16,
     fontFamily: "PlusJakartaSans-SemiBold",
-    color: "#fff",
+
   },
   empty: { paddingVertical: 40, alignItems: "center" },
   emptyText: {

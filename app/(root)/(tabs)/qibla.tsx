@@ -1,4 +1,4 @@
-﻿import React, { useEffect, useState, useRef, useMemo } from "react";
+﻿import React, { useEffect, useState, useMemo } from "react";
 import {
   Alert,
   View,
@@ -27,7 +27,6 @@ import {
 import {
   usePrayerTimes,
   PRAYER_ORDER,
-  getPrayerLabel,
   type PrayerKey,
 } from "@/lib/usePrayerTimes";
 import { usePrayersChecked } from "@/lib/usePrayersChecked";
@@ -37,11 +36,13 @@ import { screenPageHeaderSpacing } from "@/constants/screen-layout";
 import { ScreenPageHeader } from "@/components/ScreenPageHeader";
 import { TRANSLATIONS, useTranslation } from "@/lib/i18n";
 import { useAppTheme } from "@/lib/app-theme";
+import { useAppTypography } from "@/lib/app-typography";
 import { createQiblaStyles } from "@/lib/qibla-screen-styles";
 import { useMosqueName } from "@/lib/home/hooks/useMosqueName";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 const COMPASS_SIZE = Math.min(SCREEN_WIDTH - 64, 260);
+const SALAT_KEYS: PrayerKey[] = ["Fajr", "Dhuhr", "Asr", "Maghrib", "Isha"];
 
 function useTodayDates(locale: "fr" | "en" | "ar", hijriMonths: readonly string[]) {
   return useMemo(() => {
@@ -81,7 +82,11 @@ function getDirection(degree: number): string {
 export default function MesPrièresScreen() {
   const { t, locale } = useTranslation();
   const colors = useAppTheme();
-  const styles = useMemo(() => createQiblaStyles(colors), [colors]);
+  const typography = useAppTypography();
+  const styles = useMemo(
+    () => createQiblaStyles(colors, typography),
+    [colors, typography]
+  );
   const hijriMonths = TRANSLATIONS[locale].home.hijriMonths;
   const { gregorian, hijri } = useTodayDates(locale, hijriMonths);
   const {
@@ -89,7 +94,6 @@ export default function MesPrièresScreen() {
     loading: prayerLoading,
     applyingLocation,
     cityName: prayerCity,
-    coords: prayerCoords,
     applyLocationByQuery,
     applyDeviceLocation,
   } = usePrayerTimes();
@@ -103,10 +107,12 @@ export default function MesPrièresScreen() {
   const [countdownNow, setCountdownNow] = useState(() => Date.now());
   const [locationQuery, setLocationQuery] = useState("");
 
-  const needleAnim = useRef(new Animated.Value(0)).current;
+  const [needleAnim] = useState(() => new Animated.Value(0));
 
   useEffect(() => {
-    if (prayerCity) setLocationQuery(prayerCity);
+    if (!prayerCity) return;
+    const timeout = setTimeout(() => setLocationQuery(prayerCity), 0);
+    return () => clearTimeout(timeout);
   }, [prayerCity]);
 
   const handleLocationSubmit = async () => {
@@ -118,7 +124,6 @@ export default function MesPrièresScreen() {
 
   const nextPrayer = prayerTimes ? getNextPrayerInfo(prayerTimes) : null;
   const currentPrayer = prayerTimes ? getCurrentPrayer(prayerTimes) : null;
-  const SALAT_KEYS: PrayerKey[] = ["Fajr", "Dhuhr", "Asr", "Maghrib", "Isha"];
   const remainingCount = 5 - SALAT_KEYS.filter((k) => isPrayerChecked(k)).length;
   const nextPrayerTimestamp = prayerTimes ? getNextPrayerTimestamp(prayerTimes) : null;
   const nextPrayerCountdownHM = useMemo(() => {
@@ -134,7 +139,6 @@ export default function MesPrièresScreen() {
     return () => clearInterval(id);
   }, [prayerTimes, nextPrayer]);
 
-  // Position pour l'angle Qibla
   useEffect(() => {
     let cancelled = false;
     (async () => {
@@ -145,16 +149,14 @@ export default function MesPrièresScreen() {
         if (cancelled) return;
         setBearing(getQiblaBearing(position.coords.latitude, position.coords.longitude));
       } catch {
-        if (!cancelled) setCompassError("Position indisponible");
+        if (!cancelled) setCompassError(t("qibla.positionUnavailable"));
       }
     })();
     return () => { cancelled = true; };
-  }, []);
+  }, [t]);
 
-  // Cap du téléphone (boussole)
   useEffect(() => {
     if (Platform.OS === "web") {
-      setCompassError("Boussole non disponible sur le web");
       return;
     }
     let subscription: { remove: () => void } | null = null;
@@ -162,7 +164,7 @@ export default function MesPrièresScreen() {
       try {
         const { status } = await Location.requestForegroundPermissionsAsync();
         if (status !== "granted") {
-          setCompassError("Permission localisation refusée");
+          setCompassError(t("qibla.locationPermissionDenied"));
           return;
         }
         subscription = await Location.watchHeadingAsync((data) => {
@@ -170,11 +172,11 @@ export default function MesPrièresScreen() {
           if (h >= 0) setHeading(h);
         });
       } catch {
-        setCompassError("Boussole indisponible");
+        setCompassError(t("qibla.compassUnavailable"));
       }
     })();
     return () => subscription?.remove();
-  }, []);
+  }, [t]);
 
   const needleAngle =
     heading !== null && bearing !== null ? (bearing - heading + 360) % 360 : 0;
@@ -190,6 +192,8 @@ export default function MesPrièresScreen() {
   const direction = heading !== null ? getDirection(heading) : "—";
   const degree = heading !== null ? Math.round(heading) : 0;
   const needleLength = COMPASS_SIZE / 2 - 24;
+  const displayedCompassError =
+    Platform.OS === "web" ? t("qibla.compassWebUnavailable") : compassError;
 
   return (
     <ScreenBackground style={styles.background}>
@@ -226,7 +230,7 @@ export default function MesPrièresScreen() {
         {/* Bloc prières */}
         <View style={styles.prayerSection}>
           <Text style={styles.sectionLabel}>
-            Prières{prayerCity ? ` — ${prayerCity}` : ""}
+            {t("qibla.prayersSection")}{prayerCity ? ` — ${prayerCity}` : ""}
           </Text>
           <View style={styles.prayerCard}>
             {prayerLoading ? (
@@ -234,30 +238,27 @@ export default function MesPrièresScreen() {
             ) : prayerTimes ? (
               <>
                 <View style={styles.prayerCardHeader}>
-                  <Text style={styles.prayerCardMethod}>Aladhan (MWL)</Text>
                   {hijri ? <Text style={styles.prayerCardHijri}>{hijri}</Text> : null}
                   <Text style={styles.prayerCardGregorian}>{gregorian}</Text>
-                  {prayerCoords ? (
-                    <View style={styles.prayerCardCoords}>
-                      <AppIcon name="map-pin" size={12} color={colors.iconMuted} />
-                      <Text style={styles.prayerCardCoordsText}>
-                        Lat: {prayerCoords.latitude.toFixed(5)}, Lon: {prayerCoords.longitude.toFixed(5)}
-                      </Text>
-                    </View>
-                  ) : prayerCity ? (
+                  {prayerCity ? (
                     <View style={styles.prayerCardCoords}>
                       <AppIcon name="map-pin" size={12} color={colors.iconMuted} />
                       <Text style={styles.prayerCardCoordsText}>{prayerCity}</Text>
                     </View>
                   ) : null}
                   <Text style={styles.prayerCardRemaining}>
-                    {remainingCount} prière{remainingCount !== 1 ? "s" : ""} restante{remainingCount !== 1 ? "s" : ""} à faire
+                    {t(
+                      remainingCount === 1
+                        ? "qibla.remainingPrayer"
+                        : "qibla.remainingPrayers",
+                      { count: remainingCount }
+                    )}
                   </Text>
                 </View>
                 {PRAYER_ORDER.filter((k) => k !== "Sunrise").map((key, index) => {
                   const prayerKey = key as PrayerKey;
                   const checked = isPrayerChecked(prayerKey);
-                  const isCurrent = currentPrayer?.label === getPrayerLabel(prayerKey);
+                  const isCurrent = currentPrayer?.name === prayerKey;
                   return (
                     <Pressable
                       key={key}
@@ -274,7 +275,7 @@ export default function MesPrièresScreen() {
                           style={[styles.prayerRowLabel, checked && styles.prayerLabelDone]}
                           numberOfLines={1}
                         >
-                          {getPrayerLabel(prayerKey)}
+                          {t(`qibla.prayerNames.${prayerKey}`)}
                         </Text>
                         <View style={styles.prayerRowTimeRow}>
                           {isCurrent && <View style={styles.prayerRowCurrentDot} />}
@@ -283,7 +284,7 @@ export default function MesPrièresScreen() {
                       </View>
                       <View style={styles.prayerRowCheckboxWrap}>
                         <View style={[styles.prayerCheckbox, checked && styles.prayerCheckboxChecked]}>
-                          {checked ? <AppIcon name="check" size={14} color="#fff" /> : null}
+                          {checked ? <AppIcon name="check" size={14} color={colors.onAccent} /> : null}
                         </View>
                       </View>
                     </Pressable>
@@ -294,11 +295,16 @@ export default function MesPrièresScreen() {
                     <View style={styles.sectionDivider} />
                     <View style={styles.prayerNextWidget}>
                       <View style={styles.prayerNextWidgetLeft}>
-                        <Text style={styles.prayerNextLabel}>PROCHAINE PRIÈRE</Text>
+                        <Text style={styles.prayerNextLabel}>{t("qibla.nextPrayer")}</Text>
                         <View style={styles.prayerNextWidgetRow}>
-                          <AppIcon name="sunset" size={14} color="rgba(61, 107, 71, 0.9)" />
+                          <AppIcon name="sunset" size={14} color={colors.accent} />
                           <Text style={styles.prayerNextText}>
-                            {nextPrayer.label}{nextPrayerTimeStr ? ` à ${nextPrayerTimeStr}` : ""}
+                            {nextPrayerTimeStr
+                              ? t("qibla.nextPrayerAt", {
+                                  prayer: t(`qibla.prayerNames.${nextPrayer.name}`),
+                                  time: nextPrayerTimeStr,
+                                })
+                              : t(`qibla.prayerNames.${nextPrayer.name}`)}
                           </Text>
                         </View>
                       </View>
@@ -308,28 +314,27 @@ export default function MesPrièresScreen() {
                     </View>
                   </>
                 )}
-                <Text style={styles.prayerCardFooter}>
-                  {currentPrayer ? `${currentPrayer.label} : Standard` : "Calcul : MWL"}
-                </Text>
               </>
             ) : (
-              <Text style={styles.prayerUnavailable}>Horaires non disponibles</Text>
+              <Text style={styles.prayerUnavailable}>{t("qibla.prayerUnavailable")}</Text>
             )}
           </View>
         </View>
 
         {/* Section Qibla */}
         <View style={styles.qiblaSection}>
-          <Text style={styles.sectionLabel}>Qibla</Text>
+          <Text style={styles.sectionLabel}>{t("qibla.title")}</Text>
           <Text style={styles.qiblaSubtitle}>
-            {"Dirigez l'aiguille vers le haut pour faire face à la Mecque"}
+            {t("qibla.instructions")}
           </Text>
 
-          {compassError ? (
+          {displayedCompassError ? (
             <View style={styles.compassError}>
-              <Text style={styles.compassErrorText}>{compassError}</Text>
+              <Text style={styles.compassErrorText}>{displayedCompassError}</Text>
               {bearing !== null && (
-                <Text style={styles.qiblaAngle}>Angle Qibla : {Math.round(bearing)}°</Text>
+                <Text style={styles.qiblaAngle}>
+                  {t("qibla.angle", { angle: Math.round(bearing) })}
+                </Text>
               )}
             </View>
           ) : (
@@ -366,7 +371,9 @@ export default function MesPrièresScreen() {
               </View>
 
               {bearing !== null && (
-                <Text style={styles.qiblaAngle}>Qibla : {Math.round(bearing)}°</Text>
+                <Text style={styles.qiblaAngle}>
+                  {t("qibla.bearing", { angle: Math.round(bearing) })}
+                </Text>
               )}
             </>
           )}

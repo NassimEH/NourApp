@@ -4,6 +4,7 @@ import { GlassView, isGlassEffectAPIAvailable } from "expo-glass-effect";
 import { useEffect, useState, type ReactNode } from "react";
 
 import { useAppTheme } from "@/lib/app-theme";
+import { GLASS_RADIUS } from "@/lib/ui/spacing";
 
 function useGlassAvailable() {
   const [available, setAvailable] = useState(false);
@@ -31,7 +32,7 @@ interface ThemedGlassSurfaceProps {
 export function ThemedGlassSurface({
   children,
   style,
-  borderRadius = 20,
+  borderRadius = GLASS_RADIUS,
   interactive = false,
 }: ThemedGlassSurfaceProps) {
   const colors = useAppTheme();
@@ -69,7 +70,7 @@ export function ThemedGlassSurface({
       />
       <View
         style={[
-          StyleSheet.absoluteFillObject,
+          StyleSheet.absoluteFill,
           { backgroundColor: colors.glassOverlay, borderRadius },
         ]}
         pointerEvents="none"

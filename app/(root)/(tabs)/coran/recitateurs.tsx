@@ -30,7 +30,7 @@ export default function RecitateursScreen() {
               key={reciter.id}
               icon="mic"
               title={reciter.name}
-              subtitle={reciter.style}
+              subtitle={t(reciter.styleKey)}
               onPress={() =>
                 router.push({
                   pathname: "/(root)/(tabs)/coran/recitateur-detail",

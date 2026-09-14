@@ -17,23 +17,25 @@ import { ThemedGlassSurface } from "@/components/ThemedGlassSurface";
 import * as Haptics from "expo-haptics";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { AppIcon } from "@/components/AppIcon";
-import type { BottomTabBarProps } from "@react-navigation/bottom-tabs";
+import type { BottomTabBarProps } from "expo-router/build/react-navigation/bottom-tabs";
 
 import { QuranMiniPlayer } from "@/components/quran/QuranMiniPlayer";
 import { useQuranAudioContextOptional } from "@/lib/quran/QuranAudioContext";
 import { useSuraList } from "@/lib/quran/hooks/useSuraList";
 import { useAppTheme } from "@/lib/app-theme";
+import { useTranslation } from "@/lib/i18n";
 import type { Reciter } from "@/lib/quran/types";
+import { PILL_RADIUS } from "@/lib/ui/spacing";
 
 const quranArtwork = require("@/assets/images/islamic-new-year-quran-book-with-dates-photo.jpg");
 
 const TAB_ROUTES = [
-  { name: "index" as const, label: "Accueil", icon: "home" as const, href: "/(root)/(tabs)" as const },
-  { name: "qibla" as const, label: "Mes prières", icon: "sunrise" as const, href: "/(root)/(tabs)/qibla" as const },
-  { name: "coran" as const, label: "Bibliothèque", icon: "book-open" as const, href: "/(root)/(tabs)/coran" as const },
-  { name: "apprendre" as const, label: "Apprendre", icon: "award" as const, href: "/(root)/(tabs)/apprendre" as const },
-  { name: "explore" as const, label: "Écoute", icon: "search" as const, href: "/(root)/(tabs)/explore" as const },
-  { name: "profile" as const, label: "Profil", icon: "user" as const, href: "/(root)/(tabs)/profile" as const },
+  { name: "index" as const, labelKey: "tabs.home", icon: "home" as const, href: "/(root)/(tabs)" as const },
+  { name: "qibla" as const, labelKey: "tabs.prayers", icon: "sunrise" as const, href: "/(root)/(tabs)/qibla" as const },
+  { name: "coran" as const, labelKey: "tabs.library", icon: "book-open" as const, href: "/(root)/(tabs)/coran" as const },
+  { name: "apprendre" as const, labelKey: "tabs.learn", icon: "award" as const, href: "/(root)/(tabs)/apprendre" as const },
+  { name: "explore" as const, labelKey: "tabs.explore", icon: "search" as const, href: "/(root)/(tabs)/explore" as const },
+  { name: "profile" as const, labelKey: "tabs.profile", icon: "user" as const, href: "/(root)/(tabs)/profile" as const },
 ];
 
 const { height: SCREEN_HEIGHT, width: SCREEN_WIDTH } = Dimensions.get("window");
@@ -54,6 +56,7 @@ function TabIconButton({
   onPress: () => void;
 }) {
   const colors = useAppTheme();
+  const { t } = useTranslation();
   const scale = useRef(new Animated.Value(1)).current;
   const prevActive = useRef(isActive);
 
@@ -104,6 +107,8 @@ function TabIconButton({
       }}
       onPressIn={onPressIn}
       onPressOut={onPressOut}
+      accessibilityRole="button"
+      accessibilityLabel={t(route.labelKey)}
       style={[
         styles.tabIconButton,
         isActive && { backgroundColor: colors.accent },
@@ -133,6 +138,7 @@ function ReciterSelector({
   currentReciter: string;
   onSelect: (id: string) => void;
 }) {
+  const { t } = useTranslation();
   const colors = useAppTheme();
   const insets = useSafeAreaInsets();
 
@@ -142,7 +148,7 @@ function ReciterSelector({
     <View style={[reciterStyles.content, { paddingBottom: insets.bottom + 20 }]}>
       <View style={reciterStyles.header}>
         <Text style={[reciterStyles.title, { color: colors.text }]}>
-          Choisir un récitateur
+          {t("profile.reciterModalTitle")}
         </Text>
         <TouchableOpacity onPress={onClose} style={reciterStyles.closeBtn}>
           <AppIcon name="x" size={24} color={colors.icon} />
@@ -187,7 +193,7 @@ function ReciterSelector({
                   {reciter.name}
                 </Text>
                 <Text style={[reciterStyles.itemStyle, { color: colors.textMuted }]}>
-                  {reciter.style}
+                  {t(reciter.styleKey)}
                 </Text>
               </View>
               {isSelected ? (
@@ -558,7 +564,7 @@ export default function BottomBar({ state, navigation }: BottomTabBarProps) {
   const renderPillContent = () => (
     <ThemedGlassSurface
       style={styles.glassPillOuter}
-      borderRadius={32}
+      borderRadius={PILL_RADIUS}
       interactive
     >
       {renderGlassPill()}

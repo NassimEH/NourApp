@@ -1,64 +1,31 @@
 /**
- * Index d'une collection : tous les hadiths chargés et regroupés par livre / chapitre.
- * Utilisé pour afficher les livres, chapitres et hadiths sans "All hadiths".
+ * Index d'une collection via fawazahmed0/hadith-api.
+ * Charge l'édition (eng par défaut) une fois, construit livres (= sections) et hadiths.
  */
 
 import type { HadithRecord, HadithBook, HadithChapter } from "./types";
+import { editionUrl, type HadithContentLang } from "./editions";
 
-const BASE_URL = "https://hadithapi.pages.dev/api";
-const PAGE_LIMIT = 100;
-
-interface HadithApiItem {
-  id: number;
-  header?: string;
-  hadith_english: string;
-  book?: string;
-  refno?: string;
-  bookName?: string;
-  chapterName?: string;
+interface FawazHadithItem {
+  hadithnumber: number;
+  arabicnumber?: number;
+  text?: string;
+  reference?: { book?: number; hadith?: number };
 }
 
-interface HadithListApiResponse {
-  results: HadithApiItem[];
-  pagination: {
-    total: number;
-    page: number;
-    limit: number;
-    totalPages: number;
-    hasNextPage: boolean;
-    hasPrevPage: boolean;
-  };
-}
-
-function trim(s: string | undefined): string {
-  return (s ?? "").trim() || "Sans titre";
-}
-
-function mapItemToRecord(
-  item: HadithApiItem,
-  collectionName: string,
-  bookNumber: string,
-  chapterId: string,
-  chapterTitle: string
-): HadithRecord {
-  const body = [item.header, item.hadith_english]
-    .filter(Boolean)
-    .map((s) => (s || "").trim())
-    .join("\n\n");
-  return {
-    collection: collectionName,
-    bookNumber,
-    chapterId,
-    hadithNumber: String(item.id),
-    source: item.refno ?? undefined,
-    hadith: [
+interface FawazEditionJson {
+  metadata?: {
+    name?: string;
+    sections?: Record<string, string>;
+    section_details?: Record<
+      string,
       {
-        lang: "en",
-        body: body || item.hadith_english?.trim(),
-        chapterTitle,
-      },
-    ],
+        hadithnumber_first?: number;
+        hadithnumber_last?: number;
+      }
+    >;
   };
+  hadiths?: FawazHadithItem[];
 }
 
 export interface CollectionIndex {
@@ -69,194 +36,163 @@ export interface CollectionIndex {
 
 export interface CollectionIndexCache {
   index: CollectionIndex;
-  rawItems: HadithApiItem[];
-  lastPageFetched: number;
-  totalPages: number | null;
+  lang: HadithContentLang;
 }
 
 const indexCache = new Map<string, CollectionIndexCache>();
 
-function cacheKey(collectionName: string): string {
-  return collectionName.toLowerCase();
+function cacheKey(collectionName: string, lang: HadithContentLang): string {
+  return `${collectionName.toLowerCase()}_${lang}`;
 }
 
-function buildIndexFromRawItems(
+function mapItemToRecord(
+  item: FawazHadithItem,
   collectionName: string,
-  rawItems: HadithApiItem[]
-): CollectionIndex {
-  const bookNamesOrdered: string[] = [];
-  const bookToChaptersOrdered = new Map<string, string[]>();
-
-  for (const item of rawItems) {
-    const bookName = trim(item.bookName);
-    const chapterName = trim(item.chapterName);
-    if (!bookNamesOrdered.includes(bookName)) bookNamesOrdered.push(bookName);
-    let chapters = bookToChaptersOrdered.get(bookName);
-    if (!chapters) {
-      chapters = [];
-      bookToChaptersOrdered.set(bookName, chapters);
-    }
-    if (!chapters.includes(chapterName)) chapters.push(chapterName);
-  }
-
-  const allHadiths: HadithRecord[] = rawItems.map((item) => {
-    const bookName = trim(item.bookName);
-    const chapterName = trim(item.chapterName);
-    const bookNumber = String(bookNamesOrdered.indexOf(bookName) + 1);
-    const chapterId = String(
-      bookToChaptersOrdered.get(bookName)!.indexOf(chapterName) + 1
-    );
-    return mapItemToRecord(
-      item,
-      collectionName,
-      bookNumber,
-      chapterId,
-      chapterName
-    );
-  });
-
-  const books: HadithBook[] = bookNamesOrdered.map((name, i) => {
-    const bookNumber = String(i + 1);
-    const count = allHadiths.filter((h) => h.bookNumber === bookNumber).length;
-    return {
-      bookNumber,
-      book: [
-        { lang: "en", name, numberOfHadith: count },
-      ],
-    };
-  });
-
-  const chaptersByBook = new Map<string, HadithChapter[]>();
-  const hadithsByChapter = new Map<string, HadithRecord[]>();
-
-  for (const [bookName, chapterNames] of bookToChaptersOrdered) {
-    const bookNumber = String(bookNamesOrdered.indexOf(bookName) + 1);
-    const chapters: HadithChapter[] = chapterNames.map((chapterName, i) => {
-      const chapterId = String(i + 1);
-      const num = String(i + 1).padStart(2, "0");
-      return {
-        bookNumber,
-        chapterId,
-        chapter: [
-          { lang: "en", chapterNumber: num, chapterTitle: chapterName },
-        ],
-      };
-    });
-    chaptersByBook.set(bookNumber, chapters);
-    for (const ch of chapters) {
-      const list = allHadiths.filter(
-        (h) => h.bookNumber === bookNumber && h.chapterId === ch.chapterId
-      );
-      hadithsByChapter.set(`${bookNumber}_${ch.chapterId}`, list);
-    }
-  }
-
+  bookNumber: string,
+  chapterId: string,
+  chapterTitle: string,
+  lang: HadithContentLang
+): HadithRecord {
   return {
-    books,
-    chaptersByBook,
-    hadithsByChapter,
+    collection: collectionName.toLowerCase(),
+    bookNumber,
+    chapterId,
+    hadithNumber: String(item.hadithnumber),
+    source: chapterTitle
+      ? `${chapterTitle} · ${item.hadithnumber}`
+      : String(item.hadithnumber),
+    hadith: [
+      {
+        lang,
+        body: (item.text ?? "").trim(),
+        chapterTitle,
+      },
+    ],
   };
 }
 
-const DEFAULT_MAX_PAGES = 10;
+function buildIndexFromEdition(
+  collectionName: string,
+  json: FawazEditionJson,
+  lang: HadithContentLang
+): CollectionIndex {
+  const sections = json.metadata?.sections ?? {};
+  const hadiths = json.hadiths ?? [];
 
-/** Charge les N premières pages puis construit l'index (évite le chargement en boucle). */
+  const sectionKeys = Object.keys(sections)
+    .filter((k) => k !== "0" && (sections[k] ?? "").trim().length > 0)
+    .sort((a, b) => Number(a) - Number(b));
+
+  const books: HadithBook[] = [];
+  const chaptersByBook = new Map<string, HadithChapter[]>();
+  const hadithsByChapter = new Map<string, HadithRecord[]>();
+
+  for (const bookNumber of sectionKeys) {
+    const name = sections[bookNumber]?.trim() || `Book ${bookNumber}`;
+    const chapterId = "1";
+    const list = hadiths
+      .filter((h) => String(h.reference?.book ?? "") === bookNumber)
+      .map((h) =>
+        mapItemToRecord(h, collectionName, bookNumber, chapterId, name, lang)
+      );
+
+    books.push({
+      bookNumber,
+      book: [
+        { lang: "en", name, numberOfHadith: list.length },
+        { lang: "fr", name, numberOfHadith: list.length },
+      ],
+    });
+
+    chaptersByBook.set(bookNumber, [
+      {
+        bookNumber,
+        chapterId,
+        chapter: [
+          {
+            lang: "en",
+            chapterNumber: "01",
+            chapterTitle: name,
+          },
+          {
+            lang: "fr",
+            chapterNumber: "01",
+            chapterTitle: name,
+          },
+        ],
+      },
+    ]);
+
+    hadithsByChapter.set(`${bookNumber}_${chapterId}`, list);
+  }
+
+  // Fallback: si sections vides, un seul livre avec tous les hadiths
+  if (books.length === 0 && hadiths.length > 0) {
+    const bookNumber = "1";
+    const chapterId = "1";
+    const name = json.metadata?.name ?? collectionName;
+    const list = hadiths.map((h) =>
+      mapItemToRecord(h, collectionName, bookNumber, chapterId, name, lang)
+    );
+    books.push({
+      bookNumber,
+      book: [{ lang: "en", name, numberOfHadith: list.length }],
+    });
+    chaptersByBook.set(bookNumber, [
+      {
+        bookNumber,
+        chapterId,
+        chapter: [
+          { lang: "en", chapterNumber: "01", chapterTitle: name },
+        ],
+      },
+    ]);
+    hadithsByChapter.set(`${bookNumber}_${chapterId}`, list);
+  }
+
+  return { books, chaptersByBook, hadithsByChapter };
+}
+
+/**
+ * Charge l'édition CDN (min.json) et construit l'index.
+ * `lang` = langue des previews de liste (détail charge toujours fr+en+ar).
+ */
 export async function loadCollectionIndex(
   collectionName: string,
-  options: { maxPages?: number } = {}
+  options: { lang?: HadithContentLang } = {}
 ): Promise<CollectionIndex> {
-  const key = cacheKey(collectionName);
-  const { maxPages = DEFAULT_MAX_PAGES } = options;
+  const lang = options.lang ?? "en";
+  const key = cacheKey(collectionName, lang);
   const existing = indexCache.get(key);
   if (existing) return existing.index;
 
-  const rawItems: HadithApiItem[] = [];
-  let page = 1;
-  let hasNext = true;
-  let totalPages: number | null = null;
-
-  while (hasNext && page <= maxPages) {
-    const res = await fetch(
-      `${BASE_URL}/${encodeURIComponent(collectionName)}?page=${page}&limit=${PAGE_LIMIT}`
-    );
-    if (!res.ok) throw new Error(`Hadith API error: ${res.status}`);
-    const json = (await res.json()) as HadithListApiResponse;
-    const results = json.results ?? [];
-    const pagination = json.pagination;
-
-    for (const item of results) {
-      const bookName = trim(item.bookName);
-      const chapterName = trim(item.chapterName);
-      rawItems.push(item);
-    }
-    if (pagination?.totalPages != null) totalPages = pagination.totalPages;
-
-    hasNext = pagination?.hasNextPage === true && results.length === PAGE_LIMIT;
-    page += 1;
-  }
-
-  const index = buildIndexFromRawItems(collectionName, rawItems);
-  indexCache.set(key, {
-    index,
-    rawItems,
-    lastPageFetched: page - 1,
-    totalPages,
-  });
+  const res = await fetch(editionUrl(collectionName, lang));
+  if (!res.ok) throw new Error(`Hadith API error: ${res.status}`);
+  const json = (await res.json()) as FawazEditionJson;
+  const index = buildIndexFromEdition(collectionName, json, lang);
+  indexCache.set(key, { index, lang });
   return index;
 }
 
-/** Charge les N pages suivantes et fusionne dans l'index en cache. */
+/** Plus de pagination : édition entière déjà chargée. */
 export async function loadMoreCollectionHadiths(
-  collectionName: string,
-  batchSize = 10
+  _collectionName: string,
+  _batchSize = 10
 ): Promise<CollectionIndex | null> {
-  const key = cacheKey(collectionName);
-  const existing = indexCache.get(key);
-  if (!existing) return null;
-  const { rawItems, lastPageFetched, totalPages } = existing;
-  const nextPage = lastPageFetched + 1;
-  if (totalPages != null && nextPage > totalPages) return existing.index;
-
-  const startPage = nextPage;
-  const endPage = Math.min(
-    nextPage + batchSize - 1,
-    totalPages ?? nextPage + batchSize - 1
-  );
-  const newRawItems = [...rawItems];
-
-  for (let page = startPage; page <= endPage; page++) {
-    const res = await fetch(
-      `${BASE_URL}/${encodeURIComponent(collectionName)}?page=${page}&limit=${PAGE_LIMIT}`
-    );
-    if (!res.ok) break;
-    const json = (await res.json()) as HadithListApiResponse;
-    const results = json.results ?? [];
-    newRawItems.push(...results);
-    if (results.length < PAGE_LIMIT) break;
-  }
-
-  const index = buildIndexFromRawItems(collectionName, newRawItems);
-  indexCache.set(key, {
-    index,
-    rawItems: newRawItems,
-    lastPageFetched: endPage,
-    totalPages,
-  });
-  return index;
+  return null;
 }
 
-export function canLoadMoreHadiths(collectionName: string): boolean {
-  const key = cacheKey(collectionName);
-  const existing = indexCache.get(key);
-  if (!existing) return false;
-  const { lastPageFetched, totalPages } = existing;
-  if (totalPages == null) return true;
-  return lastPageFetched < totalPages;
+export function canLoadMoreHadiths(_collectionName: string): boolean {
+  return false;
 }
 
 export function getCachedCollectionIndex(
-  collectionName: string
+  collectionName: string,
+  lang: HadithContentLang = "en"
 ): CollectionIndex | null {
-  const cached = indexCache.get(cacheKey(collectionName));
-  return cached?.index ?? null;
+  return indexCache.get(cacheKey(collectionName, lang))?.index ?? null;
+}
+
+export function clearCollectionIndexCache(): void {
+  indexCache.clear();
 }

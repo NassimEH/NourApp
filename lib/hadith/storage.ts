@@ -1,5 +1,6 @@
 /**
- * Persistance : langue d'affichage des hadiths (EN/FR) et favoris.
+ * Persistance : langue d'affichage des hadiths (FR/EN) et favoris.
+ * Par défaut alignée sur la locale app (ar → fr pour la traduction affichée).
  */
 
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -22,7 +23,7 @@ export async function getHadithLanguage(): Promise<HadithLanguage> {
     const raw = await AsyncStorage.getItem(KEY_LANGUAGE);
     if (raw === "fr" || raw === "en") return raw;
   } catch {}
-  return "en";
+  return "fr";
 }
 
 export async function setHadithLanguage(lang: HadithLanguage): Promise<void> {

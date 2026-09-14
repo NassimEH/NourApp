@@ -1,15 +1,14 @@
 import {
   FlatList,
   StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router, useLocalSearchParams } from "expo-router";
-import { AppIcon } from "@/components/AppIcon";
+import { ListRow } from "@/components/ListRow";
 import { useMemo, useState } from "react";
 
+import { EmptyState } from "@/components/EmptyState";
+import { ErrorState } from "@/components/ErrorState";
 import { useCategoryDuas, getCategoryDisplayNameBySlug } from "@/lib/dua";
 import { DuaListSkeleton } from "@/components/dua/DuaListSkeleton";
 import type { DuaItem } from "@/lib/dua/types";
@@ -17,7 +16,6 @@ import { ScreenBackground } from "@/components/ScreenBackground";
 import { ScreenPageHeader } from "@/components/ScreenPageHeader";
 import { ScreenSearchBar, screenSearchBarSpacing } from "@/components/ScreenSearchBar";
 import { useTranslation } from "@/lib/i18n";
-import { useAppTheme } from "@/lib/app-theme";
 
 import { SCREEN_EDGE_PADDING } from "@/constants/screen-layout";
 
@@ -36,7 +34,6 @@ function filterDuas(list: DuaItem[], query: string) {
 
 export default function InvocationsCategoryScreen() {
   const { t } = useTranslation();
-  const colors = useAppTheme();
   const { slug } = useLocalSearchParams<{ slug: string }>();
   const decodedSlug = slug ? decodeURIComponent(slug) : null;
   const { duas, loading, error, refetch } = useCategoryDuas(decodedSlug, "fr");
@@ -61,17 +58,7 @@ export default function InvocationsCategoryScreen() {
         {loading && duas.length === 0 ? (
           <DuaListSkeleton />
         ) : error && duas.length === 0 ? (
-          <View style={styles.errorWrap}>
-            <Text style={[styles.errorText, { color: colors.text }]}>{error}</Text>
-            <TouchableOpacity
-              onPress={() => refetch()}
-              style={[styles.retryBtn, { backgroundColor: colors.accent }]}
-              activeOpacity={0.8}
-            >
-              <AppIcon name="refresh-cw" size={20} color="#fff" />
-              <Text style={styles.retryText}>Réessayer</Text>
-            </TouchableOpacity>
-          </View>
+          <ErrorState message={error} onRetry={refetch} retryLabel={t("common.retry")} />
         ) : (
           <>
             <ScreenSearchBar
@@ -87,34 +74,20 @@ export default function InvocationsCategoryScreen() {
               contentContainerStyle={styles.listContent}
               showsVerticalScrollIndicator={false}
               ListEmptyComponent={
-                <View style={styles.empty}>
-                  <Text style={[styles.emptyText, { color: colors.textMuted }]}>
-                    {t("library.searchNoResults")}
-                  </Text>
-                </View>
+                <EmptyState message={t("library.searchNoResults")} icon="search" />
               }
               renderItem={({ item }) => (
-                <TouchableOpacity
-                  style={styles.row}
+                <ListRow
+                  icon="book-open"
+                  title={item.title}
+                  subtitle={item.translation || item.arabic || item.latin || categoryName}
                   onPress={() =>
                     router.push({
                       pathname: "/(root)/(tabs)/coran/invocations/dua/[slug]/[id]",
                       params: { slug: decodedSlug ?? "", id: String(item.id) },
                     })
                   }
-                  activeOpacity={0.7}
-                >
-                  <AppIcon name="book-open" size={22} color={colors.icon} />
-                  <View style={styles.rowText}>
-                    <Text style={[styles.rowTitle, { color: colors.text }]} numberOfLines={1}>
-                      {item.title}
-                    </Text>
-                    <Text style={[styles.rowPreview, { color: colors.textMuted }]} numberOfLines={1}>
-                      {item.translation || item.arabic || item.latin || categoryName}
-                    </Text>
-                  </View>
-                  <AppIcon name="chevron-right" size={20} color={colors.iconMuted} />
-                </TouchableOpacity>
+                />
               )}
             />
           </>
@@ -144,51 +117,5 @@ const styles = StyleSheet.create({
   listContent: {
     paddingHorizontal: H_PADDING,
     paddingBottom: 120,
-  },
-  row: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingVertical: 12,
-    gap: 12,
-  },
-  rowText: { flex: 1 },
-  rowTitle: {
-    fontSize: 17,
-    fontFamily: "PlusJakartaSans-Medium",
-  },
-  rowPreview: {
-    fontSize: 14,
-    fontFamily: "PlusJakartaSans-Regular",
-    marginTop: 2,
-  },
-  errorWrap: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    paddingHorizontal: 32,
-  },
-  errorText: {
-    fontSize: 16,
-    fontFamily: "PlusJakartaSans-Regular",
-    textAlign: "center",
-    marginBottom: 20,
-  },
-  retryBtn: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-    paddingVertical: 14,
-    paddingHorizontal: 24,
-    borderRadius: 12,
-  },
-  retryText: {
-    fontSize: 16,
-    fontFamily: "PlusJakartaSans-SemiBold",
-    color: "#fff",
-  },
-  empty: { paddingVertical: 40, alignItems: "center" },
-  emptyText: {
-    fontSize: 15,
-    fontFamily: "PlusJakartaSans-Regular",
   },
 });

@@ -1,4 +1,4 @@
-import type { BottomTabBarProps } from "@react-navigation/bottom-tabs";
+import type { BottomTabBarProps } from "expo-router/build/react-navigation/bottom-tabs";
 
 import { LiquidTabBar } from "@/components/LiquidTabBar";
 import { TabBarChrome } from "@/components/TabBarChrome";

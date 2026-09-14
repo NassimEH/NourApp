@@ -6,6 +6,10 @@ import {
   type TypographyVariant,
 } from "@/lib/app-typography";
 
+/** Famille chargée dans app/_layout.tsx via @expo-google-fonts/amiri */
+export const ARABIC_FONT_FAMILY = "Amiri_400Regular";
+export const ARABIC_FONT_FAMILY_BOLD = "Amiri_700Bold";
+
 export interface AppTextProps extends TextProps {
   variant?: TypographyVariant;
 }
@@ -18,10 +22,10 @@ export function AppText({
   const colors = useAppTheme();
   const typography = useAppTypography();
   const fontSize = typography[variant];
-  const lineHeight =
-    variant === "arabic"
-      ? fontSize * typography.lineHeightArabic
-      : fontSize * typography.lineHeightBody;
+  const isArabic = variant === "arabic";
+  const lineHeight = isArabic
+    ? fontSize * typography.lineHeightArabic
+    : fontSize * typography.lineHeightBody;
 
   return (
     <Text
@@ -30,6 +34,13 @@ export function AppText({
           fontSize,
           lineHeight,
           color: colors.text,
+          ...(isArabic
+            ? {
+                fontFamily: ARABIC_FONT_FAMILY,
+                writingDirection: "rtl" as const,
+                textAlign: "right" as const,
+              }
+            : null),
         } as TextStyle,
         style,
       ]}

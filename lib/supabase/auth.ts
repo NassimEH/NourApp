@@ -25,26 +25,14 @@ async function createSessionFromOAuthUrl(url: string): Promise<Session> {
   }
 
   const code = params.code;
-  if (code) {
-    const { data, error } = await supabase.auth.exchangeCodeForSession(code);
-    if (error) throw error;
-    if (!data.session) throw new Error("OAuth: session manquante après échange du code");
-    return data.session;
+  if (!code) {
+    throw new Error("OAuth: code PKCE absent dans l'URL de retour");
   }
 
-  const accessToken = params.access_token;
-  const refreshToken = params.refresh_token;
-  if (accessToken && refreshToken) {
-    const { data, error } = await supabase.auth.setSession({
-      access_token: accessToken,
-      refresh_token: refreshToken,
-    });
-    if (error) throw error;
-    if (!data.session) throw new Error("OAuth: session manquante");
-    return data.session;
-  }
-
-  throw new Error("OAuth: code ou jetons absents dans l'URL de retour");
+  const { data, error } = await supabase.auth.exchangeCodeForSession(code);
+  if (error) throw error;
+  if (!data.session) throw new Error("OAuth: session manquante après échange du code");
+  return data.session;
 }
 
 function assertConfigured(): void {
@@ -86,9 +74,9 @@ async function mapSupabaseUser(user: User): Promise<AppUser> {
 
 export async function getCurrentUser(): Promise<AppUser | null> {
   if (!isSupabaseConfigured) return null;
-  const { data, error } = await supabase.auth.getSession();
-  if (error) throw error;
-  const user = data.session?.user;
+  const { data, error } = await supabase.auth.getUser();
+  if (error) return null;
+  const user = data.user;
   if (!user) return null;
   return mapSupabaseUser(user);
 }
@@ -229,10 +217,31 @@ export async function logout(): Promise<boolean> {
   return !error;
 }
 
-export async function updateUserPassword(newPassword: string): Promise<boolean> {
+export async function deleteOwnAccount(): Promise<void> {
   assertConfigured();
+  const { error } = await supabase.rpc("delete_own_account");
+  if (error) throw error;
+  const { error: signOutError } = await supabase.auth.signOut();
+  if (signOutError) throw signOutError;
+}
+
+export async function updateUserPassword(
+  currentPassword: string,
+  newPassword: string
+): Promise<boolean> {
+  assertConfigured();
+  const { data: userData, error: userError } = await supabase.auth.getUser();
+  if (userError || !userData.user?.email) throw userError ?? new Error("No user");
+
+  const { error: reauthError } = await supabase.auth.signInWithPassword({
+    email: userData.user.email,
+    password: currentPassword,
+  });
+  if (reauthError) throw reauthError;
+
   const { error } = await supabase.auth.updateUser({ password: newPassword });
-  return !error;
+  if (error) throw error;
+  return true;
 }
 
 export { mapSupabaseUser };

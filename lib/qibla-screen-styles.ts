@@ -1,16 +1,20 @@
 import { StyleSheet } from "react-native";
 
 import type { AppThemeColors } from "@/lib/app-theme";
+import type { AppTypography } from "@/lib/app-typography";
 import { screenScrollContent } from "@/constants/screen-layout";
 
-export function createQiblaStyles(c: AppThemeColors) {
+export function createQiblaStyles(
+  c: AppThemeColors,
+  typography: AppTypography
+) {
   return StyleSheet.create({
     background: { flex: 1 },
     safe: { flex: 1, backgroundColor: "transparent" },
     scroll: { flex: 1 },
     scrollContent: { ...screenScrollContent, paddingTop: 8 },
     sectionLabel: {
-      fontSize: 20,
+      fontSize: typography.title,
       fontFamily: "PlusJakartaSans-SemiBold",
       color: c.text,
       marginBottom: 12,
@@ -36,32 +40,26 @@ export function createQiblaStyles(c: AppThemeColors) {
       borderBottomWidth: 1,
       borderBottomColor: c.divider,
     },
-    prayerCardMethod: {
-      fontSize: 11,
-      fontFamily: "PlusJakartaSans-Medium",
-      color: c.textMuted,
-      marginBottom: 4,
-    },
     prayerCardHijri: {
-      fontSize: 14,
+      fontSize: typography.body,
       fontFamily: "PlusJakartaSans-SemiBold",
       color: c.text,
       marginBottom: 2,
     },
     prayerCardGregorian: {
-      fontSize: 12,
+      fontSize: typography.caption,
       fontFamily: "PlusJakartaSans-Regular",
       color: c.textMuted,
       marginBottom: 4,
     },
     prayerCardCoords: { flexDirection: "row", alignItems: "center", gap: 4 },
     prayerCardCoordsText: {
-      fontSize: 11,
+      fontSize: typography.caption,
       fontFamily: "PlusJakartaSans-Regular",
       color: c.textMuted,
     },
     prayerCardRemaining: {
-      fontSize: 13,
+      fontSize: typography.caption,
       fontFamily: "PlusJakartaSans-Medium",
       color: c.textMuted,
       marginTop: 6,
@@ -86,7 +84,7 @@ export function createQiblaStyles(c: AppThemeColors) {
     prayerRowLeft: { flex: 1, marginRight: 44 },
     prayerRowTimeRow: { flexDirection: "row", alignItems: "center", gap: 6, marginTop: 6 },
     prayerRowLabel: {
-      fontSize: 16,
+      fontSize: typography.body,
       fontFamily: "PlusJakartaSans-Medium",
       color: c.text,
     },
@@ -95,7 +93,7 @@ export function createQiblaStyles(c: AppThemeColors) {
       color: c.textMuted,
     },
     prayerRowTime: {
-      fontSize: 14,
+      fontSize: typography.body,
       fontFamily: "PlusJakartaSans-Regular",
       color: c.textMuted,
     },
@@ -122,7 +120,7 @@ export function createQiblaStyles(c: AppThemeColors) {
       borderColor: c.accent,
     },
     prayerNextLabel: {
-      fontSize: 9,
+      fontSize: typography.caption,
       fontFamily: "PlusJakartaSans-Medium",
       color: c.textMuted,
       letterSpacing: 0.3,
@@ -130,32 +128,25 @@ export function createQiblaStyles(c: AppThemeColors) {
     },
     prayerNextWidgetRow: { flexDirection: "row", alignItems: "center" },
     prayerNextText: {
-      fontSize: 14,
+      fontSize: typography.body,
       fontFamily: "PlusJakartaSans-SemiBold",
       color: c.text,
       marginLeft: 6,
     },
     prayerNextCountdown: {
-      fontSize: 16,
+      fontSize: typography.bodyMedium,
       fontFamily: "PlusJakartaSans-Bold",
       color: c.text,
       letterSpacing: 0.5,
     },
-    prayerCardFooter: {
-      fontSize: 10,
-      fontFamily: "PlusJakartaSans-Regular",
-      color: c.textMuted,
-      marginTop: 10,
-      textAlign: "center",
-    },
     prayerUnavailable: {
-      fontSize: 14,
+      fontSize: typography.body,
       fontFamily: "PlusJakartaSans-Regular",
       color: c.textMuted,
       paddingVertical: 12,
     },
     qiblaSubtitle: {
-      fontSize: 14,
+      fontSize: typography.body,
       fontFamily: "PlusJakartaSans-Regular",
       color: c.textMuted,
       textAlign: "center",
@@ -167,7 +158,7 @@ export function createQiblaStyles(c: AppThemeColors) {
       color: c.accent,
     },
     degreeLabel: {
-      fontSize: 22,
+      fontSize: typography.title,
       fontFamily: "PlusJakartaSans-SemiBold",
       color: c.text,
     },
@@ -198,12 +189,12 @@ export function createQiblaStyles(c: AppThemeColors) {
     },
     qiblaAngle: {
       marginTop: 24,
-      fontSize: 16,
+      fontSize: typography.body,
       fontFamily: "PlusJakartaSans-Medium",
       color: c.textMuted,
     },
     compassErrorText: {
-      fontSize: 16,
+      fontSize: typography.body,
       fontFamily: "PlusJakartaSans-Medium",
       color: c.danger,
       textAlign: "center",

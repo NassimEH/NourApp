@@ -1,5 +1,5 @@
 ﻿import { ScrollView, StyleSheet, Text } from "react-native";
-import { router } from "expo-router";
+import { router, type Href } from "expo-router";
 
 import { ListRow } from "@/components/ListRow";
 import { ScreenStackLayout } from "@/components/ScreenStackLayout";
@@ -29,10 +29,9 @@ export default function HadithsThemeScreen() {
             title={t(theme.titleKey)}
             subtitle={t(theme.subtitleKey)}
             onPress={() =>
-              router.push({
-                pathname: "/(root)/(tabs)/coran/hadiths/theme/[id]",
-                params: { id: theme.id },
-              })
+              router.push(
+                `/(root)/(tabs)/coran/hadiths/theme/${theme.id}` as Href
+              )
             }
           />
         ))}

@@ -147,10 +147,8 @@ const PROFIL_SECTION_PARAMETRES: {
   href?: string;
   key?: "language" | "share" | "security";
 }[] = [
-  { titleKey: "profile.myProfile", iconName: "user" },
   { titleKey: "profile.security", iconName: "shield", href: "/profile/security", key: "security" },
   { titleKey: "profile.language", iconName: "globe", href: "/profile/language", key: "language" },
-  { titleKey: "profile.help", iconName: "help-circle" },
   { titleKey: "profile.shareApp", iconName: "share", key: "share" },
 ];
 

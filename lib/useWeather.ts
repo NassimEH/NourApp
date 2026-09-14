@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 const OPEN_METEO = "https://api.open-meteo.com/v1/forecast";
 
@@ -19,38 +19,38 @@ export interface WeatherData {
   windSpeed: number;
   surfacePressure: number;
   imageKey: WeatherImageKey;
-  conditionLabel: string;
+  conditionKey: string;
 }
 
-const WMO_LABELS: Record<number, string> = {
-  0: "Ciel dégagé",
-  1: "Principalement dégagé",
-  2: "Partiellement nuageux",
-  3: "Couvert",
-  45: "Brouillard",
-  48: "Brouillard givrant",
-  51: "Bruine légère",
-  53: "Bruine modérée",
-  55: "Bruine dense",
-  56: "Bruine verglaçante légère",
-  57: "Bruine verglaçante dense",
-  61: "Pluie légère",
-  63: "Pluie modérée",
-  65: "Pluie forte",
-  66: "Pluie verglaçante légère",
-  67: "Pluie verglaçante forte",
-  71: "Chute de neige légère",
-  73: "Chute de neige modérée",
-  75: "Chute de neige forte",
-  77: "Grains de neige",
-  80: "Averses légères",
-  81: "Averses modérées",
-  82: "Averses violentes",
-  85: "Légères averses de neige",
-  86: "Averses de neige fortes",
-  95: "Orage",
-  96: "Orage avec grêle légère",
-  99: "Orage avec grêle forte",
+const WMO_CONDITION_KEYS: Record<number, string> = {
+  0: "weather.conditions.clear",
+  1: "weather.conditions.mostlyClear",
+  2: "weather.conditions.partlyCloudy",
+  3: "weather.conditions.overcast",
+  45: "weather.conditions.fog",
+  48: "weather.conditions.rimeFog",
+  51: "weather.conditions.lightDrizzle",
+  53: "weather.conditions.moderateDrizzle",
+  55: "weather.conditions.denseDrizzle",
+  56: "weather.conditions.lightFreezingDrizzle",
+  57: "weather.conditions.denseFreezingDrizzle",
+  61: "weather.conditions.lightRain",
+  63: "weather.conditions.moderateRain",
+  65: "weather.conditions.heavyRain",
+  66: "weather.conditions.lightFreezingRain",
+  67: "weather.conditions.heavyFreezingRain",
+  71: "weather.conditions.lightSnowfall",
+  73: "weather.conditions.moderateSnowfall",
+  75: "weather.conditions.heavySnowfall",
+  77: "weather.conditions.snowGrains",
+  80: "weather.conditions.lightShowers",
+  81: "weather.conditions.moderateShowers",
+  82: "weather.conditions.violentShowers",
+  85: "weather.conditions.lightSnowShowers",
+  86: "weather.conditions.heavySnowShowers",
+  95: "weather.conditions.thunderstorm",
+  96: "weather.conditions.thunderstormLightHail",
+  99: "weather.conditions.thunderstormHeavyHail",
 };
 
 function getImageKey(weatherCode: number, isDay: number): WeatherImageKey {
@@ -70,6 +70,8 @@ export function useWeather(
   const [data, setData] = useState<WeatherData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [refreshToken, setRefreshToken] = useState(0);
+  const refetch = useCallback(() => setRefreshToken((token) => token + 1), []);
 
   useEffect(() => {
     if (
@@ -95,7 +97,7 @@ export function useWeather(
         if (cancelled) return;
         const cur = json?.current;
         if (!cur) {
-          setError("Données indisponibles");
+          setError("weather.dataUnavailable");
           return;
         }
         const weatherCode = Number(cur.weather_code) || 0;
@@ -109,11 +111,12 @@ export function useWeather(
           windSpeed: Number(cur.wind_speed_10m) ?? 0,
           surfacePressure: Number(cur.surface_pressure) ?? 0,
           imageKey: getImageKey(weatherCode, isDay),
-          conditionLabel: WMO_LABELS[weatherCode] ?? "—",
+          conditionKey:
+            WMO_CONDITION_KEYS[weatherCode] ?? "weather.conditions.unknown",
         });
       })
-      .catch((err) => {
-        if (!cancelled) setError(err?.message ?? "Erreur météo");
+      .catch(() => {
+        if (!cancelled) setError("weather.loadError");
       })
       .finally(() => {
         if (!cancelled) setLoading(false);
@@ -122,7 +125,7 @@ export function useWeather(
     return () => {
       cancelled = true;
     };
-  }, [latitude, longitude]);
+  }, [latitude, longitude, refreshToken]);
 
-  return { data, loading, error };
+  return { data, loading, error, refetch };
 }

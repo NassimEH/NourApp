@@ -48,8 +48,12 @@ export default function InvocationsMeteoScreen() {
               <Text style={[styles.cardTitle, { color: colors.text }]}>
                 {t(`weather.${key}`)}
               </Text>
-              <Text style={[styles.dou3a, { color: colors.text }]}>{item.dou3a}</Text>
-              <Text style={[styles.reason, { color: colors.textMuted }]}>{item.reason}</Text>
+              <Text style={[styles.dou3a, { color: colors.text }]}>
+                {t(item.dou3aKey)}
+              </Text>
+              <Text style={[styles.reason, { color: colors.textMuted }]}>
+                {t(item.reasonKey)}
+              </Text>
             </View>
           );
         })}

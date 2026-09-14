@@ -1,27 +1,27 @@
-# Captures UI de référence
+# Captures App Store / Play Store — checklist
 
-Checklist manuelle avant release (thèmes **clair**, **sombre**, **spirituel**).
+Objectif : 6–8 captures portrait par plateforme (FR + EN si possible).
 
-## Onglets principaux
+## Écrans à capturer
 
-- [ ] Accueil (carousel, outils, continuer)
-- [ ] Mes prières / Qibla
-- [ ] Bibliothèque
-- [ ] Écoute
-- [ ] Apprendre (Aujourd’hui + Parcours)
-- [ ] Profil
+1. **Accueil** — horaires, hadith / outils, branding Louma
+2. **Mes prières / Qibla** — boussole + horaires
+3. **Lecteur Coran** — versets + traduction
+4. **Écoute** — hub audio / mini-player si visible
+5. **Hadith** — détail multilingue ou hadith du jour
+6. **Invocations** — liste ou détail dua
+7. **Apprendre** — parcours + streak / stats
+8. **Profil** — thème / préférences (optionnel)
 
-## Outils
+## Consignes
 
-- [ ] Zakat al-Fitr, Zakat al-mal, Dhikr, Dates, Prière du jour, Sadaqa
-- [ ] 99 noms d’Allah, raccourci Qibla
+- Utiliser le thème light + accent vert par défaut (cohérent splash/icon `#3d6b47`)
+- Locale FR pour App Store FR ; EN pour listing international
+- Masquer données personnelles / emails de test
+- iPhone 6.7" et Android téléphone haut de gamme (Play)
 
-## Préférences
+## Fichiers
 
-- [ ] Thème, barre d’onglets (pilule / liquid / native), langue, méthode horaires
-
-## Export
-
-Enregistrer sous `docs/screenshots/<version>/<theme>/<écran>.png` après validation visuelle.
-
-Commande Expo (dev build sur appareil) : captures via outil OS ou `npx expo run:ios` / Android Studio.
+- Icône : `assets/images/icon.png`
+- Splash : `assets/images/splash-icon.png`
+- Voir aussi `docs/APP_STORE.md`

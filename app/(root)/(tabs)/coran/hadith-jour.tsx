@@ -1,4 +1,4 @@
-﻿import { useMemo } from "react";
+﻿import { useCallback, useMemo } from "react";
 import {
   ScrollView,
   StyleSheet,
@@ -17,10 +17,14 @@ import { ScreenBackground } from "@/components/ScreenBackground";
 import { ScreenPageHeader } from "@/components/ScreenPageHeader";
 import { SCREEN_EDGE_PADDING } from "@/constants/screen-layout";
 import { useAppTheme, type AppThemeColors } from "@/lib/app-theme";
+import { useHadithFavorites } from "@/lib/hadith";
+import type { HadithFavorite } from "@/lib/hadith/types";
 import {
   buildHadithDuJourCatalog,
   formatHadithFeaturedDate,
   getHadithDuJour,
+  getHadithDuJourIndex,
+  getHadithLocalizedText,
 } from "@/lib/hadith-du-jour";
 import { useTranslation } from "@/lib/i18n";
 
@@ -28,9 +32,16 @@ export default function HadithJourScreen() {
   const { t, locale, rtlTextStyle, rtlViewStyle } = useTranslation();
   const colors = useAppTheme();
   const styles = useMemo(() => createStyles(colors), [colors]);
+  const { isFavorite, toggleFavorite } = useHadithFavorites();
 
   const todayHadith = getHadithDuJour();
+  const todayIndex = getHadithDuJourIndex();
+  const todayText = getHadithLocalizedText(todayHadith, locale);
   const todayDate = formatHadithFeaturedDate(new Date(), locale);
+
+  const favCollection = todayHadith.collection ?? "daily";
+  const favNumber = todayHadith.hadithNumber ?? String(todayIndex);
+  const isFav = isFavorite(favCollection, favNumber);
 
   const catalog = useMemo(
     () =>
@@ -48,6 +59,19 @@ export default function HadithJourScreen() {
     Alert.alert(t("quran.copied"));
   };
 
+  const handleFavorite = useCallback(() => {
+    const favorite: HadithFavorite = {
+      collectionName: favCollection,
+      hadithNumber: favNumber,
+      arabicBody: todayHadith.ar,
+      englishBody: todayHadith.en,
+      chapterTitle: todayHadith.fr,
+      collectionDisplayName: todayHadith.source,
+      addedAt: Date.now(),
+    };
+    void toggleFavorite(favorite);
+  }, [favCollection, favNumber, todayHadith, toggleFavorite]);
+
   return (
     <ScreenBackground style={styles.background}>
       <SafeAreaView style={styles.safeArea} edges={["top", "left", "right"]}>
@@ -55,6 +79,19 @@ export default function HadithJourScreen() {
           title={t("screens.hadithDayTitle")}
           subtitle={t("screens.hadithDaySubtitle")}
           onBack={() => router.back()}
+          headerActions={
+            <TouchableOpacity
+              onPress={handleFavorite}
+              style={styles.iconBtn}
+              activeOpacity={0.7}
+            >
+              <AppIcon
+                name="heart"
+                size={22}
+                color={isFav ? colors.accent : colors.icon}
+              />
+            </TouchableOpacity>
+          }
         />
 
         <ScrollView
@@ -68,13 +105,13 @@ export default function HadithJourScreen() {
               </Text>
               <Text style={[styles.todayDate, rtlTextStyle]}>{todayDate}</Text>
             </View>
-            <Text style={[styles.hadithText, rtlTextStyle]}>{todayHadith.text}</Text>
+            <Text style={[styles.hadithText, rtlTextStyle]}>{todayText}</Text>
             <Text style={[styles.source, rtlTextStyle]}>{todayHadith.source}</Text>
 
             <View style={[styles.actions, rtlViewStyle]}>
               <TouchableOpacity
                 style={[styles.actionBtn, { borderColor: colors.border }]}
-                onPress={() => onShare(todayHadith.text, todayHadith.source)}
+                onPress={() => onShare(todayText, todayHadith.source)}
                 activeOpacity={0.85}
               >
                 <AppIcon name="share-2" size={18} color={colors.accent} />
@@ -84,7 +121,7 @@ export default function HadithJourScreen() {
               </TouchableOpacity>
               <TouchableOpacity
                 style={[styles.actionBtn, { borderColor: colors.border }]}
-                onPress={() => void onCopy(todayHadith.text, todayHadith.source)}
+                onPress={() => void onCopy(todayText, todayHadith.source)}
                 activeOpacity={0.85}
               >
                 <AppIcon name="copy" size={18} color={colors.accent} />
@@ -101,6 +138,7 @@ export default function HadithJourScreen() {
 
           {catalog.map((entry) => {
             const dateLabel = formatHadithFeaturedDate(entry.featuredDate, locale);
+            const entryText = getHadithLocalizedText(entry.hadith, locale);
             return (
               <View
                 key={entry.index}
@@ -111,7 +149,7 @@ export default function HadithJourScreen() {
                   { borderColor: colors.border },
                 ]}
               >
-                <Text style={[styles.historyText, rtlTextStyle]}>{entry.hadith.text}</Text>
+                <Text style={[styles.historyText, rtlTextStyle]}>{entryText}</Text>
                 <Text style={[styles.historySource, rtlTextStyle]}>
                   {entry.hadith.source}
                 </Text>
@@ -138,6 +176,9 @@ function createStyles(colors: AppThemeColors) {
     scrollContent: {
       paddingHorizontal: SCREEN_EDGE_PADDING,
       paddingBottom: 120,
+    },
+    iconBtn: {
+      padding: 8,
     },
     todayCard: {
       borderRadius: 12,

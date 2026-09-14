@@ -95,7 +95,7 @@ const styles = StyleSheet.create({
   },
   souratesImg: { width: "100%", height: "100%" },
   souratesOverlay: {
-    ...StyleSheet.absoluteFillObject,
+    ...StyleSheet.absoluteFill,
     justifyContent: "flex-end",
     padding: 12,
     backgroundColor: "rgba(25, 29, 49, 0.35)",

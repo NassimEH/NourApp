@@ -5,6 +5,7 @@ import { router } from "expo-router";
 import { SectionHeader } from "@/components/SectionHeader";
 import { useAppTheme } from "@/lib/app-theme";
 import { createHomeStyles } from "@/lib/home-screen-styles";
+import { getHadithLocalizedText } from "@/constants/hadithsJour";
 import {
   formatHadithFeaturedDate,
   getHadithDuJour,
@@ -38,7 +39,7 @@ export function HomeHadithDuJourSection() {
       >
         <Text style={[themed.hadithDayDate, rtlTextStyle]}>{todayLabel}</Text>
         <Text style={[themed.hadithDayText, rtlTextStyle]} numberOfLines={4}>
-          {hadith.text}
+          {getHadithLocalizedText(hadith, locale)}
         </Text>
         <Text style={[themed.hadithDaySource, rtlTextStyle]} numberOfLines={2}>
           {hadith.source}

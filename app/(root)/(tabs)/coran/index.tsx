@@ -1,17 +1,15 @@
 import { useMemo } from "react";
-import { ScrollView, StyleSheet, useWindowDimensions, View } from "react-native";
+import { ScrollView, StyleSheet, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router } from "expo-router";
 
 import {
   LibrarySection,
   LibrarySectionDivider,
-  useLibraryCardWidth,
   type LibraryEntryItem,
 } from "@/components/library/LibraryEntry";
 import { ScreenBackground } from "@/components/ScreenBackground";
 import {
-  SCREEN_EDGE_PADDING,
   screenPageHeaderSpacing,
   screenScrollContent,
 } from "@/constants/screen-layout";
@@ -45,8 +43,6 @@ function mapCatalogItems(
 
 export default function BibliothequeScreen() {
   const { t } = useTranslation();
-  const { width: screenWidth } = useWindowDimensions();
-  const cardWidth = useLibraryCardWidth(screenWidth);
 
   const sections = useMemo(
     () =>
@@ -81,7 +77,7 @@ export default function BibliothequeScreen() {
 
   return (
     <ScreenBackground style={styles.background}>
-      <SafeAreaView style={styles.safeArea} edges={["top"]}>
+      <SafeAreaView style={styles.safeArea} edges={["top", "left", "right"]}>
         <ScreenPageHeader
           title={t("screens.libraryTitle")}
           subtitle={t("screens.librarySubtitle")}
@@ -100,10 +96,8 @@ export default function BibliothequeScreen() {
               {index > 0 ? <LibrarySectionDivider /> : null}
               <LibrarySection
                 section={section}
-                cardWidth={cardWidth}
                 items={items}
                 onPressItem={onPressItem}
-                rowPaddingStyle={styles.rowPadding}
                 isFirst={index === 0}
               />
             </View>
@@ -122,8 +116,5 @@ const styles = StyleSheet.create({
     ...screenScrollContent,
     paddingTop: 8,
     paddingBottom: 140,
-  },
-  rowPadding: {
-    paddingRight: SCREEN_EDGE_PADDING,
   },
 });

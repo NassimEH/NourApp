@@ -3,15 +3,20 @@ import React, {
   useCallback,
   useContext,
   useEffect,
+  useRef,
   useState,
   type ReactNode,
 } from "react";
+import { Alert } from "react-native";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 import { loadLocalUser, type LocalUser } from "./local-profile";
 import { getCurrentUser, logout as supabaseLogout } from "./supabase/auth";
 import { syncUserDataWithCloud } from "./supabase/sync";
 import { supabase } from "./supabase/client";
 import type { AppUser } from "./supabase/types";
+import { translate } from "./i18n";
+import { useAppPreferences } from "./app-preferences";
 
 export type { AppUser };
 
@@ -31,14 +36,51 @@ interface GlobalContextType {
 
 const GlobalContext = createContext<GlobalContextType | undefined>(undefined);
 
+const KEY_SYNC_PROMPT = "@louma_sync_prompt_done";
+
 async function resolveGuestUser(): Promise<LocalUser> {
   return loadLocalUser();
 }
 
+async function promptAndMaybeSync(userId: string, locale: "fr" | "en" | "ar"): Promise<void> {
+  try {
+    const already = await AsyncStorage.getItem(`${KEY_SYNC_PROMPT}_${userId}`);
+    if (already === "1") {
+      void syncUserDataWithCloud(userId);
+      return;
+    }
+
+    Alert.alert(
+      translate(locale, "profile.syncLocalDataTitle"),
+      translate(locale, "profile.syncLocalDataBody"),
+      [
+        {
+          text: translate(locale, "profile.syncLocalDataSkip"),
+          style: "cancel",
+          onPress: () => {
+            void AsyncStorage.setItem(`${KEY_SYNC_PROMPT}_${userId}`, "1");
+          },
+        },
+        {
+          text: translate(locale, "profile.syncLocalDataConfirm"),
+          onPress: () => {
+            void AsyncStorage.setItem(`${KEY_SYNC_PROMPT}_${userId}`, "1");
+            void syncUserDataWithCloud(userId);
+          },
+        },
+      ]
+    );
+  } catch {
+    void syncUserDataWithCloud(userId);
+  }
+}
+
 export const GlobalProvider = ({ children }: { children: ReactNode }) => {
+  const { locale } = useAppPreferences();
   const [user, setUser] = useState<SessionUser | null>(null);
   const [loading, setLoading] = useState(true);
   const [isGuest, setIsGuest] = useState(false);
+  const syncPrompted = useRef<string | null>(null);
 
   const refetch = useCallback(async () => {
     setLoading(true);
@@ -47,7 +89,10 @@ export const GlobalProvider = ({ children }: { children: ReactNode }) => {
       if (sessionUser) {
         setUser(sessionUser);
         setIsGuest(false);
-        void syncUserDataWithCloud(sessionUser.id);
+        if (syncPrompted.current !== sessionUser.id) {
+          syncPrompted.current = sessionUser.id;
+          void promptAndMaybeSync(sessionUser.id, locale);
+        }
         return;
       }
       if (isGuest) {
@@ -60,7 +105,7 @@ export const GlobalProvider = ({ children }: { children: ReactNode }) => {
     } finally {
       setLoading(false);
     }
-  }, [isGuest]);
+  }, [isGuest, locale]);
 
   useEffect(() => {
     void refetch();
@@ -95,6 +140,7 @@ export const GlobalProvider = ({ children }: { children: ReactNode }) => {
       if (!ok) return false;
       setIsGuest(false);
       setUser(null);
+      syncPrompted.current = null;
       return true;
     } finally {
       setLoading(false);
@@ -123,7 +169,7 @@ export const GlobalProvider = ({ children }: { children: ReactNode }) => {
 export const useGlobalContext = (): GlobalContextType => {
   const context = useContext(GlobalContext);
   if (!context) {
-    throw new Error("useGlobalContext must be used within a GlobalProvider");
+    throw new Error("useGlobalContext must be used within GlobalProvider");
   }
   return context;
 };

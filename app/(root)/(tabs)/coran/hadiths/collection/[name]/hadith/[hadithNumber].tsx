@@ -89,8 +89,8 @@ export default function HadithDetailScreen() {
     const parts = [arabicBody, displayTranslation].filter(Boolean);
     if (parts.length === 0) return;
     await Clipboard.setStringAsync(parts.join("\n\n"));
-    Alert.alert("Copié", "Le texte a été copié dans le presse-papiers.");
-  }, [hadith, arabicBody, displayTranslation]);
+    Alert.alert(t("common.copiedTitle"), t("common.copiedBody"));
+  }, [hadith, arabicBody, displayTranslation, t]);
 
   const handleFavorite = useCallback(() => {
     if (hadith)
@@ -104,13 +104,13 @@ export default function HadithDetailScreen() {
   if (collectionName == null || hadithNum == null) {
     return (
       <View style={styles.centered}>
-        <Text style={styles.errorText}>Hadith introuvable</Text>
+        <Text style={styles.errorText}>{t("hadith.notFound")}</Text>
         <TouchableOpacity
           onPress={() => router.back()}
           style={styles.backLink}
           activeOpacity={0.7}
         >
-          <Text style={styles.backLinkText}>Retour</Text>
+          <Text style={styles.backLinkText}>{t("common.back")}</Text>
         </TouchableOpacity>
       </View>
     );
@@ -120,7 +120,7 @@ export default function HadithDetailScreen() {
     <ScreenBackground style={styles.background}>
       <SafeAreaView style={styles.safeArea} edges={["top", "left", "right"]}>
         <ScreenPageHeader
-          title={`Hadith ${hadithNum}`}
+          title={t("hadith.title", { number: hadithNum })}
           subtitle={t("screens.hadithDetailSubtitle")}
           onBack={() => router.back()}
           headerActions={
@@ -166,7 +166,7 @@ export default function HadithDetailScreen() {
         {loading && !hadith ? (
           <View style={styles.loadingWrap}>
             <ActivityIndicator size="large" color={colors.accent} />
-            <Text style={styles.loadingText}>Chargement…</Text>
+            <Text style={styles.loadingText}>{t("common.loading")}</Text>
           </View>
         ) : error && !hadith ? (
           <View style={styles.errorWrap}>
@@ -176,7 +176,7 @@ export default function HadithDetailScreen() {
               style={styles.retryBtn}
               activeOpacity={0.8}
             >
-              <Text style={styles.retryText}>Réessayer</Text>
+              <Text style={[styles.retryText, { color: colors.onAccent }]}>{t("common.retry")}</Text>
             </TouchableOpacity>
           </View>
         ) : hadith ? (
@@ -207,7 +207,7 @@ export default function HadithDetailScreen() {
             {arabicBody ? (
               <View style={[styles.block, { borderTopColor: colors.border }]}>
                 <Text style={[styles.blockLabel, { color: colors.accent }]}>
-                  Texte arabe
+                  {t("hadith.arabicText")}
                 </Text>
                 <Text
                   style={[
@@ -228,7 +228,9 @@ export default function HadithDetailScreen() {
             {displayTranslation ? (
               <View style={[styles.block, { borderTopColor: colors.border }]}>
                 <Text style={[styles.blockLabel, { color: colors.accent }]}>
-                  Traduction {language === "fr" ? "FR" : "EN"}
+                  {t("hadith.translation", {
+                    language: language === "fr" ? "FR" : "EN",
+                  })}
                 </Text>
                 <Text
                   style={[
@@ -248,7 +250,7 @@ export default function HadithDetailScreen() {
 
             {hadith.source ? (
               <View style={styles.sourceBlock}>
-                <Text style={styles.blockLabel}>Source</Text>
+                <Text style={styles.blockLabel}>{t("hadith.source")}</Text>
                 <Text style={styles.sourceText} selectable>
                   {hadith.source}
                 </Text>
@@ -257,7 +259,7 @@ export default function HadithDetailScreen() {
 
             {hadith.grades?.length ? (
               <View style={styles.block}>
-                <Text style={styles.blockLabel}>Degrés / Notes</Text>
+                <Text style={styles.blockLabel}>{t("hadith.grades")}</Text>
                 {hadith.grades.map((g, i) => (
                   <Text
                     key={i}
@@ -332,7 +334,7 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   arabicText: {
-    fontFamily: "PlusJakartaSans-Regular",
+    fontFamily: "Amiri_400Regular",
     textAlign: "right",
     writingDirection: "rtl",
   },
@@ -391,7 +393,7 @@ const styles = StyleSheet.create({
   retryText: {
     fontSize: 16,
     fontFamily: "PlusJakartaSans-SemiBold",
-    color: "#fff",
+
   },
   centered: {
     flex: 1,

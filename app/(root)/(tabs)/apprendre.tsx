@@ -1,5 +1,6 @@
 ﻿import { useCallback, useMemo, useState } from "react";
 import {
+  Alert,
   Image,
   Platform,
   Pressable,
@@ -43,7 +44,11 @@ const H_PADDING = SCREEN_EDGE_PADDING;
 
 function LearnDivider({ tight }: { tight?: boolean }) {
   const colors = useAppTheme();
-  const styles = useMemo(() => createLearnScreenStyles(colors), [colors]);
+  const typography = useAppTypography();
+  const styles = useMemo(
+    () => createLearnScreenStyles(colors, typography),
+    [colors, typography]
+  );
   return <View style={tight ? styles.dividerTight : styles.divider} />;
 }
 
@@ -56,9 +61,11 @@ function RecentSuraTile({
   onPress: () => void;
   styles: ReturnType<typeof createLearnScreenStyles>;
 }) {
-  const { rtlTextStyle } = useTranslation();
+  const { t, rtlTextStyle } = useTranslation();
   const revelation =
-    sura.revelationType === "Meccan" ? "Mecquoise" : "Médinoise";
+    sura.revelationType === "Meccan"
+      ? t("library.suraMeccan")
+      : t("library.suraMedinan");
 
   return (
     <Pressable
@@ -85,8 +92,11 @@ export default function ApprendreScreen() {
   const { user } = useGlobalContext();
   const { t } = useTranslation();
   const colors = useAppTheme();
-  const styles = useMemo(() => createLearnScreenStyles(colors), [colors]);
   const typography = useAppTypography();
+  const styles = useMemo(
+    () => createLearnScreenStyles(colors, typography),
+    [colors, typography]
+  );
   const { locale } = useAppPreferences();
   const courses = useMemo(() => getLearnCourses(locale), [locale]);
   const [selectedCourseId, setSelectedCourseId] = useState(PROPHETS_COURSE_ID);
@@ -110,7 +120,7 @@ export default function ApprendreScreen() {
     useLearnCatalog();
   const { getStatus, completedCount, totalLessons, loading: progressLoading } =
     useLearnProgress(activeCourse?.id ?? PROPHETS_COURSE_ID);
-  const { goal: weeklyGoal, done: weeklyDone, cycleGoal } = useWeeklyGoal();
+  const { goal: weeklyGoal, done: weeklyDone, setGoal } = useWeeklyGoal();
 
   useFocusEffect(
     useCallback(() => {
@@ -136,6 +146,19 @@ export default function ApprendreScreen() {
     }
   };
 
+  const showGoalPicker = () => {
+    hapticPress();
+    Alert.alert(
+      t("learn.goalPickerTitle"),
+      t("learn.goalPickerMessage"),
+      [3, 5, 7].map((goal) => ({
+        text: t("learn.goalOption", { count: goal }),
+        onPress: () => void setGoal(goal),
+      })),
+      { cancelable: true }
+    );
+  };
+
   return (
     <ScreenBackground style={ui.background}>
       <SafeAreaView style={ui.safeArea} edges={["top", "left", "right"]}>
@@ -152,7 +175,11 @@ export default function ApprendreScreen() {
               <Pressable
                 onPress={() => router.push("/(root)/apprendre-stats")}
                 accessibilityRole="button"
-                style={({ pressed }) => pressed && { opacity: 0.85 }}
+                accessibilityLabel={t("learn.statsLabel")}
+                style={({ pressed }) => [
+                  styles.statsButton,
+                  pressed && { opacity: 0.85 },
+                ]}
               >
                 <Image
                   source={{
@@ -162,6 +189,9 @@ export default function ApprendreScreen() {
                   }}
                   style={styles.headerAvatar}
                 />
+                <Text style={styles.statsButtonText}>
+                  {t("learn.statsLabel")}
+                </Text>
               </Pressable>
             </View>
           }
@@ -201,10 +231,7 @@ export default function ApprendreScreen() {
           {activeTab === "today" && (
             <>
               <Pressable
-                onPress={() => {
-                  hapticPress();
-                  cycleGoal();
-                }}
+                onPress={showGoalPicker}
                 style={({ pressed }) => [
                   styles.rowPressable,
                   pressed && styles.rowPressablePressed,

@@ -3,6 +3,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { getAuthenticatedUserId, upsertLessonCompletion } from "@/lib/supabase/user-data";
 
 import { incrementWeeklyLessonsDone } from "./weekly-goal";
+import { recordLearnActivityDay } from "./streak";
 
 const KEY_PROGRESS_LEGACY = "@learn_completed_lessons";
 
@@ -60,6 +61,7 @@ export async function markLessonCompleted(
     }
   }
   await incrementWeeklyLessonsDone();
+  await recordLearnActivityDay();
 }
 
 export function getLessonStatus(

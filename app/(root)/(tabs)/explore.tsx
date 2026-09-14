@@ -30,6 +30,10 @@ import { SectionHeader } from "@/components/SectionHeader";
 import { ScreenPageHeader } from "@/components/ScreenPageHeader";
 import { useTranslation } from "@/lib/i18n";
 import { useAppTheme, type AppThemeColors } from "@/lib/app-theme";
+import {
+  useAppTypography,
+  type AppTypography,
+} from "@/lib/app-typography";
 import { MIN_TOUCH_TARGET, SECTION_GAP } from "@/lib/ui/spacing";
 
 const H_PADDING = SCREEN_EDGE_PADDING;
@@ -38,7 +42,11 @@ const SCROLL_PADDING_BOTTOM = 120;
 
 function useExploreStyles() {
   const colors = useAppTheme();
-  return useMemo(() => createExploreStyles(colors), [colors]);
+  const typography = useAppTypography();
+  return useMemo(
+    () => createExploreStyles(colors, typography),
+    [colors, typography]
+  );
 }
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
@@ -49,7 +57,7 @@ const GRID_IMAGE_SIZE = 56;
 const FEATURED_CARD_WIDTH = 150;
 const FEATURED_CARD_HEIGHT = 200;
 
-type TabId = "tout" | "sourates" | "recitateurs" | "juz" | "invocations";
+type TabId = "tout" | "sourates" | "recitateurs" | "juz";
 
 function useExploreTabs(): { id: TabId; label: string }[] {
   const { t } = useTranslation();
@@ -59,20 +67,12 @@ function useExploreTabs(): { id: TabId; label: string }[] {
       { id: "sourates", label: t("explore.tabSuras") },
       { id: "recitateurs", label: t("explore.tabReciters") },
       { id: "juz", label: t("explore.tabJuz") },
-      { id: "invocations", label: t("explore.tabInvocations") },
     ],
     [t]
   );
 }
 
 const FEATURED_RECITERS = AVAILABLE_RECITERS.slice(0, 4);
-
-const INVOCATION_SHORTCUTS = [
-  { id: "matin", slug: "invocations-du-matin", icon: "sun" as const, labelKey: "explore.invocationMorning" },
-  { id: "soir", slug: "invocations-du-soir", icon: "moon" as const, labelKey: "explore.invocationEvening" },
-  { id: "priere", slug: "doua-apres-priere", icon: "heart" as const, labelKey: "explore.invocationAfterPrayer" },
-  { id: "sommeil", slug: "doua-avant-dormir", icon: "cloud" as const, labelKey: "explore.invocationSleep" },
-] as const;
 
 const JUZ_ITEMS = Array.from({ length: 30 }, (_, i) => i + 1);
 
@@ -110,7 +110,7 @@ function CompactCard({
   );
 }
 
-function FeaturedCardSpotify({
+function FeaturedAudioCard({
   title,
   subtitle,
   icon,
@@ -138,7 +138,7 @@ function FeaturedCardSpotify({
   );
 }
 
-function ReciterCardSpotify({
+function ReciterCard({
   name,
   tag,
   onPress,
@@ -178,11 +178,9 @@ export default function ExploreScreen() {
   const showSourates = activeTab === "tout" || activeTab === "sourates";
   const showJuz = activeTab === "tout" || activeTab === "juz";
   const showRecitateurs = activeTab === "tout" || activeTab === "recitateurs";
-  const showInvocations = activeTab === "tout" || activeTab === "invocations";
-
   return (
     <ScreenBackground style={styles.container}>
-      <SafeAreaView style={styles.safeArea} edges={["top"]}>
+      <SafeAreaView style={styles.safeArea} edges={["top", "left", "right"]}>
         <ScreenPageHeader
           title={t("screens.exploreTitle")}
           subtitle={t("screens.exploreSubtitle")}
@@ -246,7 +244,7 @@ export default function ExploreScreen() {
                   contentContainerStyle={styles.horizontalScroll}
                 >
                   {featuredSuras.map((sura) => (
-                    <FeaturedCardSpotify
+                    <FeaturedAudioCard
                       key={sura.number}
                       title={sura.englishName}
                       subtitle={`${t("library.verseCount", { count: sura.numberOfAyahs })} • ${sura.revelationType === "Meccan" ? t("library.suraMeccan") : t("library.suraMedinan")}`}
@@ -272,10 +270,10 @@ export default function ExploreScreen() {
                 contentContainerStyle={styles.horizontalScroll}
               >
                 {FEATURED_RECITERS.map((r) => (
-                  <ReciterCardSpotify
+                  <ReciterCard
                     key={r.id}
                     name={r.name}
-                    tag={r.style}
+                    tag={t(r.styleKey)}
                     onPress={() =>
                       router.push({
                         pathname: "/(root)/(tabs)/coran/recitateur-detail",
@@ -313,40 +311,6 @@ export default function ExploreScreen() {
             </View>
           )}
 
-          {showInvocations && (
-            <View style={styles.section}>
-              <SectionHeader
-                title={t("explore.invocationsSection")}
-                onSeeAll={() => router.push("/(root)/(tabs)/coran/invocations")}
-                seeAllLabel={t("library.seeAll")}
-              />
-              <ScrollView
-                horizontal
-                showsHorizontalScrollIndicator={false}
-                contentContainerStyle={styles.horizontalScroll}
-              >
-                {INVOCATION_SHORTCUTS.map((item) => (
-                  <TouchableOpacity
-                    key={item.id}
-                    style={styles.invocationCard}
-                    onPress={() =>
-                      router.push({
-                        pathname: "/(root)/(tabs)/coran/invocations/category/[slug]",
-                        params: { slug: item.slug },
-                      })
-                    }
-                    activeOpacity={0.8}
-                  >
-                    <View style={styles.invocationIconWrap}>
-                      <AppIcon name={item.icon} size={28} color={colors.accent} />
-                    </View>
-                    <Text style={styles.invocationTitle}>{t(item.labelKey)}</Text>
-                  </TouchableOpacity>
-                ))}
-              </ScrollView>
-            </View>
-          )}
-
           {showSourates && discoverSuras.length > 0 && (
             <View style={styles.section}>
               <SectionHeader
@@ -359,7 +323,7 @@ export default function ExploreScreen() {
                 contentContainerStyle={styles.horizontalScroll}
               >
                 {discoverSuras.map((sura) => (
-                  <FeaturedCardSpotify
+                  <FeaturedAudioCard
                     key={sura.number}
                     title={sura.englishName}
                     subtitle={`Sourate ${sura.number} • ${sura.numberOfAyahs} versets`}
@@ -378,7 +342,7 @@ export default function ExploreScreen() {
   );
 }
 
-function createExploreStyles(c: AppThemeColors) {
+function createExploreStyles(c: AppThemeColors, typography: AppTypography) {
   return StyleSheet.create({
   container: {
     flex: 1,
@@ -426,7 +390,7 @@ function createExploreStyles(c: AppThemeColors) {
     borderColor: c.accent,
   },
   tabLabel: {
-    fontSize: 13,
+    fontSize: typography.caption,
     fontFamily: "PlusJakartaSans-Medium",
     color: c.text,
   },
@@ -475,7 +439,7 @@ function createExploreStyles(c: AppThemeColors) {
   compactCardTitle: {
     flex: 1,
     fontFamily: "PlusJakartaSans-SemiBold",
-    fontSize: 12,
+    fontSize: typography.caption,
     color: c.text,
     paddingHorizontal: 10,
   },
@@ -509,13 +473,13 @@ function createExploreStyles(c: AppThemeColors) {
   },
   featuredCardTitle: {
     fontFamily: "PlusJakartaSans-SemiBold",
-    fontSize: 14,
+    fontSize: typography.body,
     color: c.text,
     marginBottom: 4,
   },
   featuredCardSubtitle: {
     fontFamily: "PlusJakartaSans-Regular",
-    fontSize: 12,
+    fontSize: typography.caption,
     color: c.textMuted,
     lineHeight: 16,
   },
@@ -540,13 +504,13 @@ function createExploreStyles(c: AppThemeColors) {
   },
   reciterName: {
     fontFamily: "PlusJakartaSans-SemiBold",
-    fontSize: 14,
+    fontSize: typography.body,
     color: c.text,
     textAlign: "center",
   },
   reciterTag: {
     fontFamily: "PlusJakartaSans-Regular",
-    fontSize: 12,
+    fontSize: typography.caption,
     color: c.textMuted,
     marginTop: 4,
   },
@@ -571,33 +535,8 @@ function createExploreStyles(c: AppThemeColors) {
   },
   juzNumber: {
     fontFamily: "PlusJakartaSans-SemiBold",
-    fontSize: 13,
+    fontSize: typography.caption,
     color: c.text,
-  },
-  invocationCard: {
-    width: 130,
-    alignItems: "center",
-    paddingVertical: 20,
-    paddingHorizontal: 12,
-    backgroundColor: c.card,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: c.border,
-  },
-  invocationIconWrap: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    backgroundColor: c.accentSurface,
-    alignItems: "center",
-    justifyContent: "center",
-    marginBottom: 12,
-  },
-  invocationTitle: {
-    fontFamily: "PlusJakartaSans-SemiBold",
-    fontSize: 13,
-    color: c.text,
-    textAlign: "center",
   },
   bottomSpacer: {
     height: 100,

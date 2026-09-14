@@ -4,9 +4,13 @@ import { Stack } from "expo-router";
 import { useFonts } from "expo-font";
 import * as SplashScreen from "expo-splash-screen";
 import { StatusBar } from "expo-status-bar";
+import {
+  Amiri_400Regular,
+  Amiri_700Bold,
+} from "@expo-google-fonts/amiri";
 
 import "./global.css";
-import GlobalProvider from "@/lib/global-provider";
+import { GlobalProvider } from "@/lib/global-provider";
 import { OnboardingGateProvider } from "@/lib/onboarding-gate";
 import { TabBarPreferenceProvider } from "@/lib/tab-bar-preference";
 import { AppPreferencesProvider, useAppPreferences } from "@/lib/app-preferences";
@@ -44,6 +48,8 @@ export default function RootLayout() {
     "PlusJakartaSans-Medium": require("../fonts2/PlusJakartaSans-Medium.ttf"),
     "PlusJakartaSans-Regular": require("../fonts2/PlusJakartaSans-Regular.ttf"),
     "PlusJakartaSans-SemiBold": require("../fonts2/PlusJakartaSans-SemiBold.ttf"),
+    Amiri_400Regular,
+    Amiri_700Bold,
   });
 
   useEffect(() => {
@@ -57,20 +63,20 @@ export default function RootLayout() {
   }
 
   return (
-    <GlobalProvider>
-      <OnboardingGateProvider>
-        <TabBarPreferenceProvider>
-          <AppPreferencesProvider>
+    <AppPreferencesProvider>
+      <GlobalProvider>
+        <OnboardingGateProvider>
+          <TabBarPreferenceProvider>
             <LocaleSync />
             <ScreenBackground style={styles.background}>
               <View style={styles.overlay}>
                 <RootNavigation />
               </View>
             </ScreenBackground>
-          </AppPreferencesProvider>
-        </TabBarPreferenceProvider>
-      </OnboardingGateProvider>
-    </GlobalProvider>
+          </TabBarPreferenceProvider>
+        </OnboardingGateProvider>
+      </GlobalProvider>
+    </AppPreferencesProvider>
   );
 }
 

@@ -7,7 +7,6 @@
     "icon": "./assets/images/icon.png",
     "scheme": "louma",
     "userInterfaceStyle": "automatic",
-    "newArchEnabled": true,
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.louma.app",
@@ -84,7 +83,9 @@
           "icon": "./assets/images/icon.png",
           "color": "#3d6b47"
         }
-      ]
+      ],
+      "expo-secure-store",
+      "expo-status-bar"
     ],
     "experiments": {
       "typedRoutes": true

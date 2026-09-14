@@ -8,6 +8,7 @@ import {
 } from "react-native";
 
 import { useAppTheme } from "@/lib/app-theme";
+import { useAppTypography } from "@/lib/app-typography";
 import { useTranslation } from "@/lib/i18n";
 import { SECTION_TITLE_GAP } from "@/lib/ui/spacing";
 
@@ -25,13 +26,18 @@ export function SectionHeader({
   style,
 }: SectionHeaderProps) {
   const colors = useAppTheme();
+  const typography = useAppTypography();
   const { t, rtlTextStyle, rtlViewStyle } = useTranslation();
   const linkLabel = seeAllLabel ?? t("home.seeAll");
 
   return (
     <View style={[styles.row, rtlViewStyle, style]}>
       <Text
-        style={[styles.title, { color: colors.text }, rtlTextStyle]}
+        style={[
+          styles.title,
+          { color: colors.text, fontSize: typography.title },
+          rtlTextStyle,
+        ]}
         accessibilityRole="header"
       >
         {title}
@@ -44,7 +50,13 @@ export function SectionHeader({
           accessibilityLabel={linkLabel}
           style={({ pressed }) => [pressed && styles.pressed]}
         >
-          <Text style={[styles.seeAll, { color: colors.accent }, rtlTextStyle]}>
+          <Text
+            style={[
+              styles.seeAll,
+              { color: colors.accent, fontSize: typography.body },
+              rtlTextStyle,
+            ]}
+          >
             {linkLabel}
           </Text>
         </Pressable>
@@ -61,12 +73,10 @@ const styles = StyleSheet.create({
     marginBottom: SECTION_TITLE_GAP,
   },
   title: {
-    fontSize: 20,
     fontFamily: "PlusJakartaSans-Bold",
     flex: 1,
   },
   seeAll: {
-    fontSize: 16,
     fontFamily: "PlusJakartaSans-SemiBold",
     marginLeft: 12,
   },

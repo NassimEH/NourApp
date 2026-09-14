@@ -13,11 +13,13 @@ import React, {
   useState,
 } from "react";
 import { Audio } from "expo-av";
-import { getSuraAudioUrl, getAyahAudioUrl } from "./api";
+import { getAyahAudioUrl } from "./api";
+import { resolveSuraAudioUri } from "./offline-downloads";
 import { persistLastListen } from "./persistLastListen";
 import { getLastListen } from "./storage";
 import { DEFAULT_AUDIO_RECITER, AVAILABLE_RECITERS, type Reciter } from "./types";
 import { useAppPreferences } from "@/lib/app-preferences";
+import { useTranslation } from "@/lib/i18n";
 
 export type PlaybackMode = "sura" | "ayah";
 
@@ -70,6 +72,7 @@ async function setAudioMode() {
 
 export function QuranAudioProvider({ children }: { children: React.ReactNode }) {
   const { quranReciter, setQuranReciter } = useAppPreferences();
+  const { t } = useTranslation();
   const [state, setState] = useState<QuranAudioState>(initialState);
   const soundRef = useRef<Audio.Sound | null>(null);
   const positionRef = useRef(0);
@@ -133,7 +136,7 @@ export function QuranAudioProvider({ children }: { children: React.ReactNode }) 
       }));
       let playRequested = false;
       try {
-        const url = getSuraAudioUrl(suraNumber, reciter);
+        const url = await resolveSuraAudioUri(suraNumber, reciter);
         const { sound } = await Audio.Sound.createAsync(
           { uri: url },
           { shouldPlay: false }
@@ -169,7 +172,7 @@ export function QuranAudioProvider({ children }: { children: React.ReactNode }) 
               .catch(() => {
                 setState((s) => ({
                   ...s,
-                  error: "Impossible de lancer la lecture",
+                  error: t("audio.playbackStartError"),
                 }));
               });
           }
@@ -201,15 +204,15 @@ export function QuranAudioProvider({ children }: { children: React.ReactNode }) 
             durationMs: status.durationMillis ?? durationRef.current,
           }));
         }
-      } catch (e) {
+      } catch {
         setState((s) => ({
           ...s,
           isLoading: false,
-          error: e instanceof Error ? e.message : "Erreur lecture audio",
+          error: t("audio.playbackError"),
         }));
       }
     },
-    [unload]
+    [t, unload]
   );
 
   const setReciter = useCallback(
@@ -249,7 +252,7 @@ export function QuranAudioProvider({ children }: { children: React.ReactNode }) 
             ? lastListen.progress
             : 0;
 
-        const url = getSuraAudioUrl(suraNumber, state.currentReciter);
+        const url = await resolveSuraAudioUri(suraNumber, state.currentReciter);
         const { sound } = await Audio.Sound.createAsync(
           { uri: url },
           { shouldPlay: false }
@@ -290,7 +293,7 @@ export function QuranAudioProvider({ children }: { children: React.ReactNode }) 
               .catch(() => {
                 setState((s) => ({
                   ...s,
-                  error: "Impossible de lancer la lecture",
+                  error: t("audio.playbackStartError"),
                 }));
               });
           }
@@ -321,15 +324,15 @@ export function QuranAudioProvider({ children }: { children: React.ReactNode }) 
             durationMs: status.durationMillis ?? durationRef.current,
           }));
         }
-      } catch (e) {
+      } catch {
         setState((s) => ({
           ...s,
           isLoading: false,
-          error: e instanceof Error ? e.message : "Erreur lecture audio",
+          error: t("audio.playbackError"),
         }));
       }
     },
-    [unload, state.currentReciter]
+    [t, unload, state.currentReciter]
   );
 
   const playAyah = useCallback(
@@ -382,7 +385,7 @@ export function QuranAudioProvider({ children }: { children: React.ReactNode }) 
               .catch(() => {
                 setState((s) => ({
                   ...s,
-                  error: "Impossible de lancer la lecture",
+                  error: t("audio.playbackStartError"),
                 }));
               });
           }
@@ -414,15 +417,15 @@ export function QuranAudioProvider({ children }: { children: React.ReactNode }) 
             durationMs: status.durationMillis ?? durationRef.current,
           }));
         }
-      } catch (e) {
+      } catch {
         setState((s) => ({
           ...s,
           isLoading: false,
-          error: e instanceof Error ? e.message : "Erreur lecture audio",
+          error: t("audio.playbackError"),
         }));
       }
     },
-    [unload, state.currentReciter]
+    [t, unload, state.currentReciter]
   );
 
   const pause = useCallback(async () => {

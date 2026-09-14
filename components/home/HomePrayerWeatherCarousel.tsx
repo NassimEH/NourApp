@@ -29,8 +29,12 @@ export function HomePrayerWeatherCarousel({
   prayerCoords,
   onRequestLocation,
 }: HomePrayerWeatherCarouselProps) {
-  const { data: weatherData, loading: weatherLoading, error: weatherError } =
-    useWeather(prayerCoords?.latitude, prayerCoords?.longitude);
+  const {
+    data: weatherData,
+    loading: weatherLoading,
+    error: weatherError,
+    refetch: refetchWeather,
+  } = useWeather(prayerCoords?.latitude, prayerCoords?.longitude);
 
   const colors = useAppTheme();
   const themed = useMemo(() => createHomeStyles(colors), [colors]);
@@ -57,8 +61,8 @@ export function HomePrayerWeatherCarousel({
         />
       ) : weatherError ? (
         <WeatherEmpty
-          message={weatherError}
-          onRequestLocation={onRequestLocation}
+          message={t(weatherError)}
+          onRequestLocation={refetchWeather}
           retryLabel={t("home.retry")}
           themed={themed}
         />
@@ -70,7 +74,7 @@ export function HomePrayerWeatherCarousel({
                 {Math.round(weatherData.temperature)}°
               </Text>
               <Text style={themed.weatherCondition}>
-                {weatherData.conditionLabel}
+                {t(weatherData.conditionKey)}
               </Text>
               <View style={styles.weatherDetailRow}>
                 <AppIcon name="droplet" size={14} color={colors.iconMuted} />
@@ -115,10 +119,10 @@ export function HomePrayerWeatherCarousel({
           <View style={themed.weatherDou3a}>
             <Text style={themed.weatherDou3aLabel}>{t("home.invocation")}</Text>
             <Text style={themed.weatherDou3aText}>
-              {WEATHER_DOU3A[weatherData.imageKey].dou3a}
+              {t(WEATHER_DOU3A[weatherData.imageKey].dou3aKey)}
             </Text>
             <Text style={themed.weatherDou3aReason}>
-              {WEATHER_DOU3A[weatherData.imageKey].reason}
+              {t(WEATHER_DOU3A[weatherData.imageKey].reasonKey)}
             </Text>
           </View>
         </>

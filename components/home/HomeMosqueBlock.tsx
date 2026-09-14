@@ -43,7 +43,7 @@ export function HomeMosqueBlock({
     <View style={[styles.wrap, rtlViewStyle]}>
       <SectionHeader
         title={t("home.myMosque")}
-        onSeeAll={() => router.push("/mosquee")}
+        onSeeAll={() => router.push("/(root)/(tabs)/qibla")}
       />
       {prayerLoading ? (
         <ActivityIndicator
@@ -70,7 +70,9 @@ export function HomeMosqueBlock({
               <View key={key} style={styles.prayerRow}>
                 <AppIcon name={icon} size={15} color={colors.iconMuted} />
                 <View style={styles.prayerCell}>
-                  <Text style={themed.mosquePrayerLabel}>{key}</Text>
+                  <Text style={themed.mosquePrayerLabel}>
+                    {t(`qibla.prayerNames.${key}`)}
+                  </Text>
                   <Text style={themed.mosquePrayerTime}>{time}</Text>
                 </View>
               </View>

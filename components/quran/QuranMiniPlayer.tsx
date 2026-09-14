@@ -190,7 +190,7 @@ export function QuranMiniPlayer({
                   <View style={styles.reciterInfo}>
                     <Text style={[styles.reciterName, { color: colors.text }]}>{reciter.name}</Text>
                     <Text style={[styles.reciterStyle, { color: colors.textMuted }]}>
-                      {reciter.style}
+                      {t(reciter.styleKey)}
                     </Text>
                   </View>
                   {selected ? <AppIcon name="check" size={18} color={colors.accent} /> : null}

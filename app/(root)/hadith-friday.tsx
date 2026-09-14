@@ -2,14 +2,18 @@ import { StyleSheet, Text, TouchableOpacity, Share, Alert } from "react-native";
 import * as Clipboard from "expo-clipboard";
 import { AppIcon } from "@/components/AppIcon";
 import { PreferenceScreenLayout } from "@/components/PreferenceScreenLayout";
-import { getHadithVendrediDuJour } from "@/constants/hadithsVendredi";
+import {
+  getHadithVendrediDuJour,
+  getHadithVendrediText,
+} from "@/constants/hadithsVendredi";
 import { useAppTheme } from "@/lib/app-theme";
 import { useTranslation } from "@/lib/i18n";
 
 export default function HadithFridayScreen() {
-  const { t, rtlTextStyle } = useTranslation();
+  const { t, locale, rtlTextStyle } = useTranslation();
   const colors = useAppTheme();
   const hadith = getHadithVendrediDuJour();
+  const hadithText = hadith ? getHadithVendrediText(hadith, locale) : "";
 
   if (!hadith) {
     return (
@@ -26,12 +30,12 @@ export default function HadithFridayScreen() {
 
   const onShare = () => {
     void Share.share({
-      message: `${hadith.text}\n\n— ${hadith.source}`,
+      message: `${hadithText}\n\n— ${hadith.source}`,
     });
   };
 
   const onCopy = async () => {
-    await Clipboard.setStringAsync(`${hadith.text}\n\n— ${hadith.source}`);
+    await Clipboard.setStringAsync(`${hadithText}\n\n— ${hadith.source}`);
     Alert.alert(t("quran.copied"));
   };
 
@@ -41,7 +45,7 @@ export default function HadithFridayScreen() {
       subtitle={t("home.hadithFridayLabel")}
     >
       <Text style={[styles.hadithText, { color: colors.text }, rtlTextStyle]}>
-        {hadith.text}
+        {hadithText}
       </Text>
       <Text style={[styles.source, { color: colors.textMuted }, rtlTextStyle]}>
         {hadith.source}

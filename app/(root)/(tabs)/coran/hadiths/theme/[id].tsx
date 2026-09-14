@@ -4,7 +4,7 @@ import { router, useLocalSearchParams } from "expo-router";
 import { ListRow } from "@/components/ListRow";
 import { ScreenStackLayout } from "@/components/ScreenStackLayout";
 import { COLLECTION_DISPLAY_NAMES } from "@/lib/hadith/api";
-import { getHadithThemeById } from "@/lib/hadith/themes";
+import { getHadithThemeById, getThemePreview } from "@/lib/hadith/themes";
 import { useAppTheme } from "@/lib/app-theme";
 import { useTranslation } from "@/lib/i18n";
 
@@ -20,6 +20,8 @@ export default function HadithThemeDetailScreen() {
   const colors = useAppTheme();
   const theme = id ? getHadithThemeById(id) : undefined;
   const lang = locale === "en" ? "en" : "fr";
+  const previewLocale =
+    locale === "en" ? "en" : locale === "ar" ? "ar" : "fr";
 
   if (!theme) {
     return (
@@ -54,7 +56,7 @@ export default function HadithThemeDetailScreen() {
                 collection: collectionLabel,
                 number: ref.hadithNumber,
               })}
-              subtitle={ref.previewFr}
+              subtitle={getThemePreview(ref, previewLocale)}
               onPress={() =>
                 router.push({
                   pathname:

@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { fetchBooks } from "../api";
 import { getCachedBooks, setCachedBooks } from "../cache";
 import type { HadithBook } from "../types";
+import { useHadithLanguage } from "./useHadithLanguage";
 
 export function useBooks(collectionName: string | null): {
   books: HadithBook[];
@@ -9,6 +10,7 @@ export function useBooks(collectionName: string | null): {
   error: string | null;
   refetch: () => Promise<void>;
 } {
+  const { language } = useHadithLanguage();
   const [books, setBooks] = useState<HadithBook[]>([]);
   const [loading, setLoading] = useState(!!collectionName);
   const [error, setError] = useState<string | null>(null);
@@ -20,7 +22,8 @@ export function useBooks(collectionName: string | null): {
       return;
     }
     setError(null);
-    const cached = await getCachedBooks(collectionName);
+    const cacheKey = `${collectionName}_${language}`;
+    const cached = await getCachedBooks(cacheKey);
     if (cached?.length) {
       setBooks(cached);
       setLoading(false);
@@ -28,9 +31,9 @@ export function useBooks(collectionName: string | null): {
       setLoading(true);
     }
     try {
-      const data = await fetchBooks(collectionName);
+      const data = await fetchBooks(collectionName, language);
       setBooks(data);
-      if (data.length) await setCachedBooks(collectionName, data);
+      if (data.length) await setCachedBooks(cacheKey, data);
     } catch (e) {
       setError(
         e instanceof Error ? e.message : "Erreur chargement des livres"
@@ -39,7 +42,7 @@ export function useBooks(collectionName: string | null): {
     } finally {
       setLoading(false);
     }
-  }, [collectionName]);
+  }, [collectionName, language]);
 
   useEffect(() => {
     load();

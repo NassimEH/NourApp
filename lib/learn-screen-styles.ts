@@ -1,12 +1,16 @@
 import { StyleSheet } from "react-native";
 
 import type { AppThemeColors } from "@/lib/app-theme";
+import type { AppTypography } from "@/lib/app-typography";
 import { CARD_RADIUS, MIN_TOUCH_TARGET, SECTION_GAP, SPACE } from "@/lib/ui/spacing";
 
 export const LEARN_RECENT_TILE_WIDTH = 120;
 export const LEARN_RECENT_TILE_HEIGHT = 118;
 
-export function createLearnScreenStyles(c: AppThemeColors) {
+export function createLearnScreenStyles(
+  c: AppThemeColors,
+  typography: AppTypography
+) {
   const cardBg = c.usesBackgroundImage ? "transparent" : c.card;
 
   return StyleSheet.create({
@@ -31,7 +35,7 @@ export function createLearnScreenStyles(c: AppThemeColors) {
       borderColor: c.border,
     },
     streakCount: {
-      fontSize: 18,
+      fontSize: typography.title,
       fontFamily: "PlusJakartaSans-Bold",
       color: c.text,
     },
@@ -41,6 +45,17 @@ export function createLearnScreenStyles(c: AppThemeColors) {
       borderRadius: 22,
       borderWidth: StyleSheet.hairlineWidth,
       borderColor: c.border,
+    },
+    statsButton: {
+      minHeight: MIN_TOUCH_TARGET,
+      flexDirection: "row",
+      alignItems: "center",
+      gap: SPACE.xs,
+    },
+    statsButtonText: {
+      fontSize: typography.caption,
+      fontFamily: "PlusJakartaSans-SemiBold",
+      color: c.text,
     },
     divider: {
       height: StyleSheet.hairlineWidth,
@@ -109,18 +124,18 @@ export function createLearnScreenStyles(c: AppThemeColors) {
       gap: 3,
     },
     rowTitle: {
-      fontSize: 16,
+      fontSize: typography.body,
       fontFamily: "PlusJakartaSans-SemiBold",
       color: c.text,
     },
     rowSub: {
-      fontSize: 13,
+      fontSize: typography.caption,
       fontFamily: "PlusJakartaSans-Regular",
       color: c.textMuted,
       lineHeight: 18,
     },
     rowAction: {
-      fontSize: 13,
+      fontSize: typography.caption,
       fontFamily: "PlusJakartaSans-SemiBold",
       color: c.accent,
     },
@@ -132,14 +147,14 @@ export function createLearnScreenStyles(c: AppThemeColors) {
       marginBottom: SPACE.md,
     },
     highlightLabel: {
-      fontSize: 11,
+      fontSize: typography.sectionTitle,
       fontFamily: "PlusJakartaSans-SemiBold",
       color: c.textMuted,
       textTransform: "uppercase",
       letterSpacing: 0.4,
     },
     highlightTitle: {
-      fontSize: 17,
+      fontSize: typography.bodyMedium,
       fontFamily: "PlusJakartaSans-Bold",
       color: c.text,
       lineHeight: 22,
@@ -172,17 +187,17 @@ export function createLearnScreenStyles(c: AppThemeColors) {
       opacity: 0.9,
     },
     recentNumber: {
-      fontSize: 13,
+      fontSize: typography.caption,
       fontFamily: "PlusJakartaSans-Bold",
       color: c.accent,
     },
     recentTitle: {
-      fontSize: 13,
+      fontSize: typography.caption,
       fontFamily: "PlusJakartaSans-SemiBold",
       color: c.text,
     },
     recentSub: {
-      fontSize: 11,
+      fontSize: typography.caption,
       fontFamily: "PlusJakartaSans-Regular",
       color: c.textMuted,
       lineHeight: 14,
@@ -213,7 +228,7 @@ export function createLearnScreenStyles(c: AppThemeColors) {
       borderColor: c.accent,
     },
     chipText: {
-      fontSize: 14,
+      fontSize: typography.body,
       fontFamily: "PlusJakartaSans-SemiBold",
       color: c.text,
     },
@@ -225,12 +240,12 @@ export function createLearnScreenStyles(c: AppThemeColors) {
       gap: 4,
     },
     planTitle: {
-      fontSize: 20,
+      fontSize: typography.title,
       fontFamily: "PlusJakartaSans-Bold",
       color: c.text,
     },
     planSub: {
-      fontSize: 14,
+      fontSize: typography.body,
       fontFamily: "PlusJakartaSans-Regular",
       color: c.textMuted,
       lineHeight: 20,
@@ -261,20 +276,20 @@ export function createLearnScreenStyles(c: AppThemeColors) {
       marginVertical: 2,
     },
     lessonMeta: {
-      fontSize: 11,
+      fontSize: typography.sectionTitle,
       fontFamily: "PlusJakartaSans-Medium",
       color: c.textMuted,
       textTransform: "uppercase",
       letterSpacing: 0.3,
     },
     lessonTitle: {
-      fontSize: 15,
+      fontSize: typography.bodyMedium,
       fontFamily: "PlusJakartaSans-SemiBold",
       color: c.text,
       lineHeight: 20,
     },
     completedBadge: {
-      fontSize: 11,
+      fontSize: typography.caption,
       fontFamily: "PlusJakartaSans-SemiBold",
       color: c.accent,
     },

@@ -17,6 +17,6 @@ export function SpiritualBackgroundGradient() {
 
 const styles = StyleSheet.create({
   fill: {
-    ...StyleSheet.absoluteFillObject,
+    ...StyleSheet.absoluteFill,
   },
 });

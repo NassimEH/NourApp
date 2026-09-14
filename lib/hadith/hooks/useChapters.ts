@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { fetchChapters } from "../api";
 import { getCachedChapters, setCachedChapters } from "../cache";
 import type { HadithChapter } from "../types";
+import { useHadithLanguage } from "./useHadithLanguage";
 
 export function useChapters(
   collectionName: string | null,
@@ -12,6 +13,7 @@ export function useChapters(
   error: string | null;
   refetch: () => Promise<void>;
 } {
+  const { language } = useHadithLanguage();
   const [chapters, setChapters] = useState<HadithChapter[]>([]);
   const [loading, setLoading] = useState(
     !!(collectionName && bookNumber)
@@ -25,7 +27,10 @@ export function useChapters(
       return;
     }
     setError(null);
-    const cached = await getCachedChapters(collectionName, bookNumber);
+    const cached = await getCachedChapters(
+      `${collectionName}_${language}`,
+      bookNumber
+    );
     if (cached?.length) {
       setChapters(cached);
       setLoading(false);
@@ -33,10 +38,14 @@ export function useChapters(
       setLoading(true);
     }
     try {
-      const data = await fetchChapters(collectionName, bookNumber);
+      const data = await fetchChapters(collectionName, bookNumber, language);
       setChapters(data);
       if (data.length)
-        await setCachedChapters(collectionName, bookNumber, data);
+        await setCachedChapters(
+          `${collectionName}_${language}`,
+          bookNumber,
+          data
+        );
     } catch (e) {
       setError(
         e instanceof Error ? e.message : "Erreur chargement des chapitres"
@@ -45,7 +54,7 @@ export function useChapters(
     } finally {
       setLoading(false);
     }
-  }, [collectionName, bookNumber]);
+  }, [collectionName, bookNumber, language]);
 
   useEffect(() => {
     load();

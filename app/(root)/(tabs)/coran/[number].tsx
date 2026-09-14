@@ -258,7 +258,7 @@ export default function QuranReaderScreen() {
               style={[styles.retryBtn, { backgroundColor: colors.accent }]}
               activeOpacity={0.8}
             >
-              <Text style={styles.retryText}>{t("home.retry")}</Text>
+              <Text style={[styles.retryText, { color: colors.onAccent }]}>{t("home.retry")}</Text>
             </TouchableOpacity>
           </View>
         ) : data && ayah ? (
@@ -379,7 +379,7 @@ const styles = StyleSheet.create({
     paddingVertical: 24,
   },
   arabicVerse: {
-    fontFamily: "PlusJakartaSans-Regular",
+    fontFamily: "Amiri_400Regular",
     textAlign: "right",
     writingDirection: "rtl",
   },
@@ -431,7 +431,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 28,
     borderRadius: 12,
   },
-  retryText: { fontSize: 16, fontFamily: "PlusJakartaSans-SemiBold", color: "#fff" },
+  retryText: { fontSize: 16, fontFamily: "PlusJakartaSans-SemiBold" },
   centered: { flex: 1, justifyContent: "center", alignItems: "center" },
   backLink: { marginTop: 12 },
   backLinkText: { fontSize: 16, fontFamily: "PlusJakartaSans-SemiBold" },

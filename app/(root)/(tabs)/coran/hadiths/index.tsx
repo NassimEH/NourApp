@@ -1,9 +1,10 @@
-import { StyleSheet, Text, TouchableOpacity, View, ScrollView } from "react-native";
+import { StyleSheet, View, ScrollView } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router } from "expo-router";
-import { AppIcon } from "@/components/AppIcon";
 import { useMemo, useState } from "react";
 
+import { EmptyState } from "@/components/EmptyState";
+import { ErrorState } from "@/components/ErrorState";
 import { useCollections, getCollectionDisplayName } from "@/lib/hadith";
 import { ListRow } from "@/components/ListRow";
 import { HadithCollectionSkeleton } from "@/components/hadith/HadithCollectionSkeleton";
@@ -13,7 +14,6 @@ import { ScreenBackground } from "@/components/ScreenBackground";
 import { SCREEN_EDGE_PADDING } from "@/constants/screen-layout";
 import { ScreenPageHeader } from "@/components/ScreenPageHeader";
 import { useTranslation } from "@/lib/i18n";
-import { useAppTheme } from "@/lib/app-theme";
 
 function filterCollections(
   list: HadithCollection[],
@@ -31,7 +31,6 @@ function filterCollections(
 
 export default function HadithsCollectionsScreen() {
   const { t } = useTranslation();
-  const colors = useAppTheme();
   const { collections, loading, error, refetch } = useCollections();
   const [search, setSearch] = useState("");
 
@@ -53,17 +52,7 @@ export default function HadithsCollectionsScreen() {
         {loading && collections.length === 0 ? (
           <HadithCollectionSkeleton />
         ) : error && collections.length === 0 ? (
-          <View style={styles.errorWrap}>
-            <Text style={[styles.errorText, { color: colors.text }]}>{error}</Text>
-            <TouchableOpacity
-              onPress={() => refetch()}
-              style={[styles.retryBtn, { backgroundColor: colors.accent }]}
-              activeOpacity={0.8}
-            >
-              <AppIcon name="refresh-cw" size={20} color="#fff" />
-              <Text style={styles.retryText}>{t("home.retry")}</Text>
-            </TouchableOpacity>
-          </View>
+          <ErrorState message={error} onRetry={refetch} retryLabel={t("home.retry")} />
         ) : (
           <>
             <ScreenSearchBar
@@ -80,11 +69,7 @@ export default function HadithsCollectionsScreen() {
               keyboardShouldPersistTaps="handled"
             >
               {filtered.length === 0 ? (
-                <View style={styles.empty}>
-                  <Text style={[styles.emptyText, { color: colors.textMuted }]}>
-                    {t("library.searchNoResults")}
-                  </Text>
-                </View>
+                <EmptyState message={t("library.searchNoResults")} icon="search" />
               ) : (
                 <View style={styles.list}>
                   {filtered.map((col) => {
@@ -132,34 +117,4 @@ const styles = StyleSheet.create({
   },
   list: { gap: 2 },
   row: { paddingVertical: 8 },
-  errorWrap: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    paddingHorizontal: 32,
-  },
-  errorText: {
-    fontSize: 16,
-    fontFamily: "PlusJakartaSans-Regular",
-    textAlign: "center",
-    marginBottom: 20,
-  },
-  retryBtn: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-    paddingVertical: 14,
-    paddingHorizontal: 24,
-    borderRadius: 12,
-  },
-  retryText: {
-    fontSize: 16,
-    fontFamily: "PlusJakartaSans-SemiBold",
-    color: "#fff",
-  },
-  empty: { paddingVertical: 40, alignItems: "center" },
-  emptyText: {
-    fontSize: 15,
-    fontFamily: "PlusJakartaSans-Regular",
-  },
 });

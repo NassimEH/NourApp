@@ -13,6 +13,10 @@ import {
   setHadithReminderEnabled,
   setLessonReminderEnabled,
 } from "@/lib/notifications/content-reminders";
+import {
+  getAdhanEnabled,
+  setAdhanEnabled,
+} from "@/lib/notifications/prayer-notifications";
 
 const REMINDER_INFO_KEYS = [
   "reminders.prayer",
@@ -25,6 +29,7 @@ export default function RemindersScreen() {
   const [activityLogs, setActivityLogs] = useState<ActivityLogEntry[]>([]);
   const [hadithEnabled, setHadithEnabled] = useState(false);
   const [lessonEnabled, setLessonEnabled] = useState(false);
+  const [adhanEnabled, setAdhanEnabledState] = useState(false);
 
   useFocusEffect(
     useCallback(() => {
@@ -37,6 +42,9 @@ export default function RemindersScreen() {
       });
       void isLessonReminderEnabled().then((v) => {
         if (!cancelled) setLessonEnabled(v);
+      });
+      void getAdhanEnabled().then((v) => {
+        if (!cancelled) setAdhanEnabledState(v);
       });
       return () => {
         cancelled = true;
@@ -105,6 +113,15 @@ export default function RemindersScreen() {
         body={t("reminders.lessonBody")}
         value={lessonEnabled}
         onValueChange={(v) => void onToggleLesson(v)}
+      />
+      <ReminderToggleRow
+        title={t("reminders.adhanTitle")}
+        body={t("reminders.adhanBody")}
+        value={adhanEnabled}
+        onValueChange={(value) => {
+          setAdhanEnabledState(value);
+          void setAdhanEnabled(value);
+        }}
       />
 
       {REMINDER_INFO_KEYS.map((key) => (

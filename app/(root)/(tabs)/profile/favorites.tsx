@@ -1,4 +1,4 @@
-import { FlatList, StyleSheet, Text, View } from "react-native";
+import { FlatList, StyleSheet } from "react-native";
 
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -8,7 +8,7 @@ import { useCallback } from "react";
 
 
 
-import { AppIcon } from "@/components/AppIcon";
+import { EmptyState } from "@/components/EmptyState";
 
 import { ListRow } from "@/components/ListRow";
 
@@ -20,8 +20,6 @@ import { ScreenPageHeader } from "@/components/ScreenPageHeader";
 
 import { useTranslation } from "@/lib/i18n";
 
-import { useAppTheme } from "@/lib/app-theme";
-
 import {
 
   useUnifiedFavorites,
@@ -32,6 +30,9 @@ import {
 
 const H_PADDING = SCREEN_EDGE_PADDING;
 
+function assertNever(value: never): never {
+  throw new Error(`Type de favori non géré : ${String(value)}`);
+}
 
 
 function kindIcon(kind: UnifiedFavoriteKind) {
@@ -50,6 +51,8 @@ function kindIcon(kind: UnifiedFavoriteKind) {
 
       return "bookmark" as const;
 
+    default:
+      return assertNever(kind);
   }
 
 }
@@ -78,6 +81,8 @@ function kindLabel(
 
       return t("favorites.kindQuran");
 
+    default:
+      return assertNever(kind);
   }
 
 }
@@ -87,8 +92,6 @@ function kindLabel(
 export default function FavoritesScreen() {
 
   const { t } = useTranslation();
-
-  const colors = useAppTheme();
 
   const { items, loading, refetch } = useUnifiedFavorites();
 
@@ -118,17 +121,7 @@ export default function FavoritesScreen() {
 
         {!loading && items.length === 0 ? (
 
-          <View style={styles.empty}>
-
-            <AppIcon name="heart" size={48} color={colors.iconMuted} />
-
-            <Text style={[styles.emptyText, { color: colors.textMuted }]}>
-
-              {t("favorites.empty")}
-
-            </Text>
-
-          </View>
+          <EmptyState message={t("favorites.empty")} icon="heart" />
 
         ) : (
 
