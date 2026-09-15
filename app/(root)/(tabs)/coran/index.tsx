@@ -1,23 +1,32 @@
 import { useMemo } from "react";
-import { ScrollView, StyleSheet, View } from "react-native";
+import { ScrollView, StyleSheet } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router } from "expo-router";
 
 import {
-  LibrarySection,
-  LibrarySectionDivider,
-  type LibraryEntryItem,
+  LibraryHadithTeaser,
+  LibraryHeroCard,
+  LibraryShortcutList,
+  LibraryToolGrid,
 } from "@/components/library/LibraryEntry";
+import { HomeSection } from "@/components/home/HomeSection";
 import { ScreenBackground } from "@/components/ScreenBackground";
+import { ScreenPageHeader } from "@/components/ScreenPageHeader";
 import {
   screenPageHeaderSpacing,
   screenScrollContent,
 } from "@/constants/screen-layout";
-import { ScreenPageHeader } from "@/components/ScreenPageHeader";
+import { getHadithLocalizedText } from "@/constants/hadithsJour";
+import {
+  formatHadithFeaturedDate,
+  getHadithDuJour,
+} from "@/lib/hadith-du-jour";
 import { useTranslation } from "@/lib/i18n";
 import {
-  LIBRARY_CATALOG,
-  type LibraryCatalogItem,
+  LIBRARY_HADITHS_FEATURED,
+  LIBRARY_INVOCATIONS_FEATURED,
+  LIBRARY_QURAN_HERO,
+  LIBRARY_QURAN_TOOLS,
   type LibraryRoute,
 } from "@/lib/library/catalog";
 
@@ -25,33 +34,12 @@ function pushLibraryRoute(route: LibraryRoute) {
   router.push(`/(root)/(tabs)/coran/${route}` as const);
 }
 
-function mapCatalogItems(
-  items: LibraryCatalogItem[],
-  t: (key: string) => string
-): LibraryEntryItem[] {
-  return items.map((item) => ({
-    id: item.id,
-    title: t(item.titleKey),
-    subtitle: t(item.shortKey),
-    icon: item.icon,
-    soon: item.soon,
-    disabled: item.disabled,
-    invocationSlug: item.invocationSlug,
-    hadithCollectionName: item.hadithCollectionName,
-  }));
-}
-
 export default function BibliothequeScreen() {
-  const { t } = useTranslation();
+  const { t, locale } = useTranslation();
 
-  const sections = useMemo(
-    () =>
-      LIBRARY_CATALOG.map((section) => ({
-        section,
-        items: mapCatalogItems(section.items, t),
-      })),
-    [t]
-  );
+  const hadithJour = useMemo(() => getHadithDuJour(), []);
+  const hadithBody = getHadithLocalizedText(hadithJour, locale);
+  const todayLabel = formatHadithFeaturedDate(new Date(), locale);
 
   const onPressItem = (
     id: string,
@@ -89,19 +77,50 @@ export default function BibliothequeScreen() {
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
         >
-          <LibrarySectionDivider variant="header" />
+          <HomeSection
+            title={t("library.sectionQuran")}
+            seeAllLabel={t("library.seeAll")}
+            onSeeAll={() => pushLibraryRoute("sourates")}
+            isFirst
+          >
+            <LibraryHeroCard
+              item={LIBRARY_QURAN_HERO}
+              onPressItem={onPressItem}
+            />
+            <LibraryToolGrid
+              items={LIBRARY_QURAN_TOOLS}
+              onPressItem={onPressItem}
+            />
+          </HomeSection>
 
-          {sections.map(({ section, items }, index) => (
-            <View key={section.id}>
-              {index > 0 ? <LibrarySectionDivider /> : null}
-              <LibrarySection
-                section={section}
-                items={items}
-                onPressItem={onPressItem}
-                isFirst={index === 0}
-              />
-            </View>
-          ))}
+          <HomeSection
+            title={t("library.sectionInvocations")}
+            seeAllLabel={t("library.seeAll")}
+            onSeeAll={() => pushLibraryRoute("invocations")}
+          >
+            <LibraryToolGrid
+              items={LIBRARY_INVOCATIONS_FEATURED}
+              onPressItem={onPressItem}
+            />
+          </HomeSection>
+
+          <HomeSection
+            title={t("library.sectionHadiths")}
+            seeAllLabel={t("library.seeAll")}
+            onSeeAll={() => pushLibraryRoute("hadiths")}
+          >
+            <LibraryHadithTeaser
+              title={t("library.hadithDay")}
+              badge={todayLabel}
+              body={hadithBody}
+              source={hadithJour.source}
+              onPress={() => pushLibraryRoute("hadith-jour")}
+            />
+            <LibraryShortcutList
+              items={LIBRARY_HADITHS_FEATURED}
+              onPressItem={onPressItem}
+            />
+          </HomeSection>
         </ScrollView>
       </SafeAreaView>
     </ScreenBackground>
@@ -114,7 +133,7 @@ const styles = StyleSheet.create({
   scroll: { flex: 1 },
   scrollContent: {
     ...screenScrollContent,
-    paddingTop: 8,
+    paddingTop: 4,
     paddingBottom: 140,
   },
 });

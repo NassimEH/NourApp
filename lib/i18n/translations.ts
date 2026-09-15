@@ -670,7 +670,7 @@ const fr = {
   },
   screens: {
     libraryTitle: "Bibliothèque",
-    librarySubtitle: "Cœur spirituel de l'app",
+    librarySubtitle: "Coran, invocations et hadiths",
     prayersTitle: "Mes prières",
     prayersSubtitle: "Horaires, Qibla et rappels de vos prières",
     prayersLocationPlaceholder: "Ville ou code postal…",
@@ -1534,7 +1534,7 @@ const en: TranslationMessages = {
   },
   screens: {
     libraryTitle: "Library",
-    librarySubtitle: "The spiritual heart of the app",
+    librarySubtitle: "Quran, invocations and hadiths",
     prayersTitle: "My prayers",
     prayersSubtitle: "Times, Qibla and prayer reminders",
     prayersLocationPlaceholder: "City or postal code…",
@@ -2387,7 +2387,7 @@ const ar: TranslationMessages = {
   },
   screens: {
     libraryTitle: "المكتبة",
-    librarySubtitle: "القلب الروحاني للتطبيق",
+    librarySubtitle: "قرآن وأدعية وأحاديث",
     prayersTitle: "صلواتي",
     prayersSubtitle: "الأوقات والقبلة وتذكير الصلاة",
     prayersLocationPlaceholder: "مدينة أو رمز بريدي…",

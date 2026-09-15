@@ -2,122 +2,142 @@ import { StyleSheet } from "react-native";
 
 import type { AppThemeColors } from "@/lib/app-theme";
 import type { AppTypography } from "@/lib/app-typography";
-import { CARD_RADIUS, SECTION_GAP, SPACE } from "@/lib/ui/spacing";
-import {
-  LIBRARY_CARD_HEIGHT,
-  LIBRARY_ICON_SIZE,
-} from "@/lib/library/catalog";
+import { CARD_RADIUS, LIST_GAP, SPACE } from "@/lib/ui/spacing";
 
 export function createLibraryScreenStyles(
   c: AppThemeColors,
   typography: AppTypography
 ) {
   return StyleSheet.create({
-    section: {
-      marginTop: 0,
-    },
-    sectionFirst: {
-      marginTop: SPACE.sm,
-    },
-    sectionHeader: {
-      marginBottom: SPACE.md,
-    },
-    sectionDivider: {
-      height: StyleSheet.hairlineWidth,
-      backgroundColor: c.divider,
-      marginVertical: SECTION_GAP,
-    },
-    headerDivider: {
-      height: StyleSheet.hairlineWidth,
-      backgroundColor: c.divider,
-      marginTop: SPACE.sm,
-      marginBottom: SPACE.md,
-    },
-    rowContent: {
-      paddingTop: SPACE.xs,
-      paddingBottom: SPACE.sm,
-    },
-    card: {
-      height: LIBRARY_CARD_HEIGHT,
+    hero: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: SPACE.md,
+      paddingVertical: SPACE.md,
+      paddingHorizontal: SPACE.md,
       borderRadius: CARD_RADIUS,
       borderWidth: StyleSheet.hairlineWidth,
       borderColor: c.border,
-      backgroundColor: c.usesBackgroundImage ? "transparent" : c.card,
-      paddingTop: SPACE.md,
-      paddingHorizontal: SPACE.md,
-      paddingBottom: SPACE.sm,
-      justifyContent: "space-between",
+      backgroundColor: c.usesBackgroundImage ? c.cardElevated : c.card,
+      marginBottom: LIST_GAP,
     },
-    cardPressed: {
-      opacity: 0.92,
-      transform: [{ scale: 0.98 }],
+    heroPressed: {
+      opacity: 0.9,
+      transform: [{ scale: 0.99 }],
     },
-    cardDisabled: {
-      opacity: 0.52,
-    },
-    iconWrap: {
-      width: LIBRARY_ICON_SIZE,
-      height: LIBRARY_ICON_SIZE,
+    heroIconWrap: {
+      width: 52,
+      height: 52,
       borderRadius: 16,
       alignItems: "center",
       justifyContent: "center",
       backgroundColor: c.accentSurface,
-      alignSelf: "center",
+      flexShrink: 0,
     },
-    textBlock: {
-      alignItems: "center",
+    heroText: {
+      flex: 1,
+      minWidth: 0,
       gap: 4,
-      marginTop: SPACE.sm,
     },
-    title: {
-      fontSize: typography.bodyMedium,
+    heroTitle: {
+      fontSize: typography.bodyMedium + 1,
+      lineHeight: typography.bodyMedium + 8,
       fontFamily: "PlusJakartaSans-Bold",
       color: c.text,
-      textAlign: "center",
-      width: "100%",
-      lineHeight: 19,
+      letterSpacing: -0.2,
     },
-    subtitle: {
+    heroSubtitle: {
       fontSize: typography.caption,
+      lineHeight: typography.caption + 4,
       fontFamily: "PlusJakartaSans-Regular",
       color: c.textMuted,
-      textAlign: "center",
-      width: "100%",
-      lineHeight: 16,
     },
-    cardDivider: {
-      height: StyleSheet.hairlineWidth,
-      backgroundColor: c.divider,
-      marginTop: SPACE.sm,
-      alignSelf: "stretch",
+    grid: {
+      gap: LIST_GAP,
     },
-    footer: {
+    gridRow: {
+      flexDirection: "row",
+      gap: LIST_GAP,
+    },
+    gridCell: {
+      flex: 1,
+      minWidth: 0,
+    },
+    shortcuts: {
+      gap: LIST_GAP - 2,
+      marginTop: LIST_GAP,
+    },
+    shortcut: {
       flexDirection: "row",
       alignItems: "center",
-      justifyContent: "center",
-      gap: 4,
-      marginTop: SPACE.sm,
-      paddingTop: SPACE.sm,
-      minHeight: 22,
-      alignSelf: "stretch",
-    },
-    action: {
-      fontSize: typography.caption,
-      fontFamily: "PlusJakartaSans-SemiBold",
-      color: c.accent,
-    },
-    soonPill: {
-      paddingHorizontal: 10,
-      paddingVertical: 4,
-      borderRadius: 999,
-      backgroundColor: c.accentSurface,
+      gap: SPACE.sm,
+      paddingVertical: SPACE.sm,
+      paddingHorizontal: SPACE.md,
+      borderRadius: CARD_RADIUS - 2,
       borderWidth: StyleSheet.hairlineWidth,
-      borderColor: c.accentBorder,
+      borderColor: c.border,
+      backgroundColor: c.usesBackgroundImage ? "transparent" : c.card,
+      minHeight: 52,
     },
-    soonText: {
+    shortcutPressed: {
+      opacity: 0.88,
+    },
+    shortcutIcon: {
+      width: 36,
+      height: 36,
+      borderRadius: 12,
+      alignItems: "center",
+      justifyContent: "center",
+      backgroundColor: c.accentSurface,
+      flexShrink: 0,
+    },
+    shortcutText: {
+      flex: 1,
+      minWidth: 0,
+      gap: 2,
+    },
+    shortcutTitle: {
+      fontSize: typography.body,
+      lineHeight: typography.body + 4,
+      fontFamily: "PlusJakartaSans-SemiBold",
+      color: c.text,
+    },
+    shortcutSubtitle: {
+      fontSize: typography.caption,
+      lineHeight: typography.caption + 3,
+      fontFamily: "PlusJakartaSans-Regular",
+      color: c.textMuted,
+    },
+    teaser: {
+      paddingVertical: SPACE.sm,
+      gap: SPACE.sm,
+      marginBottom: LIST_GAP - 2,
+    },
+    teaserMeta: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 6,
+    },
+    teaserBadge: {
       fontSize: typography.caption,
       fontFamily: "PlusJakartaSans-SemiBold",
       color: c.accent,
+    },
+    teaserBody: {
+      fontSize: typography.body,
+      lineHeight: typography.body + 8,
+      fontFamily: "PlusJakartaSans-Medium",
+      color: c.text,
+    },
+    teaserSource: {
+      fontSize: typography.caption,
+      lineHeight: typography.caption + 4,
+      fontFamily: "PlusJakartaSans-Regular",
+      color: c.textMuted,
+      fontStyle: "italic",
+    },
+    teaserPressed: {
+      opacity: 0.92,
     },
   });
 }

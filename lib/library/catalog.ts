@@ -218,6 +218,40 @@ export const LIBRARY_CATALOG: LibraryCatalogSection[] = [
   },
 ];
 
+function findCatalogItem(id: LibraryRoute): LibraryCatalogItem {
+  for (const section of LIBRARY_CATALOG) {
+    const hit = section.items.find((item) => item.id === id);
+    if (hit) return hit;
+  }
+  throw new Error(`Library catalog item missing: ${id}`);
+}
+
+/** Index Bibliothèque — hero Coran */
+export const LIBRARY_QURAN_HERO = findCatalogItem("sourates");
+
+/** Index Bibliothèque — outils Coran (grille 2×2) */
+export const LIBRARY_QURAN_TOOLS: LibraryCatalogItem[] = [
+  findCatalogItem("recherche"),
+  findCatalogItem("tafsir"),
+  findCatalogItem("memorisation"),
+  findCatalogItem("juz"),
+];
+
+/** Index Bibliothèque — 4 catégories d’invocations */
+export const LIBRARY_INVOCATIONS_FEATURED: LibraryCatalogItem[] = [
+  findCatalogItem("invocations"),
+  findCatalogItem("invocations-morning"),
+  findCatalogItem("invocations-evening"),
+  findCatalogItem("invocations-after-prayer"),
+];
+
+/** Index Bibliothèque — raccourcis hadiths (hors teaser du jour) */
+export const LIBRARY_HADITHS_FEATURED: LibraryCatalogItem[] = [
+  findCatalogItem("hadiths-theme"),
+  findCatalogItem("hadith-bukhari"),
+  findCatalogItem("hadith-muslim"),
+];
+
 /** Largeur carte : ~2 visibles + aperçu du suivant */
 export function getLibraryCardWidth(
   screenWidth: number,

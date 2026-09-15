@@ -75,7 +75,7 @@ export function HomePrayerWeatherCarousel({
   const pageWidth = Math.round(screenWidth - SCREEN_EDGE_PADDING * 2);
 
   const [activePage, setActivePage] = useState(0);
-  const [slideHeight, setSlideHeight] = useState<number | null>(null);
+  const [pageHeights, setPageHeights] = useState<[number, number]>([0, 0]);
 
   const { mosqueName } = useMosqueName();
   const mosqueDisplayName = mosqueName ?? t("home.defaultMosqueName");
@@ -131,14 +131,22 @@ export function HomePrayerWeatherCarousel({
     [pageWidth]
   );
 
-  const onWeatherLayout = useCallback(
-    (e: { nativeEvent: { layout: { height: number } } }) => {
-      const height = Math.ceil(e.nativeEvent.layout.height);
-      if (height <= 0) return;
-      setSlideHeight((prev) => (prev === height ? prev : height));
-    },
+  const onPageLayout = useCallback(
+    (index: 0 | 1) =>
+      (e: { nativeEvent: { layout: { height: number } } }) => {
+        const height = Math.ceil(e.nativeEvent.layout.height);
+        if (height <= 0) return;
+        setPageHeights((prev) => {
+          if (prev[index] === height) return prev;
+          const next: [number, number] = [...prev];
+          next[index] = height;
+          return next;
+        });
+      },
     []
   );
+
+  const slideHeight = Math.max(pageHeights[0], pageHeights[1]) || undefined;
 
   const sectionTitle =
     activePage === 0 ? t("home.myWeather") : t("home.myMosque");
@@ -291,7 +299,7 @@ export function HomePrayerWeatherCarousel({
               slideHeight ? { height: slideHeight } : null,
             ]}
           >
-            <View onLayout={onWeatherLayout} style={rtlViewStyle}>
+            <View onLayout={onPageLayout(0)} style={rtlViewStyle}>
               {weatherContent}
             </View>
           </View>
@@ -299,28 +307,29 @@ export function HomePrayerWeatherCarousel({
           <View
             style={[
               styles.page,
-              styles.mosquePage,
               { width: pageWidth },
               slideHeight ? { height: slideHeight } : null,
             ]}
           >
-            <HomeMosqueBlock
-              embedded
-              compact
-              prayerLoading={prayerLoading}
-              prayerTimes={prayerTimes}
-              mosqueDisplayName={mosqueDisplayName}
-              onEditMosque={() => router.push("/(root)/mosque-settings")}
-              gregorian={gregorian}
-              hijri={hijri}
-              cityName={cityName}
-              remainingCount={remainingCount}
-              currentPrayerName={currentPrayer?.name ?? null}
-              nextPrayerLabel={nextPrayerLabel}
-              nextPrayerCountdown={nextPrayerCountdownHM}
-              isPrayerChecked={isPrayerChecked}
-              onTogglePrayer={togglePrayerChecked}
-            />
+            <View onLayout={onPageLayout(1)}>
+              <HomeMosqueBlock
+                embedded
+                compact
+                prayerLoading={prayerLoading}
+                prayerTimes={prayerTimes}
+                mosqueDisplayName={mosqueDisplayName}
+                onEditMosque={() => router.push("/(root)/mosque-settings")}
+                gregorian={gregorian}
+                hijri={hijri}
+                cityName={cityName}
+                remainingCount={remainingCount}
+                currentPrayerName={currentPrayer?.name ?? null}
+                nextPrayerLabel={nextPrayerLabel}
+                nextPrayerCountdown={nextPrayerCountdownHM}
+                isPrayerChecked={isPrayerChecked}
+                onTogglePrayer={togglePrayerChecked}
+              />
+            </View>
           </View>
         </ScrollView>
       </View>
@@ -390,9 +399,6 @@ const styles = StyleSheet.create({
   },
   page: {
     justifyContent: "flex-start",
-  },
-  mosquePage: {
-    overflow: "hidden",
   },
   weatherRow: {
     flexDirection: "row",

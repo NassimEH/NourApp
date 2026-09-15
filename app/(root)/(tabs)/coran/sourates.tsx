@@ -133,7 +133,7 @@ export default function SouratesScreen() {
                         style={[styles.verseOfDayRef, { color: colors.textMuted }]}
                       >
                         {t("quran.verseReference", {
-                          sura: randomAyah.suraNumber,
+                          sura: randomAyah.suraName,
                           ayah: randomAyah.ayahNumber,
                         })}
                       </Text>

@@ -4,6 +4,8 @@ import { fetchRandomAyah, fetchSuraTranslation } from "../api";
 export interface RandomAyahData {
   suraNumber: number;
   ayahNumber: number;
+  suraName: string;
+  suraNameAr: string;
   textAr: string;
   textFr: string;
 }
@@ -25,7 +27,11 @@ export function useRandomAyah(): {
       const res = (await fetchRandomAyah()) as {
         code?: number;
         data?: {
-          surah?: { number: number };
+          surah?: {
+            number: number;
+            name?: string;
+            englishName?: string;
+          };
           numberInSurah?: number;
           text?: string;
         };
@@ -37,6 +43,8 @@ export function useRandomAyah(): {
       const suraNumber = res.data.surah.number;
       const ayahNumber = res.data.numberInSurah ?? 0;
       const textAr = res.data.text ?? "";
+      const suraName = res.data.surah.englishName ?? String(suraNumber);
+      const suraNameAr = res.data.surah.name ?? suraName;
 
       let textFr = "";
       try {
@@ -50,6 +58,8 @@ export function useRandomAyah(): {
       setAyah({
         suraNumber,
         ayahNumber,
+        suraName,
+        suraNameAr,
         textAr,
         textFr,
       });
