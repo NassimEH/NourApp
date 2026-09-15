@@ -63,22 +63,22 @@ function GlassShell({
   const nativeGlass = useNativeGlassAvailable();
 
   const borderColor = colors.isDark
-    ? "rgba(255,255,255,0.28)"
-    : "rgba(255,255,255,0.72)";
-
-  /** Voile très léger — évite la barre « sale » / trop sombre. */
-  const frost = colors.isDark
-    ? "rgba(255,255,255,0.08)"
+    ? "rgba(255,255,255,0.22)"
     : "rgba(255,255,255,0.55)";
+
+  /** Voile léger — barre plus transparente / moins opaque. */
+  const frost = colors.isDark
+    ? "rgba(255,255,255,0.04)"
+    : "rgba(255,255,255,0.28)";
 
   const shellStyle = [
     circle ? styles.circleShell : styles.pillShell,
     {
       borderColor,
       backgroundColor: colors.isDark
-        ? "rgba(40,40,42,0.55)"
-        : "rgba(255,255,255,0.52)",
-      shadowOpacity: colors.isDark ? 0.35 : 0.14,
+        ? "rgba(40,40,42,0.28)"
+        : "rgba(255,255,255,0.28)",
+      shadowOpacity: colors.isDark ? 0.28 : 0.1,
     },
   ];
 
@@ -86,7 +86,7 @@ function GlassShell({
     return (
       <GlassView
         style={shellStyle}
-        glassEffectStyle={colors.isDark ? "regular" : "clear"}
+        glassEffectStyle="clear"
         colorScheme={colors.isDark ? "dark" : "light"}
         isInteractive
       >
@@ -99,7 +99,7 @@ function GlassShell({
     <View style={shellStyle}>
       {Platform.OS !== "web" ? (
         <BlurView
-          intensity={Platform.OS === "ios" ? 64 : 90}
+          intensity={Platform.OS === "ios" ? 42 : 70}
           tint={colors.isDark ? "dark" : "light"}
           style={StyleSheet.absoluteFill}
         />
@@ -123,8 +123,8 @@ export function LiquidTabBar({ state, navigation }: BottomTabBarProps) {
 
   const activeName = state.routes[state.index]?.name;
   const inactiveColor = colors.isDark
-    ? "rgba(255,255,255,0.58)"
-    : "rgba(28,28,30,0.78)";
+    ? "rgba(255,255,255,0.92)"
+    : "rgba(10,10,12,0.92)";
   const activeColor = colors.tabBarIconActive;
 
   const navigateTo = (routeName: string) => {
@@ -290,13 +290,13 @@ const styles = StyleSheet.create({
   tabLabel: {
     fontSize: 8.5,
     lineHeight: 10,
-    fontFamily: "PlusJakartaSans-Medium",
+    fontFamily: "PlusJakartaSans-SemiBold",
     letterSpacing: -0.25,
     textAlign: "center",
     width: "100%",
   },
   tabLabelActive: {
-    fontFamily: "PlusJakartaSans-SemiBold",
+    fontFamily: "PlusJakartaSans-Bold",
   },
   circleInner: {
     flex: 1,

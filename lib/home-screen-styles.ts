@@ -225,15 +225,17 @@ export function createHomeStyles(c: AppThemeColors) {
       fontFamily: "PlusJakartaSans-Bold",
       color: c.text,
     },
-    weatherCondition: {
-      fontSize: 13,
-      fontFamily: "PlusJakartaSans-Medium",
-      color: c.textMuted,
-    },
     weatherDetailText: {
       fontSize: 12,
       fontFamily: "PlusJakartaSans-Medium",
       color: c.textMuted,
+      flexShrink: 1,
+    },
+    weatherCondition: {
+      fontSize: 13,
+      fontFamily: "PlusJakartaSans-Medium",
+      color: c.textMuted,
+      flexShrink: 1,
     },
     weatherDou3a: {
       marginTop: 16,

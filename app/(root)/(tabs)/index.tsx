@@ -83,6 +83,7 @@ type HomeListHeaderProps = {
   prayerTimes: PrayerTimes | null;
   prayerLoading: boolean;
   prayerCoords: { latitude: number; longitude: number } | null;
+  cityName: string | null;
   onRequestLocation: () => void;
   onBellPress: () => void;
   bellLabel: string;
@@ -95,6 +96,7 @@ const HomeListHeader = React.memo(function HomeListHeader({
   prayerTimes,
   prayerLoading,
   prayerCoords,
+  cityName,
   onRequestLocation,
   onBellPress,
   bellLabel,
@@ -191,7 +193,11 @@ const HomeListHeader = React.memo(function HomeListHeader({
       <View style={[styles.homeBody, rtlViewStyle]}>
         <HomePrayerWeatherCarousel
           prayerLoading={prayerLoading}
+          prayerTimes={prayerTimes}
           prayerCoords={prayerCoords}
+          cityName={cityName}
+          gregorian={gregorian}
+          hijri={hijri}
           onRequestLocation={onRequestLocation}
           isFirst
         />
@@ -216,6 +222,7 @@ const Home = () => {
     timings: prayerTimes,
     loading: prayerLoading,
     coords: prayerCoords,
+    cityName: prayerCity,
     refetch: refetchLocation,
   } = usePrayerTimes();
 
@@ -247,6 +254,7 @@ const Home = () => {
             prayerTimes={prayerTimes}
             prayerLoading={prayerLoading}
             prayerCoords={prayerCoords}
+            cityName={prayerCity}
             onRequestLocation={refetchLocation}
             onBellPress={handleBellPress}
             bellLabel={tHome("reminders.title")}
