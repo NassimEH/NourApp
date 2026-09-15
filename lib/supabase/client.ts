@@ -55,42 +55,11 @@ const AuthStorage = {
 };
 
 /**
- * Realtime exige un transport WebSocket en Node < 22 (Jest/CI).
- * `enabled: false` ne suffit pas : le client Realtime est toujours instancié.
- */
-function resolveRealtimeOptions(): { transport?: typeof WebSocket } | undefined {
-  const isJest = process.env.JEST_WORKER_ID !== undefined;
-  const isNode =
-    typeof process !== "undefined" &&
-    typeof process.versions?.node === "string";
-  const isReactNative =
-    typeof navigator !== "undefined" && navigator.product === "ReactNative";
-
-  if (!isJest && (!isNode || isReactNative)) {
-    return undefined;
-  }
-
-  if (isNode && !isJest) {
-    const major = parseInt(process.versions.node!.split(".")[0] ?? "0", 10);
-    if (major >= 22 && typeof WebSocket !== "undefined") {
-      return undefined;
-    }
-  }
-
-  try {
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const ws = require("ws") as typeof WebSocket;
-    return { transport: ws };
-  } catch {
-    return undefined;
-  }
-}
-
-const realtimeOptions = resolveRealtimeOptions();
-
-/**
  * Client Supabase (Auth + API).
  * Placeholders si les variables manquent — les appels auth échoueront jusqu'à configuration.
+ *
+ * Pas de `ws` ici : Metro le bundlerait dans React Native (API Node `stream`).
+ * RN / navigateurs utilisent le `WebSocket` natif ; Jest n’a pas besoin de Realtime.
  */
 export const supabase = createClient(
   supabaseUrl || "https://placeholder.supabase.co",
@@ -103,6 +72,5 @@ export const supabase = createClient(
       detectSessionInUrl: isWeb && !isWebSsr,
       flowType: "pkce",
     },
-    ...(realtimeOptions ? { realtime: realtimeOptions } : {}),
   }
 );

@@ -15,6 +15,11 @@ export function createHomeStyles(c: AppThemeColors) {
       color: c.text,
       marginTop: 6,
     },
+    welcomePrayer: {
+      fontFamily: "PlusJakartaSans-Medium",
+      marginTop: 3,
+      letterSpacing: 0.15,
+    },
     welcomeHijri: {
       fontFamily: "PlusJakartaSans-Regular",
       color: c.textMuted,
@@ -49,17 +54,50 @@ export function createHomeStyles(c: AppThemeColors) {
       fontStyle: "italic",
     },
     hadithDayBlock: {
-      marginTop: SECTION_GAP,
+      marginTop: 0,
+    },
+    hadithDayCard: {
+      borderRadius: 0,
+      borderWidth: 0,
+      overflow: "visible",
+      backgroundColor: "transparent",
+    },
+    hadithDayCardInner: {
+      padding: 0,
+      gap: 8,
+    },
+    hadithDayMetaRow: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "flex-start",
+      gap: 8,
+      marginBottom: 2,
+    },
+    hadithDayBadge: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 6,
+      flexShrink: 1,
+    },
+    hadithDayBadgeText: {
+      fontSize: 12,
+      fontFamily: "PlusJakartaSans-SemiBold",
+      color: c.accent,
+    },
+    hadithDayReadMore: {
+      fontSize: 13,
+      fontFamily: "PlusJakartaSans-SemiBold",
+      color: c.accent,
+    },
+    hadithDayEyebrow: {
+      fontSize: 11,
+      fontFamily: "PlusJakartaSans-SemiBold",
+      color: c.textMuted,
+      textTransform: "uppercase",
+      letterSpacing: 0.6,
     },
     hadithDayHeader: {
       marginBottom: 8,
-    },
-    hadithDayCard: {
-      borderRadius: 12,
-      borderWidth: StyleSheet.hairlineWidth,
-      borderColor: c.border,
-      padding: 14,
-      backgroundColor: c.usesBackgroundImage ? "transparent" : c.card,
     },
     hadithDayDate: {
       fontSize: 12,
@@ -68,11 +106,12 @@ export function createHomeStyles(c: AppThemeColors) {
       marginBottom: 8,
     },
     hadithDayText: {
-      fontSize: 14,
+      fontSize: 16,
       fontFamily: "PlusJakartaSans-Medium",
       color: c.text,
-      lineHeight: 21,
-      marginBottom: 6,
+      lineHeight: 25,
+      textAlign: "left",
+      alignSelf: "stretch",
     },
     hadithDaySource: {
       fontSize: 12,
@@ -80,6 +119,12 @@ export function createHomeStyles(c: AppThemeColors) {
       color: c.textMuted,
       lineHeight: 18,
       fontStyle: "italic",
+      marginTop: 2,
+      textAlign: "left",
+      alignSelf: "stretch",
+    },
+    toolsHintRow: {
+      height: 0,
     },
     sectionDivider: {
       height: 1,
@@ -193,9 +238,10 @@ export function createHomeStyles(c: AppThemeColors) {
     weatherDou3a: {
       marginTop: 16,
       paddingTop: 14,
-      borderTopWidth: 1,
-      borderTopColor: c.divider,
       gap: 6,
+    },
+    weatherDou3aRule: {
+      marginBottom: 12,
     },
     weatherDou3aLabel: {
       fontSize: 11,

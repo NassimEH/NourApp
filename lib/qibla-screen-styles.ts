@@ -13,18 +13,11 @@ export function createQiblaStyles(
     safe: { flex: 1, backgroundColor: "transparent" },
     scroll: { flex: 1 },
     scrollContent: { ...screenScrollContent, paddingTop: 8 },
-    sectionLabel: {
-      fontSize: typography.title,
-      fontFamily: "PlusJakartaSans-SemiBold",
-      color: c.text,
-      marginBottom: 12,
-    },
     sectionDivider: {
       height: 1,
       backgroundColor: c.divider,
       marginVertical: 12,
     },
-    prayerSection: { marginBottom: 32 },
     prayerCard: {
       backgroundColor: c.usesBackgroundImage ? "transparent" : c.card,
       borderRadius: 20,
@@ -200,7 +193,7 @@ export function createQiblaStyles(
       textAlign: "center",
       marginBottom: 8,
     },
-    qiblaSection: { paddingTop: 8, alignItems: "center" },
+    qiblaBody: { alignItems: "center" },
     infoRow: {
       flexDirection: "row",
       alignItems: "baseline",

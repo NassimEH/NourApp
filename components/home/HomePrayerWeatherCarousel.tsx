@@ -10,24 +10,28 @@ import {
 import { router } from "expo-router";
 
 import { AppIcon } from "@/components/AppIcon";
-import { SectionHeader } from "@/components/SectionHeader";
+import { HomeSection } from "@/components/home/HomeSection";
+import { HomeSectionRule } from "@/components/home/HomeSectionRule";
 import { weatherImages, WEATHER_DOU3A } from "@/constants/weather";
 import { useAppTheme } from "@/lib/app-theme";
 import { createHomeStyles } from "@/lib/home-screen-styles";
 import { useTranslation } from "@/lib/i18n";
-import { useWeather } from "@/lib/useWeather";
-import { SPACE } from "@/lib/ui/spacing";
+import { useWeather, type WeatherImageKey } from "@/lib/useWeather";
+
+const DEFAULT_WEATHER_IMAGE: WeatherImageKey = "nuageux";
 
 export interface HomePrayerWeatherCarouselProps {
   prayerLoading: boolean;
   prayerCoords: { latitude: number; longitude: number } | null;
   onRequestLocation: () => void;
+  isFirst?: boolean;
 }
 
 export function HomePrayerWeatherCarousel({
   prayerLoading,
   prayerCoords,
   onRequestLocation,
+  isFirst = true,
 }: HomePrayerWeatherCarouselProps) {
   const {
     data: weatherData,
@@ -40,101 +44,133 @@ export function HomePrayerWeatherCarousel({
   const themed = useMemo(() => createHomeStyles(colors), [colors]);
   const { t, rtlViewStyle } = useTranslation();
 
+  const waitingLocation = !prayerCoords && prayerLoading;
+  const waitingWeather = Boolean(prayerCoords) && weatherLoading && !weatherData;
+  const imageKey: WeatherImageKey =
+    weatherData?.imageKey ?? DEFAULT_WEATHER_IMAGE;
+
   return (
-    <View style={[styles.wrap, rtlViewStyle]}>
-      <SectionHeader
-        title={t("home.myWeather")}
-        onSeeAll={() => router.push("/meteo")}
-        style={styles.header}
-      />
-      {!prayerCoords && prayerLoading ? (
-        <ActivityIndicator
-          size="small"
-          color={colors.accent}
-          style={styles.loader}
-        />
-      ) : weatherLoading ? (
-        <ActivityIndicator
-          size="small"
-          color={colors.accent}
-          style={styles.loader}
-        />
-      ) : weatherError ? (
-        <WeatherEmpty
-          message={t(weatherError)}
-          onRequestLocation={refetchWeather}
-          retryLabel={t("home.retry")}
-          themed={themed}
-        />
-      ) : weatherData ? (
-        <>
+    <HomeSection
+      title={t("home.myWeather")}
+      onSeeAll={() => router.push("/meteo")}
+      isFirst={isFirst}
+    >
+      <View style={rtlViewStyle}>
+        {waitingLocation ? (
           <View style={styles.weatherRow}>
             <View style={styles.weatherInfoSide}>
-              <Text style={themed.weatherTemp}>
-                {Math.round(weatherData.temperature)}°
-              </Text>
-              <Text style={themed.weatherCondition}>
-                {t(weatherData.conditionKey)}
-              </Text>
-              <View style={styles.weatherDetailRow}>
-                <AppIcon name="droplet" size={14} color={colors.iconMuted} />
-                <Text style={themed.weatherDetailText}>
-                  {t("home.humidity", { value: weatherData.humidity })}
-                </Text>
-              </View>
-              <View style={styles.weatherDetailRow}>
-                <AppIcon name="thermometer" size={14} color={colors.iconMuted} />
-                <Text style={themed.weatherDetailText}>
-                  {t("home.feelsLike", {
-                    value: Math.round(weatherData.apparentTemperature),
-                  })}
-                </Text>
-              </View>
+              <ActivityIndicator size="small" color={colors.accent} />
             </View>
             <View style={styles.weatherImageWrap}>
               <Image
-                source={weatherImages[weatherData.imageKey]}
+                source={weatherImages[DEFAULT_WEATHER_IMAGE]}
                 style={styles.weatherImageStandalone}
                 resizeMode="contain"
+                fadeDuration={0}
               />
             </View>
-            <View style={styles.weatherInfoSide}>
-              <View style={styles.weatherDetailRow}>
-                <AppIcon name="wind" size={14} color={colors.iconMuted} />
+            <View style={styles.weatherInfoSide} />
+          </View>
+        ) : weatherError ? (
+          <WeatherEmpty
+            message={t(weatherError)}
+            onRequestLocation={refetchWeather}
+            retryLabel={t("home.retry")}
+            themed={themed}
+          />
+        ) : weatherData ? (
+          <>
+            <View style={styles.weatherRow}>
+              <View style={styles.weatherInfoSide}>
+                <Text style={themed.weatherTemp}>
+                  {Math.round(weatherData.temperature)}°
+                </Text>
+                <Text style={themed.weatherCondition}>
+                  {t(weatherData.conditionKey)}
+                </Text>
+                <View style={styles.weatherDetailRow}>
+                  <AppIcon name="droplet" size={14} color={colors.iconMuted} />
+                  <Text style={themed.weatherDetailText}>
+                    {t("home.humidity", { value: weatherData.humidity })}
+                  </Text>
+                </View>
+                <View style={styles.weatherDetailRow}>
+                  <AppIcon
+                    name="thermometer"
+                    size={14}
+                    color={colors.iconMuted}
+                  />
+                  <Text style={themed.weatherDetailText}>
+                    {t("home.feelsLike", {
+                      value: Math.round(weatherData.apparentTemperature),
+                    })}
+                  </Text>
+                </View>
+              </View>
+              <View style={styles.weatherImageWrap}>
+                <Image
+                  source={weatherImages[imageKey]}
+                  style={styles.weatherImageStandalone}
+                  resizeMode="contain"
+                  fadeDuration={0}
+                />
+              </View>
+              <View style={styles.weatherInfoSide}>
+                <View style={styles.weatherDetailRow}>
+                  <AppIcon name="wind" size={14} color={colors.iconMuted} />
+                  <Text style={themed.weatherDetailText}>
+                    {weatherData.windSpeed} km/h
+                  </Text>
+                </View>
+                <View style={styles.weatherDetailRow}>
+                  <AppIcon name="activity" size={14} color={colors.iconMuted} />
+                  <Text style={themed.weatherDetailText}>
+                    {Math.round(weatherData.surfacePressure)} hPa
+                  </Text>
+                </View>
                 <Text style={themed.weatherDetailText}>
-                  {weatherData.windSpeed} km/h
+                  {weatherData.isDay === 1 ? t("home.day") : t("home.night")}
                 </Text>
               </View>
-              <View style={styles.weatherDetailRow}>
-                <AppIcon name="activity" size={14} color={colors.iconMuted} />
-                <Text style={themed.weatherDetailText}>
-                  {Math.round(weatherData.surfacePressure)} hPa
-                </Text>
-              </View>
-              <Text style={themed.weatherDetailText}>
-                {weatherData.isDay === 1 ? t("home.day") : t("home.night")}
+            </View>
+            <View style={themed.weatherDou3a}>
+              <HomeSectionRule style={themed.weatherDou3aRule} />
+              <Text style={themed.weatherDou3aLabel}>
+                {t("home.invocation")}
+              </Text>
+              <Text style={themed.weatherDou3aText}>
+                {t(WEATHER_DOU3A[imageKey].dou3aKey)}
+              </Text>
+              <Text style={themed.weatherDou3aReason}>
+                {t(WEATHER_DOU3A[imageKey].reasonKey)}
               </Text>
             </View>
+          </>
+        ) : waitingWeather ? (
+          <View style={styles.weatherRow}>
+            <View style={styles.weatherInfoSide}>
+              <ActivityIndicator size="small" color={colors.accent} />
+            </View>
+            <View style={styles.weatherImageWrap}>
+              <Image
+                source={weatherImages[DEFAULT_WEATHER_IMAGE]}
+                style={styles.weatherImageStandalone}
+                resizeMode="contain"
+                fadeDuration={0}
+              />
+            </View>
+            <View style={styles.weatherInfoSide} />
           </View>
-          <View style={themed.weatherDou3a}>
-            <Text style={themed.weatherDou3aLabel}>{t("home.invocation")}</Text>
-            <Text style={themed.weatherDou3aText}>
-              {t(WEATHER_DOU3A[weatherData.imageKey].dou3aKey)}
-            </Text>
-            <Text style={themed.weatherDou3aReason}>
-              {t(WEATHER_DOU3A[weatherData.imageKey].reasonKey)}
-            </Text>
-          </View>
-        </>
-      ) : (
-        <WeatherEmpty
-          message={t("home.weatherEnableLocation")}
-          onRequestLocation={onRequestLocation}
-          allowLabel={t("home.allowLocation")}
-          themed={themed}
-        />
-      )}
-    </View>
+        ) : (
+          <WeatherEmpty
+            message={t("home.weatherEnableLocation")}
+            onRequestLocation={onRequestLocation}
+            allowLabel={t("home.allowLocation")}
+            themed={themed}
+          />
+        )}
+      </View>
+    </HomeSection>
   );
 }
 
@@ -169,16 +205,6 @@ function WeatherEmpty({
 }
 
 const styles = StyleSheet.create({
-  wrap: {
-    marginTop: SPACE.lg + SPACE.xs,
-    marginBottom: SPACE.sm,
-  },
-  header: {
-    marginBottom: SPACE.md,
-  },
-  loader: {
-    paddingVertical: 20,
-  },
   weatherRow: {
     flexDirection: "row",
     alignItems: "center",

@@ -2,10 +2,11 @@ import { Pressable, StyleSheet, Text, View } from "react-native";
 import { router, type Href } from "expo-router";
 
 import { AppIcon } from "@/components/AppIcon";
+import { HomeSection } from "@/components/home/HomeSection";
 import { useAppTheme } from "@/lib/app-theme";
 import { useAppTypography } from "@/lib/app-typography";
 import { useTranslation } from "@/lib/i18n";
-import { CARD_RADIUS, SECTION_GAP } from "@/lib/ui/spacing";
+import { CARD_RADIUS } from "@/lib/ui/spacing";
 import { isRamadanSeason } from "@/lib/seasonal/ramadan";
 
 export function HomeRamadanBanner() {
@@ -16,51 +17,57 @@ export function HomeRamadanBanner() {
   if (!isRamadanSeason()) return null;
 
   return (
-    <Pressable
-      onPress={() => router.push("/(root)/ramadan" as Href)}
-      style={({ pressed }) => [
-        styles.wrap,
-        {
-          backgroundColor: colors.card,
-          borderColor: colors.border,
-          opacity: pressed ? 0.92 : 1,
-        },
-      ]}
-      accessibilityRole="button"
-      accessibilityLabel={t("ramadan.bannerTitle")}
+    <HomeSection
+      title={t("home.ramadanSection")}
+      onSeeAll={() => router.push("/(root)/ramadan" as Href)}
     >
-      <View style={[styles.iconWrap, { backgroundColor: `${colors.accent}22` }]}>
-        <AppIcon name="star" size={22} color={colors.accent} />
-      </View>
-      <View style={styles.text}>
-        <Text
-          style={[
-            styles.title,
-            { color: colors.text, fontSize: typography.bodyMedium },
-          ]}
+      <Pressable
+        onPress={() => router.push("/(root)/ramadan" as Href)}
+        style={({ pressed }) => [
+          styles.card,
+          {
+            backgroundColor: colors.card,
+            borderColor: colors.border,
+            opacity: pressed ? 0.92 : 1,
+          },
+        ]}
+        accessibilityRole="button"
+        accessibilityLabel={t("ramadan.bannerTitle")}
+      >
+        <View
+          style={[styles.iconWrap, { backgroundColor: `${colors.accent}22` }]}
         >
-          {t("ramadan.bannerTitle")}
-        </Text>
-        <Text
-          style={[
-            styles.subtitle,
-            { color: colors.textMuted, fontSize: typography.caption },
-          ]}
-        >
-          {t("ramadan.bannerSubtitle")}
-        </Text>
-      </View>
-      <AppIcon name="chevron-right" size={20} color={colors.iconMuted} />
-    </Pressable>
+          <AppIcon name="star" size={22} color={colors.accent} />
+        </View>
+        <View style={styles.text}>
+          <Text
+            style={[
+              styles.title,
+              { color: colors.text, fontSize: typography.bodyMedium },
+            ]}
+          >
+            {t("ramadan.bannerTitle")}
+          </Text>
+          <Text
+            style={[
+              styles.subtitle,
+              { color: colors.textMuted, fontSize: typography.caption },
+            ]}
+          >
+            {t("ramadan.bannerSubtitle")}
+          </Text>
+        </View>
+        <AppIcon name="chevron-right" size={20} color={colors.iconMuted} />
+      </Pressable>
+    </HomeSection>
   );
 }
 
 const styles = StyleSheet.create({
-  wrap: {
+  card: {
     flexDirection: "row",
     alignItems: "center",
     gap: 12,
-    marginTop: SECTION_GAP,
     padding: 14,
     borderRadius: CARD_RADIUS,
     borderWidth: StyleSheet.hairlineWidth,

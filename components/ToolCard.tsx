@@ -11,50 +11,20 @@ export interface ToolCardProps {
   subtitle?: string;
   onPress: () => void;
   accessibilityLabel?: string;
-  /** Grille horizontale accueil : icône + titre centrés */
+  /** @deprecated L’accueil utilise ListRow ; conservé pour compat. */
   variant?: "default" | "compact";
 }
 
+/** Ligne outil — icône flat, alignée ListRow / design system. */
 export function ToolCard({
   icon,
   title,
   subtitle = "",
   onPress,
   accessibilityLabel,
-  variant = "default",
 }: ToolCardProps) {
   const colors = useAppTheme();
   const { rtlTextStyle, rtlViewStyle } = useTranslation();
-  const compact = variant === "compact";
-
-  if (compact) {
-    return (
-      <Pressable
-        onPress={onPress}
-        accessibilityRole="button"
-        accessibilityLabel={accessibilityLabel ?? title}
-        style={({ pressed }) => [
-          styles.cardBox,
-          pressed && styles.pressed,
-        ]}
-      >
-        <View
-          style={[
-            styles.boxIconWrap,
-            { backgroundColor: colors.accentSurface },
-          ]}
-        >
-          <AppIcon name={icon} size={22} color={colors.accent} />
-        </View>
-        <Text
-          style={[styles.titleBox, { color: colors.text }, rtlTextStyle]}
-          numberOfLines={2}
-        >
-          {title}
-        </Text>
-      </Pressable>
-    );
-  }
 
   return (
     <Pressable
@@ -74,11 +44,7 @@ export function ToolCard({
         rtlViewStyle,
       ]}
     >
-      <View
-        style={[styles.iconWrap, { backgroundColor: colors.accentSurface }]}
-      >
-        <AppIcon name={icon} size={22} color={colors.accent} />
-      </View>
+      <AppIcon name={icon} size={22} color={colors.icon} />
       <View style={styles.text}>
         <Text
           style={[styles.title, { color: colors.text }, rtlTextStyle]}
@@ -111,37 +77,6 @@ const styles = StyleSheet.create({
   },
   pressed: {
     opacity: 0.88,
-    transform: [{ scale: 0.98 }],
-  },
-  iconWrap: {
-    width: 48,
-    height: 48,
-    borderRadius: 14,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  cardBox: {
-    width: "100%",
-    minHeight: 100,
-    paddingVertical: 10,
-    paddingHorizontal: 4,
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 10,
-  },
-  boxIconWrap: {
-    width: 44,
-    height: 44,
-    borderRadius: 12,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  titleBox: {
-    fontSize: 11,
-    fontFamily: "PlusJakartaSans-SemiBold",
-    textAlign: "center",
-    lineHeight: 14,
-    width: "100%",
   },
   text: {
     flex: 1,

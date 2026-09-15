@@ -3,6 +3,7 @@ import type { BottomTabBarProps } from "expo-router/build/react-navigation/botto
 import { LiquidTabBar } from "@/components/LiquidTabBar";
 import { TabBarChrome } from "@/components/TabBarChrome";
 
+/** Bottom bar glass iOS 26 — pilule + bouton profil. */
 export default function LiquidBottomBar(props: BottomTabBarProps) {
   return (
     <TabBarChrome>

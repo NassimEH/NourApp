@@ -1,15 +1,16 @@
 /**
- * cloudflared quick tunnel (HTTP/2) + Expo LAN packager proxy.
- * Writes expo-qr.png for Expo Go: exps://<host>
- *
- * Note: on corporate networks that block Cloudflare edge / QUIC,
- * tunnel may fail with 530/1033 — use LAN or a phone hotspot instead.
+ * Reliable Expo Go tunnel on Windows corp networks:
+ * - cloudflared quick tunnel forced to HTTP/2 (QUIC often blocked)
+ * - Expo with EXPO_PACKAGER_PROXY_URL=https://...
+ * - Expo Go URL uses exps:// (HTTPS), never exp://...:443
+ * - Wait for local Metro first; QR after edge is registered
  */
-import { spawn } from 'node:child_process';
+import { spawn, spawnSync } from 'node:child_process';
 import { mkdirSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
+import http from 'node:http';
 
 const require = createRequire(import.meta.url);
 const ROOT = process.cwd();
@@ -30,9 +31,9 @@ mkdirSync(process.env.METRO_CACHE_DIR, { recursive: true });
 
 async function writeQr(url) {
   const QRCode = require('qrcode');
-  await QRCode.toFile(QR_PNG, url, { width: 560, margin: 2 });
+  await QRCode.toFile(QR_PNG, url, { width: 720, margin: 2 });
   try {
-    await QRCode.toFile(QR_OUTBOX, url, { width: 560, margin: 2 });
+    await QRCode.toFile(QR_OUTBOX, url, { width: 720, margin: 2 });
   } catch {
     // optional
   }
@@ -43,11 +44,11 @@ async function writeQr(url) {
   console.log(await QRCode.toString(url, { type: 'terminal', small: true }));
 }
 
-function spawnLogged(command, args, opts = {}) {
+function spawnLogged(command, args, env = {}) {
   const child = spawn(command, args, {
     cwd: ROOT,
     shell: true,
-    env: { ...process.env, ...(opts.env || {}) },
+    env: { ...process.env, ...env },
     stdio: ['inherit', 'pipe', 'pipe'],
   });
   child.stdout.on('data', (buf) => process.stdout.write(buf));
@@ -55,42 +56,106 @@ function spawnLogged(command, args, opts = {}) {
   return child;
 }
 
-/** Force HTTP/2 — QUIC/UDP 7844 is often blocked on corp Wi‑Fi. */
+function sleep(ms) {
+  return new Promise((r) => setTimeout(r, ms));
+}
+
+function httpGetLocal(pathname) {
+  return new Promise((resolve) => {
+    const req = http.get(
+      { host: '127.0.0.1', port: 8081, path: pathname, timeout: 2000 },
+      (res) => {
+        res.resume();
+        resolve(res.statusCode || 0);
+      }
+    );
+    req.on('error', () => resolve(0));
+    req.on('timeout', () => {
+      req.destroy();
+      resolve(0);
+    });
+  });
+}
+
+async function waitForLocalMetro(attempts = 60) {
+  for (let i = 0; i < attempts; i++) {
+    const code = await httpGetLocal('/status');
+    if (code === 200) return true;
+    console.log(`[start-tunnel] Metro local pas prêt (${code || 'down'}), retry ${i + 1}/${attempts}...`);
+    await sleep(2000);
+  }
+  return false;
+}
+
+function curlHead(url) {
+  const r = spawnSync('curl.exe', ['-sI', '--max-time', '15', url], { encoding: 'utf8' });
+  const out = `${r.stdout || ''}\n${r.stderr || ''}`;
+  const m = out.match(/HTTP\/\d(?:\.\d)?\s+(\d+)/);
+  return m ? Number(m[1]) : 0;
+}
+
+async function waitForTunnelHttps(url, attempts = 30) {
+  for (let i = 0; i < attempts; i++) {
+    const code = curlHead(url);
+    if (code > 0 && code < 500) return code;
+    console.log(`[start-tunnel] Probe HTTPS tunnel HTTP ${code || 'fail'}, retry ${i + 1}/${attempts}...`);
+    await sleep(2000);
+  }
+  return 0;
+}
+
 const tunnel = spawnLogged('npx', [
   '--yes',
   'cloudflared',
   'tunnel',
   '--url',
-  'http://localhost:8081',
+  'http://127.0.0.1:8081',
   '--protocol',
   'http2',
   '--no-autoupdate',
 ]);
 
-let expoStarted = false;
-function onTunnelData(buf) {
-  const text = buf.toString();
-  if (expoStarted) return;
-  const m = text.match(/https:\/\/([a-z0-9-]+\.trycloudflare\.com)/i);
-  if (!m) return;
-  expoStarted = true;
-  const host = m[1];
-  const proxy = `https://${host}`;
-  const exp = `exps://${host}`;
+let host = null;
+let started = false;
+let buffer = '';
+
+async function bootExpo(tunnelHost) {
+  if (started) return;
+  started = true;
+  const proxy = `https://${tunnelHost}`;
+  const expUrl = `exps://${tunnelHost}`;
+
+  console.log(`[start-tunnel] Edge registered. Starting Expo with ${proxy}`);
 
   const expo = spawnLogged(
     'npx',
-    ['expo', 'start', '--lan', '--go', '--port', '8081'],
+    ['expo', 'start', '--lan', '--go', '--port', '8081', '--clear'],
     {
-      env: {
-        METRO_CACHE_DIR: process.env.METRO_CACHE_DIR,
-        EXPO_NO_TELEMETRY: '1',
-        EXPO_PACKAGER_PROXY_URL: proxy,
-      },
+      METRO_CACHE_DIR: process.env.METRO_CACHE_DIR,
+      EXPO_NO_TELEMETRY: '1',
+      EXPO_PACKAGER_PROXY_URL: proxy,
     }
   );
 
-  writeQr(exp).catch(console.error);
+  const metroOk = await waitForLocalMetro();
+  if (!metroOk) {
+    console.error('[start-tunnel] Metro local n’a pas démarré.');
+    expo.kill();
+    tunnel.kill();
+    process.exit(1);
+  }
+  console.log('[start-tunnel] Metro local OK.');
+
+  const httpsCode = await waitForTunnelHttps(`${proxy}/status`);
+  if (httpsCode) {
+    console.log(`[start-tunnel] Tunnel HTTPS OK (HTTP ${httpsCode}).`);
+  } else {
+    console.log(
+      '[start-tunnel] Probe PC→tunnel échouée (proxy corp possible). Edge est registered — on sort le QR quand même.'
+    );
+  }
+
+  await writeQr(expUrl);
 
   const shutdown = () => {
     expo.kill();
@@ -105,8 +170,29 @@ function onTunnelData(buf) {
   });
 }
 
+function onTunnelData(buf) {
+  const text = buf.toString();
+  buffer += text;
+
+  if (!host) {
+    const m = buffer.match(/https:\/\/([a-z0-9-]+\.trycloudflare\.com)/i);
+    if (m) host = m[1];
+  }
+
+  if (host && /Registered tunnel connection/i.test(text)) {
+    bootExpo(host).catch((e) => {
+      console.error(e);
+      process.exit(1);
+    });
+  }
+}
+
 tunnel.stdout.on('data', onTunnelData);
 tunnel.stderr.on('data', onTunnelData);
+
 tunnel.on('exit', (code) => {
-  if (!expoStarted) process.exit(code ?? 1);
+  if (!started) {
+    console.error('[start-tunnel] cloudflared exited before Expo started.');
+    process.exit(code ?? 1);
+  }
 });

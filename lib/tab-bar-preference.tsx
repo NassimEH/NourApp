@@ -14,7 +14,7 @@ interface TabBarPreferenceContextType {
 const TabBarPreferenceContext = createContext<TabBarPreferenceContextType | undefined>(undefined);
 
 export function TabBarPreferenceProvider({ children }: { children: React.ReactNode }) {
-  const [tabBarVariant, setTabBarVariantState] = useState<TabBarVariant>("custom");
+  const [tabBarVariant, setTabBarVariantState] = useState<TabBarVariant>("liquid");
   const hydrationPendingRef = useRef(true);
 
   useEffect(() => {

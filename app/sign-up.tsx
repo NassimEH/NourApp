@@ -40,7 +40,7 @@ export default function SignUpScreen() {
   const [confirm, setConfirm] = useState("");
   const [busy, setBusy] = useState(false);
 
-  if (!loading && isLogged) return <Redirect href="/" />;
+  if (!loading && isLogged) return <Redirect href="/(root)/(tabs)" />;
 
   const handleSignUp = async () => {
     if (!name.trim()) {

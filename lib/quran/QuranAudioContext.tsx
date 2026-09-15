@@ -2,6 +2,8 @@
  * Contexte global pour la lecture audio Coran.
  * Permet d'afficher la mini barre de lecture depuis n'importe quel écran (ex. Explorer)
  * et de faire réagir la bottom bar.
+ *
+ * SDK 57+ : expo-av retiré d'Expo Go → expo-audio (createAudioPlayer).
  */
 
 import React, {
@@ -12,7 +14,12 @@ import React, {
   useRef,
   useState,
 } from "react";
-import { Audio } from "expo-av";
+import {
+  createAudioPlayer,
+  setAudioModeAsync,
+  type AudioPlayer,
+  type AudioStatus,
+} from "expo-audio";
 import { getAyahAudioUrl } from "./api";
 import { resolveSuraAudioUri } from "./offline-downloads";
 import { persistLastListen } from "./persistLastListen";
@@ -61,20 +68,32 @@ const QuranAudioContext = createContext<QuranAudioContextValue | null>(null);
 
 async function setAudioMode() {
   try {
-    await Audio.setAudioModeAsync({
-      playsInSilentModeIOS: true,
-      staysActiveInBackground: true,
-      shouldDuckAndroid: true,
-      playThroughEarpieceAndroid: false,
+    await setAudioModeAsync({
+      playsInSilentMode: true,
+      shouldPlayInBackground: true,
+      interruptionMode: "duckOthers",
     });
-  } catch {}
+  } catch {
+    // ignore mode errors on unsupported platforms
+  }
+}
+
+function durationMsFromPlayer(player: AudioPlayer): number {
+  const seconds = player.duration;
+  return Number.isFinite(seconds) && seconds > 0 ? Math.round(seconds * 1000) : 0;
+}
+
+function positionMsFromPlayer(player: AudioPlayer): number {
+  const seconds = player.currentTime;
+  return Number.isFinite(seconds) && seconds > 0 ? Math.round(seconds * 1000) : 0;
 }
 
 export function QuranAudioProvider({ children }: { children: React.ReactNode }) {
   const { quranReciter, setQuranReciter } = useAppPreferences();
   const { t } = useTranslation();
   const [state, setState] = useState<QuranAudioState>(initialState);
-  const soundRef = useRef<Audio.Sound | null>(null);
+  const playerRef = useRef<AudioPlayer | null>(null);
+  const statusSubRef = useRef<{ remove: () => void } | null>(null);
   const positionRef = useRef(0);
   const durationRef = useRef(0);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -91,17 +110,30 @@ export function QuranAudioProvider({ children }: { children: React.ReactNode }) 
     setState((s) => ({ ...s, currentReciter: quranReciter }));
   }, [quranReciter]);
 
-  const unload = useCallback(async () => {
+  const stopProgressUpdates = useCallback(() => {
     if (intervalRef.current) {
       clearInterval(intervalRef.current);
       intervalRef.current = null;
     }
-    if (soundRef.current) {
+  }, []);
+
+  const releasePlayer = useCallback(() => {
+    statusSubRef.current?.remove();
+    statusSubRef.current = null;
+    if (playerRef.current) {
       try {
-        await soundRef.current.unloadAsync();
-      } catch {}
-      soundRef.current = null;
+        playerRef.current.pause();
+        playerRef.current.remove();
+      } catch {
+        // ignore
+      }
+      playerRef.current = null;
     }
+  }, []);
+
+  const unload = useCallback(async () => {
+    stopProgressUpdates();
+    releasePlayer();
     positionRef.current = 0;
     durationRef.current = 0;
     setState((s) => ({
@@ -114,18 +146,95 @@ export function QuranAudioProvider({ children }: { children: React.ReactNode }) 
       currentAyah: null,
       mode: null,
     }));
-  }, []);
+  }, [releasePlayer, stopProgressUpdates]);
 
-  const stopProgressUpdates = useCallback(() => {
-    if (intervalRef.current) {
-      clearInterval(intervalRef.current);
-      intervalRef.current = null;
-    }
-  }, []);
+  const startProgressUpdates = useCallback(() => {
+    stopProgressUpdates();
+    intervalRef.current = setInterval(() => {
+      const player = playerRef.current;
+      if (player) {
+        if (player.duration > 0) {
+          durationRef.current = durationMsFromPlayer(player);
+        }
+        positionRef.current = positionMsFromPlayer(player);
+      }
+      setState((s) => {
+        const d = durationRef.current;
+        const p = positionRef.current;
+        const progress = d > 0 ? p / d : 0;
+        const sura = currentSuraRef.current;
+        if (sura != null && playbackModeRef.current === "sura") {
+          persistLastListen(sura, progress);
+        } else if (sura != null && playbackModeRef.current === "ayah") {
+          persistLastListen(sura, progress);
+        }
+        return {
+          ...s,
+          progress,
+          durationMs: d,
+        };
+      });
+    }, 500);
+  }, [stopProgressUpdates]);
+
+  const attachPlayer = useCallback(
+    (player: AudioPlayer) => {
+      playerRef.current = player;
+      let playRequested = false;
+
+      const tryPlay = () => {
+        if (playRequested) return;
+        playRequested = true;
+        try {
+          player.play();
+          setState((s) => ({
+            ...s,
+            isLoading: false,
+            isPlaying: true,
+            durationMs: durationRef.current,
+          }));
+        } catch {
+          setState((s) => ({
+            ...s,
+            isLoading: false,
+            error: t("audio.playbackStartError"),
+          }));
+        }
+      };
+
+      statusSubRef.current = player.addListener(
+        "playbackStatusUpdate",
+        (st: AudioStatus) => {
+          if (st.duration > 0) {
+            durationRef.current = Math.round(st.duration * 1000);
+          }
+          if (st.currentTime != null) {
+            positionRef.current = Math.round(st.currentTime * 1000);
+          }
+          if (st.didJustFinish) {
+            void unload();
+            return;
+          }
+          if (st.isLoaded) {
+            tryPlay();
+          }
+        }
+      );
+
+      if (player.isLoaded || player.duration > 0) {
+        durationRef.current = durationMsFromPlayer(player);
+        tryPlay();
+      }
+
+      startProgressUpdates();
+    },
+    [startProgressUpdates, t, unload]
+  );
 
   const playSuraWithReciter = useCallback(
     async (suraNumber: number, reciter: string) => {
       await setAudioMode();
+      await unload();
       setState((s) => ({
         ...s,
         isLoading: true,
@@ -134,76 +243,18 @@ export function QuranAudioProvider({ children }: { children: React.ReactNode }) 
         currentAyah: null,
         mode: "sura",
       }));
-      let playRequested = false;
       try {
         const url = await resolveSuraAudioUri(suraNumber, reciter);
-        const { sound } = await Audio.Sound.createAsync(
-          { uri: url },
-          { shouldPlay: false }
-        );
-        soundRef.current = sound;
-        if (durationRef.current === 0) {
-          const status = await sound.getStatusAsync();
-          if (status.isLoaded && status.durationMillis)
-            durationRef.current = status.durationMillis;
-        }
+        const player = createAudioPlayer({ uri: url });
+        durationRef.current = durationMsFromPlayer(player);
         setState((s) => ({
           ...s,
           isLoading: false,
           isPlaying: false,
           durationMs: durationRef.current,
         }));
-        sound.setOnPlaybackStatusUpdate((st) => {
-          if (!st.isLoaded) return;
-          if (st.durationMillis) durationRef.current = st.durationMillis;
-          if (st.positionMillis != null) positionRef.current = st.positionMillis;
-          if (st.didJustFinish && !st.isLooping) unload();
-          if (!playRequested) {
-            playRequested = true;
-            sound
-              .playAsync()
-              .then(() => {
-                setState((s) => ({
-                  ...s,
-                  isPlaying: true,
-                  durationMs: durationRef.current,
-                }));
-              })
-              .catch(() => {
-                setState((s) => ({
-                  ...s,
-                  error: t("audio.playbackStartError"),
-                }));
-              });
-          }
-        });
-        intervalRef.current = setInterval(() => {
-          setState((s) => {
-            const d = durationRef.current;
-            const p = positionRef.current;
-            const progress = d > 0 ? p / d : 0;
-            const sura = currentSuraRef.current;
-            if (sura != null && playbackModeRef.current === "sura") {
-              persistLastListen(sura, progress);
-            }
-            return {
-              ...s,
-              progress,
-              durationMs: d,
-            };
-          });
-        }, 500);
+        attachPlayer(player);
         persistLastListen(suraNumber, 0, true);
-        const status = await sound.getStatusAsync();
-        if (status.isLoaded && !playRequested) {
-          playRequested = true;
-          await sound.playAsync();
-          setState((s) => ({
-            ...s,
-            isPlaying: true,
-            durationMs: status.durationMillis ?? durationRef.current,
-          }));
-        }
       } catch {
         setState((s) => ({
           ...s,
@@ -212,7 +263,7 @@ export function QuranAudioProvider({ children }: { children: React.ReactNode }) 
         }));
       }
     },
-    [t, unload]
+    [attachPlayer, t, unload]
   );
 
   const setReciter = useCallback(
@@ -225,7 +276,7 @@ export function QuranAudioProvider({ children }: { children: React.ReactNode }) 
       if (currentSura != null && currentMode === "sura") {
         await unload();
         setTimeout(() => {
-          playSuraWithReciter(currentSura, reciterId);
+          void playSuraWithReciter(currentSura, reciterId);
         }, 100);
       }
     },
@@ -244,7 +295,6 @@ export function QuranAudioProvider({ children }: { children: React.ReactNode }) 
         currentAyah: null,
         mode: "sura",
       }));
-      let playRequested = false;
       try {
         const lastListen = await getLastListen();
         const resumeProgress =
@@ -253,20 +303,15 @@ export function QuranAudioProvider({ children }: { children: React.ReactNode }) 
             : 0;
 
         const url = await resolveSuraAudioUri(suraNumber, state.currentReciter);
-        const { sound } = await Audio.Sound.createAsync(
-          { uri: url },
-          { shouldPlay: false }
-        );
-        soundRef.current = sound;
-        const status = await sound.getStatusAsync();
-        if (status.isLoaded && status.durationMillis) {
-          durationRef.current = status.durationMillis;
-          if (resumeProgress > 0) {
-            const seekMs = Math.floor(resumeProgress * status.durationMillis);
-            await sound.setPositionAsync(seekMs);
-            positionRef.current = seekMs;
-          }
+        const player = createAudioPlayer({ uri: url });
+        durationRef.current = durationMsFromPlayer(player);
+
+        if (resumeProgress > 0 && durationRef.current > 0) {
+          const seekSec = (resumeProgress * durationRef.current) / 1000;
+          await player.seekTo(seekSec);
+          positionRef.current = Math.floor(resumeProgress * durationRef.current);
         }
+
         setState((s) => ({
           ...s,
           isLoading: false,
@@ -274,56 +319,8 @@ export function QuranAudioProvider({ children }: { children: React.ReactNode }) 
           durationMs: durationRef.current,
           progress: resumeProgress,
         }));
-        sound.setOnPlaybackStatusUpdate((st) => {
-          if (!st.isLoaded) return;
-          if (st.durationMillis) durationRef.current = st.durationMillis;
-          if (st.positionMillis != null) positionRef.current = st.positionMillis;
-          if (st.didJustFinish && !st.isLooping) unload();
-          if (!playRequested) {
-            playRequested = true;
-            sound
-              .playAsync()
-              .then(() => {
-                setState((s) => ({
-                  ...s,
-                  isPlaying: true,
-                  durationMs: durationRef.current,
-                }));
-              })
-              .catch(() => {
-                setState((s) => ({
-                  ...s,
-                  error: t("audio.playbackStartError"),
-                }));
-              });
-          }
-        });
-        intervalRef.current = setInterval(() => {
-          setState((s) => {
-            const d = durationRef.current;
-            const p = positionRef.current;
-            const progress = d > 0 ? p / d : 0;
-            const sura = currentSuraRef.current;
-            if (sura != null && playbackModeRef.current === "sura") {
-              persistLastListen(sura, progress);
-            }
-            return {
-              ...s,
-              progress,
-              durationMs: d,
-            };
-          });
-        }, 500);
+        attachPlayer(player);
         persistLastListen(suraNumber, resumeProgress, true);
-        if (status.isLoaded && !playRequested) {
-          playRequested = true;
-          await sound.playAsync();
-          setState((s) => ({
-            ...s,
-            isPlaying: true,
-            durationMs: status.durationMillis ?? durationRef.current,
-          }));
-        }
       } catch {
         setState((s) => ({
           ...s,
@@ -332,7 +329,7 @@ export function QuranAudioProvider({ children }: { children: React.ReactNode }) 
         }));
       }
     },
-    [t, unload, state.currentReciter]
+    [attachPlayer, t, unload, state.currentReciter]
   );
 
   const playAyah = useCallback(
@@ -347,76 +344,18 @@ export function QuranAudioProvider({ children }: { children: React.ReactNode }) 
         currentAyah: globalAyahNumber,
         mode: "ayah",
       }));
-      let playRequested = false;
       try {
         const url = getAyahAudioUrl(globalAyahNumber, state.currentReciter);
-        const { sound } = await Audio.Sound.createAsync(
-          { uri: url },
-          { shouldPlay: false }
-        );
-        soundRef.current = sound;
-        if (durationRef.current === 0) {
-          const status = await sound.getStatusAsync();
-          if (status.isLoaded && status.durationMillis)
-            durationRef.current = status.durationMillis;
-        }
+        const player = createAudioPlayer({ uri: url });
+        durationRef.current = durationMsFromPlayer(player);
         setState((s) => ({
           ...s,
           isLoading: false,
           isPlaying: false,
           durationMs: durationRef.current,
         }));
-        sound.setOnPlaybackStatusUpdate((st) => {
-          if (!st.isLoaded) return;
-          if (st.durationMillis) durationRef.current = st.durationMillis;
-          if (st.positionMillis != null) positionRef.current = st.positionMillis;
-          if (st.didJustFinish && !st.isLooping) unload();
-          if (!playRequested) {
-            playRequested = true;
-            sound
-              .playAsync()
-              .then(() => {
-                setState((s) => ({
-                  ...s,
-                  isPlaying: true,
-                  durationMs: durationRef.current,
-                }));
-              })
-              .catch(() => {
-                setState((s) => ({
-                  ...s,
-                  error: t("audio.playbackStartError"),
-                }));
-              });
-          }
-        });
-        intervalRef.current = setInterval(() => {
-          setState((s) => {
-            const d = durationRef.current;
-            const p = positionRef.current;
-            const progress = d > 0 ? p / d : 0;
-            const sura = currentSuraRef.current;
-            if (sura != null) {
-              persistLastListen(sura, progress);
-            }
-            return {
-              ...s,
-              progress,
-              durationMs: d,
-            };
-          });
-        }, 500);
+        attachPlayer(player);
         persistLastListen(suraNumber, 0, true);
-        const status = await sound.getStatusAsync();
-        if (status.isLoaded && !playRequested) {
-          playRequested = true;
-          await sound.playAsync();
-          setState((s) => ({
-            ...s,
-            isPlaying: true,
-            durationMs: status.durationMillis ?? durationRef.current,
-          }));
-        }
       } catch {
         setState((s) => ({
           ...s,
@@ -425,34 +364,39 @@ export function QuranAudioProvider({ children }: { children: React.ReactNode }) 
         }));
       }
     },
-    [t, unload, state.currentReciter]
+    [attachPlayer, t, unload, state.currentReciter]
   );
 
   const pause = useCallback(async () => {
-    if (!soundRef.current) return;
+    if (!playerRef.current) return;
     try {
-      await soundRef.current.pauseAsync();
+      playerRef.current.pause();
       stopProgressUpdates();
       setState((s) => ({ ...s, isPlaying: false }));
-    } catch {}
+    } catch {
+      // ignore
+    }
   }, [stopProgressUpdates]);
 
   const resume = useCallback(async () => {
-    if (!soundRef.current) return;
+    if (!playerRef.current) return;
     try {
-      await soundRef.current.playAsync();
+      playerRef.current.play();
+      startProgressUpdates();
       setState((s) => ({ ...s, isPlaying: true }));
-    } catch {}
-  }, []);
+    } catch {
+      // ignore
+    }
+  }, [startProgressUpdates]);
 
   const togglePlayPause = useCallback(async () => {
     if (state.isPlaying) await pause();
-    else if (soundRef.current) await resume();
+    else if (playerRef.current) await resume();
   }, [state.isPlaying, pause, resume]);
 
   useEffect(() => {
     return () => {
-      unload();
+      void unload();
     };
   }, [unload]);
 

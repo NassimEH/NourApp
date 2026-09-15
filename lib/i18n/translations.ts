@@ -51,7 +51,10 @@ const fr = {
     allowLocation: "Autoriser la localisation",
     defaultMosqueName: "Mosquée de Crosne",
     hadithFridayLabel: "Hadith — La prière du vendredi",
+    hadithFridayBadge: "Vendredi",
     hadithDayLabel: "Hadith du jour",
+    toolsShowLess: "Réduire",
+    ramadanSection: "Ramadan",
     mosqueSettingsTitle: "Ma mosquée",
     mosqueSettingsSubtitle: "Personnalise le nom affiché sur l'accueil",
     mosqueNameLabel: "Nom de la mosquée",
@@ -60,6 +63,8 @@ const fr = {
     bellMenuBody: "Choisissez où aller depuis la cloche.",
     bellMenuReminders: "Voir les rappels",
     bellMenuNotifications: "Ouvrir les réglages notifications",
+    currentPrayerNow: "Maintenant · {{prayer}} · {{time}}",
+    currentPrayerNext: "Prochaine · {{prayer}} · {{time}}",
   },
   qibla: {
     prayersSection: "Prières",
@@ -461,6 +466,8 @@ const fr = {
     decrease: "Diminuer",
   },
   tools: {
+    catalogTitle: "Tous les outils",
+    catalogSubtitle: "Raccourcis pour le quotidien",
     zakatMal: {
       toolTitle: "Zakat al-mal",
       toolSubtitle: "Estimer la zakat sur votre épargne",
@@ -910,7 +917,10 @@ const en: TranslationMessages = {
     allowLocation: "Allow location",
     defaultMosqueName: "Local mosque",
     hadithFridayLabel: "Hadith — Friday prayer",
+    hadithFridayBadge: "Friday",
     hadithDayLabel: "Hadith of the day",
+    toolsShowLess: "Show less",
+    ramadanSection: "Ramadan",
     mosqueSettingsTitle: "My mosque",
     mosqueSettingsSubtitle: "Customize the name shown on home",
     mosqueNameLabel: "Mosque name",
@@ -919,6 +929,8 @@ const en: TranslationMessages = {
     bellMenuBody: "Choose where to go from the bell icon.",
     bellMenuReminders: "Open reminders",
     bellMenuNotifications: "Open notification settings",
+    currentPrayerNow: "Now · {{prayer}} · {{time}}",
+    currentPrayerNext: "Next · {{prayer}} · {{time}}",
   },
   qibla: {
     prayersSection: "Prayers",
@@ -1319,6 +1331,8 @@ const en: TranslationMessages = {
     decrease: "Decrease",
   },
   tools: {
+    catalogTitle: "All tools",
+    catalogSubtitle: "Shortcuts for daily practice",
     zakatMal: {
       toolTitle: "Zakat al-mal",
       toolSubtitle: "Estimate zakat on your savings",
@@ -1756,7 +1770,10 @@ const ar: TranslationMessages = {
     allowLocation: "السماح بالموقع",
     defaultMosqueName: "المسجد المحلي",
     hadithFridayLabel: "حديث — صلاة الجمعة",
+    hadithFridayBadge: "الجمعة",
     hadithDayLabel: "حديث اليوم",
+    toolsShowLess: "أقل",
+    ramadanSection: "رمضان",
     mosqueSettingsTitle: "مسجدي",
     mosqueSettingsSubtitle: "خصّص الاسم المعروض في الرئيسية",
     mosqueNameLabel: "اسم المسجد",
@@ -1765,6 +1782,8 @@ const ar: TranslationMessages = {
     bellMenuBody: "اختر الوجهة من زر الجرس.",
     bellMenuReminders: "عرض التذكيرات",
     bellMenuNotifications: "فتح إعدادات الإشعارات",
+    currentPrayerNow: "الآن · {{prayer}} · {{time}}",
+    currentPrayerNext: "القادمة · {{prayer}} · {{time}}",
   },
   qibla: {
     prayersSection: "الصلوات",
@@ -2165,6 +2184,8 @@ const ar: TranslationMessages = {
     decrease: "نقصان",
   },
   tools: {
+    catalogTitle: "كل الأدوات",
+    catalogSubtitle: "اختصارات لليوميات",
     zakatMal: {
       toolTitle: "زكاة المال",
       toolSubtitle: "تقدير الزكاة على المدخرات",

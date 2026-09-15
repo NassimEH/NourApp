@@ -41,7 +41,7 @@ export function PrayerLocationSearchBar({
       style={[
         styles.wrap,
         rtlViewStyle,
-        { borderColor: colors.border },
+        { borderColor: colors.isDark ? "#FFFFFF" : "#000000" },
         style,
       ]}
     >
@@ -91,11 +91,11 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 12,
-    marginBottom: 20,
+    marginBottom: 0,
     paddingHorizontal: 14,
     paddingVertical: 10,
     borderRadius: CARD_RADIUS,
-    borderWidth: StyleSheet.hairlineWidth,
+    borderWidth: 1,
     backgroundColor: "transparent",
     minHeight: MIN_TOUCH_TARGET,
   },

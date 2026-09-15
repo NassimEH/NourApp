@@ -35,7 +35,11 @@ export function SectionHeader({
       <Text
         style={[
           styles.title,
-          { color: colors.text, fontSize: typography.title },
+          {
+            color: colors.text,
+            fontSize: typography.title + 2,
+            lineHeight: typography.title + 8,
+          },
           rtlTextStyle,
         ]}
         accessibilityRole="header"
@@ -75,6 +79,7 @@ const styles = StyleSheet.create({
   title: {
     fontFamily: "PlusJakartaSans-Bold",
     flex: 1,
+    letterSpacing: -0.35,
   },
   seeAll: {
     fontFamily: "PlusJakartaSans-SemiBold",

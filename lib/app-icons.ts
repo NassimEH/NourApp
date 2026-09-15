@@ -62,6 +62,11 @@ const FEATHER_TO_IONICONS: Partial<Record<FeatherIconName, IoniconName>> = {
   moon: "moon",
   "message-circle": "chatbubble",
   "file-text": "document-text",
+  compass: "compass",
+  gift: "gift",
+  headphones: "headset",
+  "dollar-sign": "cash",
+  percent: "calculator",
 };
 
 export function getIoniconsNameForFeather(name: FeatherIconName): IoniconName {

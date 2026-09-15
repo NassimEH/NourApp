@@ -1,5 +1,4 @@
 ﻿import {
-  Pressable,
   ScrollView,
   StyleSheet,
   Text,
@@ -7,16 +6,11 @@
   View,
 } from "react-native";
 import React, { useEffect, useMemo } from "react";
-import { router, type Href } from "expo-router";
+import { router } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { toHijri } from "hijri-converter";
 
 import { AppIcon } from "@/components/AppIcon";
-import {
-  isVendredi,
-  getHadithVendrediDuJour,
-  getHadithVendrediText,
-} from "@/constants/hadithsVendredi";
 import { HomeContinueSection } from "@/components/home/HomeContinueSection";
 import { HomePrayerWeatherCarousel } from "@/components/home/HomePrayerWeatherCarousel";
 import { HomeToolsSection } from "@/components/home/HomeToolsSection";
@@ -24,7 +18,15 @@ import { HomeHadithDuJourSection } from "@/components/home/HomeHadithDuJourSecti
 import { HomeRamadanBanner } from "@/components/home/HomeRamadanBanner";
 import { rescheduleNextPrayerNotification } from "@/lib/notifications/prayer-notifications";
 import { useGlobalContext } from "@/lib/global-provider";
-import { usePrayerTimes } from "@/lib/usePrayerTimes";
+import {
+  getCurrentPrayer,
+  getNextPrayerInfo,
+} from "@/lib/prayerUtils";
+import {
+  usePrayerTimes,
+  type PrayerKey,
+  type PrayerTimes,
+} from "@/lib/usePrayerTimes";
 import { ScreenBackground } from "@/components/ScreenBackground";
 import { SCREEN_EDGE_PADDING } from "@/constants/screen-layout";
 import { useAppTypography } from "@/lib/app-typography";
@@ -32,7 +34,7 @@ import { useAppTheme } from "@/lib/app-theme";
 import { createHomeStyles } from "@/lib/home-screen-styles";
 import { addActivityLog } from "@/lib/activity-log";
 import { useTranslation, getLocaleDateString, TRANSLATIONS } from "@/lib/i18n";
-import { MIN_TOUCH_TARGET } from "@/lib/ui/spacing";
+import { MIN_TOUCH_TARGET, SPACE } from "@/lib/ui/spacing";
 
 function useTodayDates(locale: "fr" | "en" | "ar") {
   return useMemo(() => {
@@ -69,7 +71,7 @@ const HeaderBell = React.memo(function HeaderBell({
       hitSlop={12}
       style={styles.bellButton}
     >
-      <AppIcon name="bell" size={28} color={colors.icon} />
+      <AppIcon name="bell" size={24} color={colors.icon} />
     </TouchableOpacity>
   );
 });
@@ -78,6 +80,7 @@ type HomeListHeaderProps = {
   user: { name?: string; avatar?: string } | null;
   gregorian: string;
   hijri: string;
+  prayerTimes: PrayerTimes | null;
   prayerLoading: boolean;
   prayerCoords: { latitude: number; longitude: number } | null;
   onRequestLocation: () => void;
@@ -89,26 +92,46 @@ const HomeListHeader = React.memo(function HomeListHeader({
   user,
   gregorian,
   hijri,
+  prayerTimes,
   prayerLoading,
   prayerCoords,
   onRequestLocation,
   onBellPress,
   bellLabel,
 }: HomeListHeaderProps) {
-  const vendredi = isVendredi();
-  const hadithVendredi = getHadithVendrediDuJour();
-
   const typography = useAppTypography();
   const colors = useAppTheme();
   const themed = useMemo(() => createHomeStyles(colors), [colors]);
-  const { t, locale, rtlTextStyle, rtlViewStyle } = useTranslation();
+  const { t, rtlTextStyle, rtlViewStyle } = useTranslation();
 
-  const welcomeTitle = `${t("home.welcome")}${
-    user?.name ? ` ${user.name}` : ` ${t("home.defaultUser")}`
-  }`;
-  const subtitle = vendredi
-    ? `${t("home.goodFriday")} · ${gregorian}`
-    : gregorian;
+  const firstName = user?.name?.trim().split(/\s+/)[0];
+  const welcomeTitle = firstName
+    ? `${t("home.welcome")} ${firstName}`
+    : `${t("home.welcome")} ${t("home.defaultUser")}`;
+
+  const dateLine = hijri ? `${gregorian} · ${hijri}` : gregorian;
+
+  const prayerLine = useMemo(() => {
+    if (!prayerTimes) return null;
+    const current = getCurrentPrayer(prayerTimes);
+    if (current) {
+      const key = current.name as PrayerKey;
+      const time = prayerTimes[key];
+      if (!time) return null;
+      return t("home.currentPrayerNow", {
+        prayer: t(`qibla.prayerNames.${key}`),
+        time,
+      });
+    }
+    const next = getNextPrayerInfo(prayerTimes);
+    const key = next.name as PrayerKey;
+    const time = prayerTimes[key];
+    if (!time) return null;
+    return t("home.currentPrayerNext", {
+      prayer: t(`qibla.prayerNames.${key}`),
+      time,
+    });
+  }, [prayerTimes, t]);
 
   return (
     <View>
@@ -120,11 +143,11 @@ const HomeListHeader = React.memo(function HomeListHeader({
                 themed.welcomeTitle,
                 rtlTextStyle,
                 {
-                  fontSize: typography.pageTitle,
-                  lineHeight: typography.pageTitle * 1.2,
+                  fontSize: typography.pageTitle * 0.92,
+                  lineHeight: typography.pageTitle * 1.15,
                 },
               ]}
-              numberOfLines={2}
+              numberOfLines={1}
             >
               {welcomeTitle}
             </Text>
@@ -133,27 +156,31 @@ const HomeListHeader = React.memo(function HomeListHeader({
                 themed.welcomeDate,
                 rtlTextStyle,
                 {
-                  fontSize: typography.subtitle,
-                  lineHeight: typography.subtitle * 1.35,
-                  marginTop: 6,
+                  fontSize: typography.body,
+                  lineHeight: typography.body * 1.35,
+                  marginTop: 4,
+                  color: colors.textMuted,
                 },
               ]}
+              numberOfLines={1}
             >
-              {subtitle}
+              {dateLine}
             </Text>
-            {hijri ? (
+            {prayerLine ? (
               <Text
                 style={[
-                  themed.welcomeHijri,
+                  themed.welcomePrayer,
                   rtlTextStyle,
                   {
-                    fontSize: typography.body,
-                    lineHeight: typography.body * 1.4,
-                    marginTop: 2,
+                    fontSize: typography.caption,
+                    lineHeight: typography.caption * 1.35,
+                    color: colors.accent,
                   },
                 ]}
+                numberOfLines={1}
+                accessibilityRole="text"
               >
-                {hijri}
+                {prayerLine}
               </Text>
             ) : null}
           </View>
@@ -166,34 +193,15 @@ const HomeListHeader = React.memo(function HomeListHeader({
           prayerLoading={prayerLoading}
           prayerCoords={prayerCoords}
           onRequestLocation={onRequestLocation}
+          isFirst
         />
+
+        <HomeHadithDuJourSection />
 
         <HomeContinueSection />
 
-        {vendredi && hadithVendredi ? (
-          <Pressable
-            onPress={() => router.push("/(root)/hadith-friday" as Href)}
-            style={({ pressed }) => [
-              themed.hadithVendrediBlock,
-              pressed && { opacity: 0.92 },
-            ]}
-            accessibilityRole="button"
-            accessibilityLabel={t("home.hadithFridayLabel")}
-          >
-            <Text style={themed.hadithVendrediLabel}>
-              {t("home.hadithFridayLabel")}
-            </Text>
-            <Text style={themed.hadithVendrediText}>
-              {getHadithVendrediText(hadithVendredi, locale)}
-            </Text>
-            <Text style={themed.hadithVendrediSource}>
-              {hadithVendredi.source}
-            </Text>
-          </Pressable>
-        ) : null}
-
-        <HomeHadithDuJourSection />
         <HomeToolsSection />
+
         <HomeRamadanBanner />
       </View>
     </View>
@@ -236,6 +244,7 @@ const Home = () => {
             user={user}
             gregorian={gregorian}
             hijri={hijri}
+            prayerTimes={prayerTimes}
             prayerLoading={prayerLoading}
             prayerCoords={prayerCoords}
             onRequestLocation={refetchLocation}
@@ -251,10 +260,9 @@ const Home = () => {
 const styles = StyleSheet.create({
   background: { flex: 1 },
   homeHeaderBlock: {
-    paddingTop: 20,
+    paddingTop: SPACE.sm,
     paddingHorizontal: SCREEN_EDGE_PADDING,
-    marginTop: 8,
-    marginBottom: 8,
+    marginBottom: SPACE.xs,
   },
   heroHeaderRow: {
     flexDirection: "row",
@@ -270,7 +278,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   homeBody: { paddingHorizontal: SCREEN_EDGE_PADDING },
-  scrollContent: { paddingBottom: 120 },
+  scrollContent: { paddingBottom: 160 },
 });
 
 export default Home;

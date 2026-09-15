@@ -42,8 +42,8 @@ export default function SignInScreen() {
   const [busy, setBusy] = useState(false);
   const primaryButton = getAuthPrimaryButtonColors(colors);
 
-  if (!loading && isLogged) return <Redirect href="/" />;
-  if (!loading && isGuest) return <Redirect href="/(root)/(tabs)/explore" />;
+  if (!loading && isLogged) return <Redirect href="/(root)/(tabs)" />;
+  if (!loading && isGuest) return <Redirect href="/(root)/(tabs)" />;
 
   const showAuthError = (key: AuthErrorKey) => {
     Alert.alert(
@@ -238,8 +238,10 @@ export default function SignInScreen() {
 
             <Pressable
               onPress={() => {
-                enterAsGuest();
-                router.replace("/(root)/(tabs)/explore");
+                void (async () => {
+                  await enterAsGuest();
+                  router.replace("/(root)/(tabs)");
+                })();
               }}
               disabled={busy}
               style={authSharedStyles.guestLink}

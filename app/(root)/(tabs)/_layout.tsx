@@ -115,6 +115,7 @@ export default function TabsLayout() {
   return (
     <QuranAudioProvider>
       <Tabs
+        initialRouteName="index"
         tabBar={
           useNativeTabBar
             ? undefined

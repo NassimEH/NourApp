@@ -1,55 +1,39 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
 import {
-  Dimensions,
   Platform,
+  Pressable,
   StyleSheet,
-  TouchableOpacity,
+  Text,
   View,
 } from "react-native";
 import { BlurView } from "expo-blur";
-import { LinearGradient } from "expo-linear-gradient";
 import { GlassView, isGlassEffectAPIAvailable } from "expo-glass-effect";
 import * as Haptics from "expo-haptics";
-import Animated, {
-  useAnimatedStyle,
-  useSharedValue,
-  withSpring,
-  type SharedValue,
-  type WithSpringConfig,
-} from "react-native-reanimated";
 import type { BottomTabBarProps } from "expo-router/build/react-navigation/bottom-tabs";
 
 import { AppIcon } from "@/components/AppIcon";
 import { TAB_BAR_ICONS } from "@/constants/tab-bar";
 import { useAppTheme } from "@/lib/app-theme";
+import { useTranslation } from "@/lib/i18n";
 
-const { width: SCREEN_WIDTH } = Dimensions.get("window");
-const TAB_BAR_WIDTH = SCREEN_WIDTH * 0.92;
-const TAB_BAR_HEIGHT = 70;
-const BUBBLE_HEIGHT = 50;
-const BUBBLE_INSET = 8;
-const BUBBLE_TOP = (TAB_BAR_HEIGHT - BUBBLE_HEIGHT) / 2;
-const ICON_SIZE = 24;
+const PILL_ROUTE_NAMES = [
+  "index",
+  "qibla",
+  "coran",
+  "apprendre",
+  "explore",
+] as const;
 
-function getBubbleTranslateX(
-  index: number,
-  tabWidth: number,
-  bubbleWidth: number
-) {
-  return index * tabWidth + (tabWidth - bubbleWidth) / 2;
-}
+const CIRCLE_ROUTE_NAME = "profile";
 
-/** Ressort court, sans rebond — évite la traînée du indicateur */
-const BUBBLE_SPRING: WithSpringConfig = {
-  damping: 28,
-  stiffness: 320,
-  mass: 0.45,
-  overshootClamping: true,
+const TAB_LABEL_KEYS: Record<string, string> = {
+  index: "tabs.home",
+  qibla: "tabs.prayers",
+  coran: "tabs.library",
+  apprendre: "tabs.learn",
+  explore: "tabs.explore",
+  profile: "tabs.profile",
 };
-
-function animateBubbleTo(translateX: SharedValue<number>, x: number) {
-  translateX.value = withSpring(x, BUBBLE_SPRING);
-}
 
 function useNativeGlassAvailable() {
   const [available, setAvailable] = useState(false);
@@ -67,250 +51,259 @@ function useNativeGlassAvailable() {
   return available;
 }
 
-export function LiquidTabBar({ state, descriptors, navigation }: BottomTabBarProps) {
+/** Coque verre claire (pas d’assombrissement). */
+function GlassShell({
+  children,
+  circle,
+}: {
+  children: ReactNode;
+  circle?: boolean;
+}) {
   const colors = useAppTheme();
   const nativeGlass = useNativeGlassAvailable();
-  const [barWidth, setBarWidth] = useState(TAB_BAR_WIDTH);
-  const tabCount = state.routes.length;
-  const tabWidth = barWidth / tabCount;
-  const bubbleWidth = tabWidth - BUBBLE_INSET * 2;
 
-  const translateX = useSharedValue(
-    getBubbleTranslateX(state.index, tabWidth, bubbleWidth)
-  );
+  const borderColor = colors.isDark
+    ? "rgba(255,255,255,0.28)"
+    : "rgba(255,255,255,0.72)";
 
-  useEffect(() => {
-    animateBubbleTo(
-      translateX,
-      getBubbleTranslateX(state.index, tabWidth, bubbleWidth)
-    );
-  }, [state.index, tabWidth, bubbleWidth, translateX]);
+  /** Voile très léger — évite la barre « sale » / trop sombre. */
+  const frost = colors.isDark
+    ? "rgba(255,255,255,0.08)"
+    : "rgba(255,255,255,0.55)";
 
-  const animatedBubbleStyle = useAnimatedStyle(() => ({
-    transform: [{ translateX: translateX.value }],
-  }));
+  const shellStyle = [
+    circle ? styles.circleShell : styles.pillShell,
+    {
+      borderColor,
+      backgroundColor: colors.isDark
+        ? "rgba(40,40,42,0.55)"
+        : "rgba(255,255,255,0.52)",
+      shadowOpacity: colors.isDark ? 0.35 : 0.14,
+    },
+  ];
 
-  const blurIntensity = useMemo(() => {
-    if (Platform.OS === "ios") {
-      return colors.isDark ? 72 : 88;
-    }
-    return 110;
-  }, [colors.isDark]);
-
-  /** Voile léger par-dessus le flou (effet liquid glass, icônes claires) */
-  const liquidGlassOverlay = useMemo(() => {
-    if (colors.isDark) {
-      return "rgba(255, 255, 255, 0.08)";
-    }
-    return "rgba(0, 0, 0, 0.04)";
-  }, [colors.isDark]);
-
-  const bubbleGradient = useMemo((): [string, string] => {
-    return [colors.accent, colors.tabBarIconActive];
-  }, [colors.accent, colors.tabBarIconActive]);
-
-  const inactiveIconColor = colors.isDark
-    ? "rgba(255, 255, 255, 0.45)"
-    : colors.iconMuted;
-
-  const activeRoute = state.routes[state.index];
-  const activeIconName = TAB_BAR_ICONS[activeRoute?.name ?? ""] ?? "home";
-
-  const tabRow = (
-    <>
-      <Animated.View
-        pointerEvents="none"
-        style={[
-          styles.liquidBubble,
-          { width: bubbleWidth },
-          animatedBubbleStyle,
-        ]}
+  if (nativeGlass) {
+    return (
+      <GlassView
+        style={shellStyle}
+        glassEffectStyle={colors.isDark ? "regular" : "clear"}
+        colorScheme={colors.isDark ? "dark" : "light"}
+        isInteractive
       >
-        <LinearGradient
-          colors={bubbleGradient}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-          style={StyleSheet.absoluteFill}
-        />
-        <View style={styles.bubbleIconCenter}>
-          <AppIcon
-            name={activeIconName}
-            size={ICON_SIZE}
-            color={colors.onAccent}
-          />
-        </View>
-      </Animated.View>
-
-      {state.routes.map((route, index) => {
-        const { options } = descriptors[route.key];
-        const isFocused = state.index === index;
-        const iconName = TAB_BAR_ICONS[route.name] ?? "home";
-
-        const onPress = () => {
-          animateBubbleTo(
-            translateX,
-            getBubbleTranslateX(index, tabWidth, bubbleWidth)
-          );
-          if (Platform.OS === "ios") {
-            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-          }
-
-          const event = navigation.emit({
-            type: "tabPress",
-            target: route.key,
-            canPreventDefault: true,
-          });
-
-          if (!isFocused && !event.defaultPrevented) {
-            navigation.navigate({
-              name: route.name,
-              merge: true,
-              params: undefined,
-            });
-          }
-        };
-
-        const onLongPress = () => {
-          navigation.emit({
-            type: "tabLongPress",
-            target: route.key,
-          });
-        };
-
-        return (
-          <TouchableOpacity
-            key={route.key}
-            accessibilityRole="button"
-            accessibilityState={isFocused ? { selected: true } : {}}
-            accessibilityLabel={
-              typeof options.tabBarLabel === "string"
-                ? options.tabBarLabel
-                : options.tabBarAccessibilityLabel
-            }
-            onPress={onPress}
-            onLongPress={onLongPress}
-            style={[styles.tabItem, { width: tabWidth }]}
-            activeOpacity={0.7}
-          >
-            {!isFocused ? (
-              <AppIcon
-                name={iconName}
-                size={ICON_SIZE}
-                color={inactiveIconColor}
-              />
-            ) : null}
-          </TouchableOpacity>
-        );
-      })}
-    </>
-  );
-
-  const glassShell = nativeGlass ? (
-    <GlassView
-      style={[
-        styles.glassBackground,
-        { borderColor: colors.glassBorder },
-      ]}
-      glassEffectStyle="regular"
-      isInteractive
-      onLayout={(e) => setBarWidth(e.nativeEvent.layout.width)}
-    >
-      {tabRow}
-    </GlassView>
-  ) : (
-    <View
-      style={[
-        styles.glassBackground,
-        {
-          borderColor: colors.glassBorder,
-          backgroundColor:
-            Platform.OS === "ios" ? undefined : colors.glassSurfaceAndroid,
-        },
-      ]}
-      onLayout={(e) => setBarWidth(e.nativeEvent.layout.width)}
-    >
-      {Platform.OS !== "web" ? (
-        <>
-          <BlurView
-            intensity={blurIntensity}
-            tint={colors.glassBlurTint}
-            style={StyleSheet.absoluteFill}
-          />
-          <View
-            pointerEvents="none"
-            style={[
-              StyleSheet.absoluteFill,
-              { backgroundColor: liquidGlassOverlay },
-            ]}
-          />
-        </>
-      ) : (
-        <View
-          pointerEvents="none"
-          style={[
-            StyleSheet.absoluteFill,
-            { backgroundColor: liquidGlassOverlay },
-          ]}
-        />
-      )}
-      {tabRow}
-    </View>
-  );
+        {children}
+      </GlassView>
+    );
+  }
 
   return (
-    <View
-      style={[
-        styles.container,
-        {
-          shadowOpacity: colors.isDark ? 0.35 : 0.15,
-        },
-      ]}
-      pointerEvents="box-none"
-    >
-      {glassShell}
+    <View style={shellStyle}>
+      {Platform.OS !== "web" ? (
+        <BlurView
+          intensity={Platform.OS === "ios" ? 64 : 90}
+          tint={colors.isDark ? "dark" : "light"}
+          style={StyleSheet.absoluteFill}
+        />
+      ) : null}
+      <View
+        pointerEvents="none"
+        style={[StyleSheet.absoluteFill, { backgroundColor: frost }]}
+      />
+      {children}
     </View>
   );
 }
 
+/**
+ * Bottom bar glass iOS 26 — pilule claire + profil rond.
+ * Pas de halo/contour autour des icônes.
+ */
+export function LiquidTabBar({ state, navigation }: BottomTabBarProps) {
+  const colors = useAppTheme();
+  const { t } = useTranslation();
+
+  const activeName = state.routes[state.index]?.name;
+  const inactiveColor = colors.isDark
+    ? "rgba(255,255,255,0.58)"
+    : "rgba(28,28,30,0.78)";
+  const activeColor = colors.tabBarIconActive;
+
+  const navigateTo = (routeName: string) => {
+    if (Platform.OS === "ios") {
+      void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    }
+    const route = state.routes.find((r) => r.name === routeName);
+    if (!route) return;
+    const event = navigation.emit({
+      type: "tabPress",
+      target: route.key,
+      canPreventDefault: true,
+    });
+    if (activeName !== routeName && !event.defaultPrevented) {
+      navigation.navigate({
+        name: routeName,
+        merge: true,
+        params: undefined,
+      });
+    }
+  };
+
+  const pillTabs = useMemo(
+    () =>
+      PILL_ROUTE_NAMES.filter((name) =>
+        state.routes.some((r) => r.name === name)
+      ),
+    [state.routes]
+  );
+
+  return (
+    <View style={styles.row} pointerEvents="box-none">
+      <View style={styles.pillWrap}>
+        <GlassShell>
+          <View style={styles.pillInner}>
+            {pillTabs.map((name) => {
+              const focused = activeName === name;
+              const color = focused ? activeColor : inactiveColor;
+              const label = t(TAB_LABEL_KEYS[name] ?? name);
+              return (
+                <Pressable
+                  key={name}
+                  onPress={() => navigateTo(name)}
+                  accessibilityRole="button"
+                  accessibilityState={{ selected: focused }}
+                  accessibilityLabel={label}
+                  style={({ pressed }) => [
+                    styles.tabItem,
+                    pressed && styles.pressed,
+                  ]}
+                >
+                  <View style={styles.tabColumn}>
+                    <AppIcon
+                      name={TAB_BAR_ICONS[name] ?? "home"}
+                      size={20}
+                      color={color}
+                    />
+                    <Text
+                      style={[
+                        styles.tabLabel,
+                        { color },
+                        focused && styles.tabLabelActive,
+                      ]}
+                      numberOfLines={1}
+                      adjustsFontSizeToFit
+                      minimumFontScale={0.7}
+                    >
+                      {label}
+                    </Text>
+                  </View>
+                </Pressable>
+              );
+            })}
+          </View>
+        </GlassShell>
+      </View>
+
+      <Pressable
+        onPress={() => navigateTo(CIRCLE_ROUTE_NAME)}
+        accessibilityRole="button"
+        accessibilityState={{ selected: activeName === CIRCLE_ROUTE_NAME }}
+        accessibilityLabel={t(TAB_LABEL_KEYS[CIRCLE_ROUTE_NAME])}
+        style={({ pressed }) => [styles.circlePress, pressed && styles.pressed]}
+      >
+        <GlassShell circle>
+          <View style={styles.circleInner}>
+            <AppIcon
+              name={TAB_BAR_ICONS[CIRCLE_ROUTE_NAME] ?? "user"}
+              size={22}
+              color={
+                activeName === CIRCLE_ROUTE_NAME ? activeColor : inactiveColor
+              }
+            />
+          </View>
+        </GlassShell>
+      </Pressable>
+    </View>
+  );
+}
+
+const PILL_HEIGHT = 62;
+const CIRCLE_SIZE = 56;
+
 const styles = StyleSheet.create({
-  container: {
-    width: TAB_BAR_WIDTH,
-    height: TAB_BAR_HEIGHT,
-    borderRadius: 25,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 10 },
-    shadowRadius: 20,
-    elevation: 8,
-    overflow: "hidden",
-    alignSelf: "center",
-  },
-  glassBackground: {
+  row: {
     flexDirection: "row",
+    alignItems: "center",
+    width: "100%",
+    gap: 10,
+    paddingHorizontal: 2,
+  },
+  pillWrap: {
+    flex: 1,
+    minWidth: 0,
+  },
+  pillShell: {
+    width: "100%",
+    height: PILL_HEIGHT,
+    borderRadius: PILL_HEIGHT / 2,
+    borderWidth: StyleSheet.hairlineWidth,
+    overflow: "hidden",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 8 },
+    shadowRadius: 18,
+    elevation: 8,
+  },
+  circlePress: {
+    flexShrink: 0,
+  },
+  circleShell: {
+    width: CIRCLE_SIZE,
+    height: CIRCLE_SIZE,
+    borderRadius: CIRCLE_SIZE / 2,
+    borderWidth: StyleSheet.hairlineWidth,
+    overflow: "hidden",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 8 },
+    shadowRadius: 18,
+    elevation: 8,
+  },
+  pillInner: {
+    flex: 1,
     width: "100%",
     height: "100%",
+    flexDirection: "row",
     alignItems: "center",
-    borderWidth: 1,
-    borderRadius: 25,
-    overflow: "hidden",
+    justifyContent: "space-between",
+    paddingHorizontal: 20,
   },
   tabItem: {
-    justifyContent: "center",
+    flex: 1,
     alignItems: "center",
+    justifyContent: "center",
+    minWidth: 0,
     height: "100%",
-    zIndex: 2,
   },
-  liquidBubble: {
-    position: "absolute",
-    top: BUBBLE_TOP,
-    left: 0,
-    height: BUBBLE_HEIGHT,
-    borderRadius: 18,
-    zIndex: 3,
-    overflow: "hidden",
-  },
-  bubbleIconCenter: {
-    ...StyleSheet.absoluteFill,
+  tabColumn: {
+    width: "100%",
     alignItems: "center",
     justifyContent: "center",
+    gap: 3,
+  },
+  tabLabel: {
+    fontSize: 8.5,
+    lineHeight: 10,
+    fontFamily: "PlusJakartaSans-Medium",
+    letterSpacing: -0.25,
+    textAlign: "center",
+    width: "100%",
+  },
+  tabLabelActive: {
+    fontFamily: "PlusJakartaSans-SemiBold",
+  },
+  circleInner: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  pressed: {
+    opacity: 0.85,
   },
 });

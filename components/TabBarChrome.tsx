@@ -2,7 +2,7 @@ import { useCallback, useState, type ReactNode } from "react";
 import { Platform, StyleSheet, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import { FullScreenPlayer } from "@/components/BottomBar";
+import { FullScreenPlayer } from "@/components/FullScreenPlayer";
 import { QuranMiniPlayer } from "@/components/quran/QuranMiniPlayer";
 import { useQuranAudioContextOptional } from "@/lib/quran/QuranAudioContext";
 import { useSuraList } from "@/lib/quran/hooks/useSuraList";
@@ -36,7 +36,7 @@ export function TabBarChrome({ children }: { children: ReactNode }) {
         style={[
           styles.container,
           {
-            paddingBottom: paddingBottom + (Platform.OS === "ios" ? 22 : 12),
+            paddingBottom: paddingBottom + (Platform.OS === "ios" ? 10 : 8),
           },
         ]}
         pointerEvents="box-none"
@@ -104,5 +104,6 @@ const styles = StyleSheet.create({
   barWrap: {
     width: "100%",
     alignItems: "center",
+    paddingHorizontal: 2,
   },
 });
