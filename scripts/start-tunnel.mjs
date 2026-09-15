@@ -1,9 +1,12 @@
 /**
- * Official `expo start --tunnel` + Cloudflare HTTP/2 (like other working apps).
- * Writes expo-qr.png for Expo Go: exp://<host>:443
+ * cloudflared quick tunnel (HTTP/2) + Expo LAN packager proxy.
+ * Writes expo-qr.png for Expo Go: exps://<host>
+ *
+ * Note: on corporate networks that block Cloudflare edge / QUIC,
+ * tunnel may fail with 530/1033 — use LAN or a phone hotspot instead.
  */
 import { spawn } from 'node:child_process';
-import { readFileSync, writeFileSync, existsSync, mkdirSync } from 'node:fs';
+import { mkdirSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
@@ -40,34 +43,70 @@ async function writeQr(url) {
   console.log(await QRCode.toString(url, { type: 'terminal', small: true }));
 }
 
-const child = spawn('npx', ['expo', 'start', '--tunnel', '--port', '8081'], {
-  cwd: ROOT,
-  shell: true,
-  env: {
-    ...process.env,
-    METRO_CACHE_DIR: process.env.METRO_CACHE_DIR,
-    EXPO_NO_TELEMETRY: '1',
-  },
-  stdio: ['inherit', 'pipe', 'pipe'],
-});
-
-let qrDone = false;
-function onData(buf) {
-  const text = buf.toString();
-  process.stdout.write(text);
-  if (qrDone) return;
-  const m = text.match(/https:\/\/([a-z0-9-]+\.trycloudflare\.com)/i);
-  if (m) {
-    qrDone = true;
-    const exp = `exp://${m[1]}:443`;
-    writeQr(exp).catch(console.error);
-  }
+function spawnLogged(command, args, opts = {}) {
+  const child = spawn(command, args, {
+    cwd: ROOT,
+    shell: true,
+    env: { ...process.env, ...(opts.env || {}) },
+    stdio: ['inherit', 'pipe', 'pipe'],
+  });
+  child.stdout.on('data', (buf) => process.stdout.write(buf));
+  child.stderr.on('data', (buf) => process.stderr.write(buf));
+  return child;
 }
 
-child.stdout.on('data', onData);
-child.stderr.on('data', onData);
-child.on('exit', (code) => process.exit(code ?? 1));
-process.on('SIGINT', () => {
-  child.kill();
-  process.exit(0);
+/** Force HTTP/2 — QUIC/UDP 7844 is often blocked on corp Wi‑Fi. */
+const tunnel = spawnLogged('npx', [
+  '--yes',
+  'cloudflared',
+  'tunnel',
+  '--url',
+  'http://localhost:8081',
+  '--protocol',
+  'http2',
+  '--no-autoupdate',
+]);
+
+let expoStarted = false;
+function onTunnelData(buf) {
+  const text = buf.toString();
+  if (expoStarted) return;
+  const m = text.match(/https:\/\/([a-z0-9-]+\.trycloudflare\.com)/i);
+  if (!m) return;
+  expoStarted = true;
+  const host = m[1];
+  const proxy = `https://${host}`;
+  const exp = `exps://${host}`;
+
+  const expo = spawnLogged(
+    'npx',
+    ['expo', 'start', '--lan', '--go', '--port', '8081'],
+    {
+      env: {
+        METRO_CACHE_DIR: process.env.METRO_CACHE_DIR,
+        EXPO_NO_TELEMETRY: '1',
+        EXPO_PACKAGER_PROXY_URL: proxy,
+      },
+    }
+  );
+
+  writeQr(exp).catch(console.error);
+
+  const shutdown = () => {
+    expo.kill();
+    tunnel.kill();
+    process.exit(0);
+  };
+  process.on('SIGINT', shutdown);
+  process.on('SIGTERM', shutdown);
+  expo.on('exit', (code) => {
+    tunnel.kill();
+    process.exit(code ?? 1);
+  });
+}
+
+tunnel.stdout.on('data', onTunnelData);
+tunnel.stderr.on('data', onTunnelData);
+tunnel.on('exit', (code) => {
+  if (!expoStarted) process.exit(code ?? 1);
 });
