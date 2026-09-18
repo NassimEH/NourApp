@@ -39,11 +39,12 @@ function useTodayDates(
     const gd = now.getDate();
     const gregorian = now.toLocaleDateString(
       locale === "ar" ? "ar-SA" : locale === "en" ? "en-US" : "fr-FR",
-      { day: "numeric", month: "short", year: "numeric" }
+      { day: "numeric", month: "long", year: "numeric" }
     );
     try {
       const { hy, hm, hd } = toHijri(gy, gm, gd);
-      const hijri = `${hijriMonths[hm - 1] ?? ""} ${hd}, ${hy}`;
+      const month = hijriMonths[hm - 1] ?? "";
+      const hijri = `${hd} ${month} ${hy}`;
       return { gregorian, hijri };
     } catch {
       return { gregorian, hijri: "" };

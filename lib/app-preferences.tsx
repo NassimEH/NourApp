@@ -10,7 +10,7 @@ import React, {
 import { Platform } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
-import { syncAppPreferencesToCloud } from "@/lib/supabase/sync";
+import { syncAppPreferencesToCloud } from "@/lib/supabase/sync-patches";
 import { getAuthenticatedUserId } from "@/lib/supabase/user-data";
 import {
   isAccentColorKey,

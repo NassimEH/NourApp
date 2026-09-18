@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import {
   Pressable,
   StyleSheet,
@@ -18,27 +19,39 @@ type ScreenSearchBarProps = {
   onChangeText: (text: string) => void;
   placeholder?: string;
   containerStyle?: StyleProp<ViewStyle>;
-} & Pick<TextInputProps, "returnKeyType" | "autoCorrect" | "onSubmitEditing">;
+  /** Contenu à droite (ex. bouton GPS), après le clear. */
+  trailing?: ReactNode;
+  editable?: boolean;
+} & Pick<
+  TextInputProps,
+  "returnKeyType" | "autoCorrect" | "autoCapitalize" | "onSubmitEditing"
+>;
 
-/** Barre de recherche flat (ligne + séparateur), alignée sur Invocations. */
+/** Barre de recherche flat (ligne + séparateur) — style unique app. */
 export function ScreenSearchBar({
   value,
   onChangeText,
   placeholder,
   containerStyle,
+  trailing,
+  editable = true,
   returnKeyType = "search",
   autoCorrect = false,
+  autoCapitalize,
   onSubmitEditing,
 }: ScreenSearchBarProps) {
   const colors = useAppTheme();
   const { t, rtlTextStyle, rtlViewStyle } = useTranslation();
+  const underline = colors.isDark
+    ? "rgba(255,255,255,0.22)"
+    : "rgba(0,0,0,0.18)";
 
   return (
     <View
       style={[
         styles.wrap,
         rtlViewStyle,
-        { borderBottomColor: colors.border },
+        { borderBottomColor: underline },
         containerStyle,
       ]}
     >
@@ -49,6 +62,8 @@ export function ScreenSearchBar({
         onSubmitEditing={onSubmitEditing}
         returnKeyType={returnKeyType}
         autoCorrect={autoCorrect}
+        autoCapitalize={autoCapitalize}
+        editable={editable}
         placeholder={placeholder ?? t("screens.searchPlaceholder")}
         placeholderTextColor={colors.textMuted}
         style={[styles.input, { color: colors.text }, rtlTextStyle]}
@@ -63,12 +78,18 @@ export function ScreenSearchBar({
           <AppIcon name="x" size={18} color={colors.textMuted} />
         </Pressable>
       ) : null}
+      {trailing}
     </View>
   );
 }
 
 export const screenSearchBarSpacing: ViewStyle = {
   marginHorizontal: SCREEN_EDGE_PADDING,
+  marginBottom: 20,
+};
+
+/** Même barre dans un ScrollView déjà paddé horizontalement. */
+export const screenSearchBarSpacingInScroll: ViewStyle = {
   marginBottom: 20,
 };
 

@@ -16,7 +16,6 @@ import { router } from "expo-router";
 import { AppIcon } from "@/components/AppIcon";
 import { HomeMosqueBlock } from "@/components/home/HomeMosqueBlock";
 import { HomeSection } from "@/components/home/HomeSection";
-import { HomeSectionRule } from "@/components/home/HomeSectionRule";
 import { SCREEN_EDGE_PADDING } from "@/constants/screen-layout";
 import { weatherImages, WEATHER_DOU3A } from "@/constants/weather";
 import { useAppTheme } from "@/lib/app-theme";
@@ -120,6 +119,11 @@ export function HomePrayerWeatherCarousel({
     const id = setInterval(() => setCountdownNow(Date.now()), 60000);
     return () => clearInterval(id);
   }, [prayerTimes, nextPrayer]);
+
+  // Remesurer la météo quand l'invocation apparaît (évite le clip du cadre).
+  useEffect(() => {
+    setPageHeights((prev) => (prev[0] === 0 ? prev : [0, prev[1]]));
+  }, [weatherData?.imageKey, Boolean(weatherData)]);
 
   const onScroll = useCallback(
     (e: NativeSyntheticEvent<NativeScrollEvent>) => {
@@ -242,7 +246,6 @@ export function HomePrayerWeatherCarousel({
             {weatherImage}
           </View>
           <View style={themed.weatherDou3a}>
-            <HomeSectionRule style={themed.weatherDou3aRule} />
             <Text style={themed.weatherDou3aLabel}>
               {t("home.invocation")}
             </Text>
@@ -273,7 +276,7 @@ export function HomePrayerWeatherCarousel({
       seeAllLabel={t("home.seeAll")}
       isFirst={isFirst}
     >
-      <View style={slideHeight ? { height: slideHeight } : undefined}>
+      <View style={slideHeight ? { minHeight: slideHeight } : undefined}>
         <ScrollView
           horizontal
           nestedScrollEnabled
@@ -287,7 +290,7 @@ export function HomePrayerWeatherCarousel({
           onMomentumScrollEnd={onScroll}
           contentContainerStyle={[
             styles.carouselContent,
-            slideHeight ? { height: slideHeight } : null,
+            slideHeight ? { minHeight: slideHeight } : null,
           ]}
           accessibilityLabel={sectionTitle}
           accessibilityHint={`${activePage + 1} / ${PAGE_COUNT}`}
@@ -296,7 +299,7 @@ export function HomePrayerWeatherCarousel({
             style={[
               styles.page,
               { width: pageWidth },
-              slideHeight ? { height: slideHeight } : null,
+              slideHeight ? { minHeight: slideHeight } : null,
             ]}
           >
             <View onLayout={onPageLayout(0)} style={rtlViewStyle}>
@@ -308,13 +311,17 @@ export function HomePrayerWeatherCarousel({
             style={[
               styles.page,
               { width: pageWidth },
-              slideHeight ? { height: slideHeight } : null,
+              slideHeight ? { height: slideHeight, minHeight: slideHeight } : null,
             ]}
           >
-            <View onLayout={onPageLayout(1)}>
+            <View
+              onLayout={onPageLayout(1)}
+              style={slideHeight ? styles.pageFill : null}
+            >
               <HomeMosqueBlock
                 embedded
                 compact
+                fillHeight={Boolean(slideHeight)}
                 prayerLoading={prayerLoading}
                 prayerTimes={prayerTimes}
                 mosqueDisplayName={mosqueDisplayName}
@@ -399,6 +406,10 @@ const styles = StyleSheet.create({
   },
   page: {
     justifyContent: "flex-start",
+  },
+  pageFill: {
+    flex: 1,
+    height: "100%",
   },
   weatherRow: {
     flexDirection: "row",

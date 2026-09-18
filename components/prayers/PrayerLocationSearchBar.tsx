@@ -2,16 +2,17 @@ import {
   ActivityIndicator,
   Pressable,
   StyleSheet,
-  TextInput,
-  View,
   type StyleProp,
   type ViewStyle,
 } from "react-native";
 
 import { AppIcon } from "@/components/AppIcon";
+import {
+  ScreenSearchBar,
+  screenSearchBarSpacingInScroll,
+} from "@/components/ScreenSearchBar";
 import { useAppTheme } from "@/lib/app-theme";
 import { useTranslation } from "@/lib/i18n";
-import { CARD_RADIUS, MIN_TOUCH_TARGET } from "@/lib/ui/spacing";
 
 type Props = {
   value: string;
@@ -23,7 +24,7 @@ type Props = {
   style?: StyleProp<ViewStyle>;
 };
 
-/** Recherche ville — contour fin, fond transparent (flat). */
+/** Recherche ville — même barre flat que Sourates / Invocations. */
 export function PrayerLocationSearchBar({
   value,
   onChangeText,
@@ -34,81 +35,46 @@ export function PrayerLocationSearchBar({
   style,
 }: Props) {
   const colors = useAppTheme();
-  const { t, rtlTextStyle, rtlViewStyle } = useTranslation();
+  const { t } = useTranslation();
 
   return (
-    <View
-      style={[
-        styles.wrap,
-        rtlViewStyle,
-        { borderColor: colors.isDark ? "#FFFFFF" : "#000000" },
-        style,
-      ]}
-    >
-      <AppIcon name="search" size={18} color={colors.textMuted} />
-      <TextInput
-        value={value}
-        onChangeText={onChangeText}
-        onSubmitEditing={onSubmit}
-        returnKeyType="search"
-        placeholder={t("screens.prayersLocationPlaceholder")}
-        placeholderTextColor={colors.textMuted}
-        style={[styles.input, { color: colors.text }, rtlTextStyle]}
-        editable={!loading}
-        autoCorrect={false}
-        autoCapitalize="words"
-      />
-      {loading ? (
-        <ActivityIndicator size="small" color={colors.accent} />
-      ) : value.length > 0 ? (
-        <Pressable
-          onPress={onClear}
-          hitSlop={10}
-          accessibilityRole="button"
-          style={({ pressed }) => pressed && styles.pressed}
-        >
-          <AppIcon name="x" size={18} color={colors.textMuted} />
-        </Pressable>
-      ) : null}
-      <Pressable
-        onPress={onUseDeviceLocation}
-        disabled={loading}
-        accessibilityRole="button"
-        accessibilityLabel={t("screens.prayersUseMyLocation")}
-        style={({ pressed }) => [
-          styles.locationBtn,
-          (pressed || loading) && styles.pressed,
-        ]}
-      >
-        <AppIcon name="navigation" size={20} color={colors.accent} />
-      </Pressable>
-    </View>
+    <ScreenSearchBar
+      value={value}
+      onChangeText={(text) => {
+        onChangeText(text);
+        if (text.length === 0) onClear();
+      }}
+      onSubmitEditing={onSubmit}
+      placeholder={t("screens.prayersLocationPlaceholder")}
+      editable={!loading}
+      autoCapitalize="words"
+      containerStyle={[screenSearchBarSpacingInScroll, style]}
+      trailing={
+        loading ? (
+          <ActivityIndicator size="small" color={colors.accent} />
+        ) : (
+          <Pressable
+            onPress={onUseDeviceLocation}
+            disabled={loading}
+            accessibilityRole="button"
+            accessibilityLabel={t("screens.prayersUseMyLocation")}
+            hitSlop={8}
+            style={({ pressed }) => [
+              styles.locationBtn,
+              pressed && styles.pressed,
+            ]}
+          >
+            <AppIcon name="navigation" size={20} color={colors.accent} />
+          </Pressable>
+        )
+      }
+    />
   );
 }
 
 const styles = StyleSheet.create({
-  wrap: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 12,
-    marginBottom: 0,
-    paddingHorizontal: 14,
-    paddingVertical: 10,
-    borderRadius: CARD_RADIUS,
-    borderWidth: 1,
-    backgroundColor: "transparent",
-    minHeight: MIN_TOUCH_TARGET,
-  },
-  input: {
-    flex: 1,
-    fontSize: 16,
-    fontFamily: "PlusJakartaSans-Regular",
-    paddingVertical: 8,
-    padding: 0,
-    backgroundColor: "transparent",
-  },
   locationBtn: {
-    padding: 6,
+    padding: 4,
     alignItems: "center",
     justifyContent: "center",
   },

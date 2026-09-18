@@ -1,4 +1,4 @@
-import type { AppIconName } from "@/components/AppIcon";
+import type { FeatherIconName } from "@/lib/app-icons";
 
 export type HadithThemeId =
   | "faith"
@@ -20,7 +20,7 @@ export type HadithTheme = {
   id: HadithThemeId;
   titleKey: string;
   subtitleKey: string;
-  icon: AppIconName;
+  icon: FeatherIconName;
   refs: HadithThemeRef[];
 };
 

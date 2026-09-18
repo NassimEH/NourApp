@@ -1,14 +1,29 @@
-﻿import { useMemo } from "react";
-import { Pressable, Text, View } from "react-native";
+﻿import { useCallback, useMemo, useRef, useState } from "react";
+import {
+  Image,
+  NativeScrollEvent,
+  NativeSyntheticEvent,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  useWindowDimensions,
+  View,
+} from "react-native";
+import { LinearGradient } from "expo-linear-gradient";
 
-import { AppIcon, type AppIconName } from "@/components/AppIcon";
+import { AppIcon } from "@/components/AppIcon";
 import { HomeSectionRule } from "@/components/home/HomeSectionRule";
-import { ToolMiniCard } from "@/components/tools/ToolMiniCard";
+import { SCREEN_EDGE_PADDING } from "@/constants/screen-layout";
 import { useAppTheme } from "@/lib/app-theme";
 import { useAppTypography } from "@/lib/app-typography";
 import { useTranslation } from "@/lib/i18n";
 import { createLibraryScreenStyles } from "@/lib/library-screen-styles";
-import type { LibraryCatalogItem } from "@/lib/library/catalog";
+import {
+  getLibraryCardWidth,
+  LIBRARY_CARD_GAP,
+  type LibraryCatalogItem,
+} from "@/lib/library/catalog";
 import { SPACE } from "@/lib/ui/spacing";
 
 export type LibraryNavHandlers = {
@@ -42,12 +57,14 @@ export function LibrarySectionDivider({
   );
 }
 
-/** Hero mis en avant (ex. Sourates). */
-export function LibraryHeroCard({
+/** Carte média : cadre carré + titre / sous-titre (sans icône sur le cadre). */
+export function LibraryMediaCard({
   item,
+  width,
   onPressItem,
 }: {
   item: LibraryCatalogItem;
+  width: number;
   onPressItem: LibraryNavHandlers["onPressItem"];
 }) {
   const colors = useAppTheme();
@@ -56,7 +73,8 @@ export function LibraryHeroCard({
     () => createLibraryScreenStyles(colors, typography),
     [colors, typography]
   );
-  const { t, rtlTextStyle, rtlViewStyle, isRTL } = useTranslation();
+  const { t, rtlTextStyle } = useTranslation();
+  const hasImage = Boolean(item.image);
 
   return (
     <Pressable
@@ -64,33 +82,41 @@ export function LibraryHeroCard({
       accessibilityRole="button"
       accessibilityLabel={`${t(item.titleKey)}. ${t(item.shortKey)}`}
       style={({ pressed }) => [
-        styles.hero,
-        rtlViewStyle,
-        pressed && styles.heroPressed,
+        styles.mediaCard,
+        { width },
+        pressed && styles.mediaCardPressed,
       ]}
     >
-      <View style={styles.heroIconWrap}>
-        <AppIcon name={item.icon} size={26} color={colors.accent} />
+      <View style={[styles.mediaFrame, { width, height: width }]}>
+        {hasImage ? (
+          <Image
+            source={item.image}
+            style={styles.mediaImage}
+            resizeMode="cover"
+          />
+        ) : (
+          <LinearGradient
+            colors={[colors.accentSurface, colors.cardElevated]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={styles.mediaImage}
+          />
+        )}
       </View>
-      <View style={styles.heroText}>
-        <Text style={[styles.heroTitle, rtlTextStyle]} numberOfLines={1}>
+      <View style={styles.mediaText}>
+        <Text style={[styles.mediaTitle, rtlTextStyle]} numberOfLines={1}>
           {t(item.titleKey)}
         </Text>
-        <Text style={[styles.heroSubtitle, rtlTextStyle]} numberOfLines={2}>
+        <Text style={[styles.mediaSubtitle, rtlTextStyle]} numberOfLines={2}>
           {t(item.shortKey)}
         </Text>
       </View>
-      <AppIcon
-        name={isRTL ? "chevron-left" : "chevron-right"}
-        size={20}
-        color={colors.iconMuted}
-      />
     </Pressable>
   );
 }
 
-/** Grille 2x2 de tuiles outils / categories. */
-export function LibraryToolGrid({
+/** Rangée horizontale avec flèches + dégradés latéraux. */
+export function LibraryHorizontalRow({
   items,
   onPressItem,
 }: {
@@ -103,133 +129,141 @@ export function LibraryToolGrid({
     () => createLibraryScreenStyles(colors, typography),
     [colors, typography]
   );
-  const { t } = useTranslation();
+  const { isRTL } = useTranslation();
+  const { width: screenWidth } = useWindowDimensions();
+  const cardWidth = getLibraryCardWidth(screenWidth, SCREEN_EDGE_PADDING);
+  /** Slot = cadre + écart fixe (identique pour toutes les sections). */
+  const slotWidth = cardWidth + LIBRARY_CARD_GAP;
+  const scrollRef = useRef<ScrollView>(null);
+  const [offsetX, setOffsetX] = useState(0);
+  const [contentWidth, setContentWidth] = useState(0);
+  const [viewportWidth, setViewportWidth] = useState(0);
 
-  const rows: LibraryCatalogItem[][] = [];
-  for (let i = 0; i < items.length; i += 2) {
-    rows.push(items.slice(i, i + 2));
-  }
+  const maxOffset = Math.max(0, contentWidth - viewportWidth);
+  const canScrollLeft = offsetX > 8;
+  const canScrollRight = offsetX < maxOffset - 8;
+  const showLeft = isRTL ? canScrollRight : canScrollLeft;
+  const showRight = isRTL ? canScrollLeft : canScrollRight;
+
+  const fadeColor = colors.isDark
+    ? "rgba(20,20,20,0.85)"
+    : colors.usesBackgroundImage
+      ? "rgba(255,248,240,0.92)"
+      : "rgba(255,255,255,0.92)";
+  const fadeClear = colors.isDark
+    ? "rgba(20,20,20,0)"
+    : colors.usesBackgroundImage
+      ? "rgba(255,248,240,0)"
+      : "rgba(255,255,255,0)";
+
+  const onScroll = useCallback(
+    (e: NativeSyntheticEvent<NativeScrollEvent>) => {
+      setOffsetX(e.nativeEvent.contentOffset.x);
+    },
+    []
+  );
+
+  const scrollBy = useCallback(
+    (direction: 1 | -1) => {
+      const next = Math.max(
+        0,
+        Math.min(maxOffset, offsetX + direction * slotWidth)
+      );
+      scrollRef.current?.scrollTo({ x: next, animated: true });
+      setOffsetX(next);
+    },
+    [maxOffset, offsetX, slotWidth]
+  );
 
   return (
-    <View style={styles.grid}>
-      {rows.map((row, rowIndex) => (
-        <View key={`row-${rowIndex}`} style={styles.gridRow}>
-          {row.map((item) => (
-            <View key={item.id} style={styles.gridCell}>
-              <ToolMiniCard
-                icon={item.icon}
-                title={t(item.titleKey)}
-                fill
-                accessibilityLabel={`${t(item.titleKey)}. ${t(item.shortKey)}`}
-                onPress={() => pressItem(item, onPressItem)}
+    <View
+      style={styles.rowWrap}
+      onLayout={(e) => setViewportWidth(e.nativeEvent.layout.width)}
+    >
+      <ScrollView
+        ref={scrollRef}
+        horizontal
+        nestedScrollEnabled
+        showsHorizontalScrollIndicator={false}
+        decelerationRate="fast"
+        snapToInterval={slotWidth}
+        snapToAlignment="start"
+        disableIntervalMomentum
+        onScroll={onScroll}
+        scrollEventThrottle={16}
+        onContentSizeChange={(w) => setContentWidth(w)}
+        contentContainerStyle={styles.horizontalRow}
+      >
+        {items.map((item, index) => {
+          const isLast = index === items.length - 1;
+          return (
+            <View
+              key={item.id}
+              style={{ width: isLast ? cardWidth : slotWidth }}
+            >
+              <LibraryMediaCard
+                item={item}
+                width={cardWidth}
+                onPressItem={onPressItem}
               />
             </View>
-          ))}
-          {row.length === 1 ? <View style={styles.gridCell} /> : null}
-        </View>
-      ))}
-    </View>
-  );
-}
+          );
+        })}
+      </ScrollView>
 
-/** Raccourcis sous un teaser (themes / recueils). */
-export function LibraryShortcutList({
-  items,
-  onPressItem,
-}: {
-  items: LibraryCatalogItem[];
-  onPressItem: LibraryNavHandlers["onPressItem"];
-}) {
-  const colors = useAppTheme();
-  const typography = useAppTypography();
-  const styles = useMemo(
-    () => createLibraryScreenStyles(colors, typography),
-    [colors, typography]
-  );
-  const { t, rtlTextStyle, rtlViewStyle, isRTL } = useTranslation();
-
-  return (
-    <View style={styles.shortcuts}>
-      {items.map((item) => (
-        <Pressable
-          key={item.id}
-          onPress={() => pressItem(item, onPressItem)}
-          accessibilityRole="button"
-          accessibilityLabel={`${t(item.titleKey)}. ${t(item.shortKey)}`}
-          style={({ pressed }) => [
-            styles.shortcut,
-            rtlViewStyle,
-            pressed && styles.shortcutPressed,
-          ]}
-        >
-          <View style={styles.shortcutIcon}>
-            <AppIcon
-              name={item.icon as AppIconName}
-              size={18}
-              color={colors.accent}
-            />
-          </View>
-          <View style={styles.shortcutText}>
-            <Text style={[styles.shortcutTitle, rtlTextStyle]} numberOfLines={1}>
-              {t(item.titleKey)}
-            </Text>
-            <Text
-              style={[styles.shortcutSubtitle, rtlTextStyle]}
-              numberOfLines={1}
-            >
-              {t(item.shortKey)}
-            </Text>
-          </View>
-          <AppIcon
-            name={isRTL ? "chevron-left" : "chevron-right"}
-            size={18}
-            color={colors.iconMuted}
+      {showLeft ? (
+        <View pointerEvents="box-none" style={StyleSheet.absoluteFill}>
+          <LinearGradient
+            colors={[fadeColor, fadeClear]}
+            start={{ x: 0, y: 0.5 }}
+            end={{ x: 1, y: 0.5 }}
+            style={[styles.edgeFade, styles.edgeFadeLeft]}
+            pointerEvents="none"
           />
-        </Pressable>
-      ))}
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Previous"
+            onPress={() => scrollBy(isRTL ? 1 : -1)}
+            style={[styles.arrowHit, styles.arrowHitLeft]}
+            hitSlop={6}
+          >
+            <View style={styles.arrowDisc}>
+              <AppIcon
+                name={isRTL ? "chevron-right" : "chevron-left"}
+                size={16}
+                color={colors.textMuted}
+              />
+            </View>
+          </Pressable>
+        </View>
+      ) : null}
+
+      {showRight ? (
+        <View pointerEvents="box-none" style={StyleSheet.absoluteFill}>
+          <LinearGradient
+            colors={[fadeClear, fadeColor]}
+            start={{ x: 0, y: 0.5 }}
+            end={{ x: 1, y: 0.5 }}
+            style={[styles.edgeFade, styles.edgeFadeRight]}
+            pointerEvents="none"
+          />
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Next"
+            onPress={() => scrollBy(isRTL ? -1 : 1)}
+            style={[styles.arrowHit, styles.arrowHitRight]}
+            hitSlop={6}
+          >
+            <View style={styles.arrowDisc}>
+              <AppIcon
+                name={isRTL ? "chevron-left" : "chevron-right"}
+                size={16}
+                color={colors.textMuted}
+              />
+            </View>
+          </Pressable>
+        </View>
+      ) : null}
     </View>
-  );
-}
-
-/** Teaser Hadith du jour — meme ton que l'accueil. */
-export function LibraryHadithTeaser({
-  title,
-  badge,
-  body,
-  source,
-  onPress,
-}: {
-  title: string;
-  badge: string;
-  body: string;
-  source: string;
-  onPress: () => void;
-}) {
-  const colors = useAppTheme();
-  const typography = useAppTypography();
-  const styles = useMemo(
-    () => createLibraryScreenStyles(colors, typography),
-    [colors, typography]
-  );
-  const { rtlTextStyle, rtlViewStyle } = useTranslation();
-
-  return (
-    <Pressable
-      onPress={onPress}
-      accessibilityRole="button"
-      accessibilityLabel={title}
-      style={({ pressed }) => [styles.teaser, pressed && styles.teaserPressed]}
-    >
-      <View style={[styles.teaserMeta, rtlViewStyle]}>
-        <AppIcon name="message-circle" size={14} color={colors.accent} />
-        <Text style={[styles.teaserBadge, rtlTextStyle]}>{badge}</Text>
-      </View>
-      <Text style={[styles.teaserBody, rtlTextStyle]} numberOfLines={3}>
-        {body}
-      </Text>
-      <Text style={[styles.teaserSource, rtlTextStyle]} numberOfLines={1}>
-        {source}
-      </Text>
-    </Pressable>
   );
 }

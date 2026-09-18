@@ -21,15 +21,15 @@ import {
 
 const mosqueImage = require("@/assets/images/mosquee.png");
 
-const MOSQUE_IMAGE_WIDTH = 168;
-const MOSQUE_IMAGE_WIDTH_COMPACT = 78;
+const MOSQUE_IMAGE_WIDTH = 92;
+const MOSQUE_IMAGE_WIDTH_COMPACT = 64;
 const MOSQUE_IMAGE_HEIGHT = Math.round((556 / 440) * MOSQUE_IMAGE_WIDTH);
 const MOSQUE_IMAGE_HEIGHT_COMPACT = Math.round(
   (556 / 440) * MOSQUE_IMAGE_WIDTH_COMPACT
 );
 
 const PRAYER_KEYS = PRAYER_ORDER.filter((k) => k !== "Sunrise") as PrayerKey[];
-const COMPACT_ROW_H = 28;
+const COMPACT_ROW_H = 34;
 
 export interface HomeMosqueBlockProps {
   prayerLoading: boolean;
@@ -49,6 +49,8 @@ export interface HomeMosqueBlockProps {
   embedded?: boolean;
   /** Même structure que Mes prières, densifiée pour le carrousel. */
   compact?: boolean;
+  /** Remplit la hauteur du carrousel (aligné sur la météo). */
+  fillHeight?: boolean;
 }
 
 /** Section unique Mes prières : mosquée + horaires cochables. */
@@ -68,6 +70,7 @@ export function HomeMosqueBlock({
   onTogglePrayer,
   embedded = false,
   compact = false,
+  fillHeight = false,
 }: HomeMosqueBlockProps) {
   const colors = useAppTheme();
   const typography = useAppTypography();
@@ -86,24 +89,29 @@ export function HomeMosqueBlock({
             ? "transparent"
             : colors.card,
           borderRadius: compact ? 14 : 20,
-          paddingVertical: compact ? 4 : 16,
-          paddingHorizontal: compact ? 8 : 18,
+          paddingVertical: compact ? (fillHeight ? 10 : 6) : 16,
+          paddingHorizontal: compact ? 10 : 18,
           borderLeftWidth: 3,
           borderLeftColor: colors.accentBorder,
           alignSelf: "stretch",
+          width: "100%",
+          ...(compact && fillHeight
+            ? { flex: 1, justifyContent: "space-between" as const }
+            : {}),
         },
         hijri: {
           fontSize: compact ? 11 : typography.body,
           lineHeight: compact ? 14 : typography.body * 1.35,
           fontFamily: "PlusJakartaSans-SemiBold",
           color: colors.text,
+          flexShrink: 1,
         },
         gregorian: {
           fontSize: compact ? 10 : typography.caption,
           lineHeight: compact ? 13 : typography.caption * 1.35,
           fontFamily: "PlusJakartaSans-Regular",
           color: colors.textMuted,
-          marginTop: 1,
+          marginTop: 2,
         },
         coordsText: {
           fontSize: compact ? 10 : typography.caption,
@@ -116,19 +124,19 @@ export function HomeMosqueBlock({
           lineHeight: compact ? 13 : typography.caption * 1.35,
           fontFamily: "PlusJakartaSans-Medium",
           color: colors.textMuted,
-          marginTop: compact ? 2 : 6,
+          marginTop: compact ? 2 : 8,
         },
         mosqueName: {
-          fontSize: compact ? 9 : typography.caption,
-          lineHeight: compact ? 12 : typography.caption * 1.35,
+          fontSize: compact ? 9 : 11,
+          lineHeight: compact ? 12 : 14,
           fontFamily: "PlusJakartaSans-SemiBold",
           color: colors.text,
           textAlign: "center",
-          marginTop: compact ? 2 : 8,
+          marginTop: compact ? 2 : 4,
         },
         prayerLabel: {
           fontSize: compact ? 13 : typography.body,
-          lineHeight: compact ? 16 : typography.body * 1.35,
+          lineHeight: compact ? 16 : typography.body * 1.25,
           fontFamily: "PlusJakartaSans-SemiBold",
           color: colors.text,
         },
@@ -137,9 +145,9 @@ export function HomeMosqueBlock({
           color: colors.textMuted,
         },
         prayerTime: {
-          fontSize: compact ? 12 : typography.body,
-          lineHeight: compact ? 15 : typography.body * 1.35,
-          fontFamily: "PlusJakartaSans-Medium",
+          fontSize: compact ? 12 : typography.caption,
+          lineHeight: compact ? 15 : typography.caption * 1.25,
+          fontFamily: "PlusJakartaSans-Light",
           color: colors.textMuted,
           fontVariant: ["tabular-nums"],
         },
@@ -173,13 +181,12 @@ export function HomeMosqueBlock({
         },
         divider: {
           height: StyleSheet.hairlineWidth,
-          marginVertical: compact ? 3 : 14,
+          marginVertical: compact ? (fillHeight ? 8 : 3) : 10,
           backgroundColor: colors.divider,
         },
         prayerRowCurrent: {
           backgroundColor: colors.accentSurface,
-          borderRadius: compact ? 6 : 12,
-          paddingHorizontal: compact ? 6 : 14,
+          borderRadius: compact ? 6 : 10,
         },
         prayerRowBorder: {
           borderBottomWidth: StyleSheet.hairlineWidth,
@@ -199,13 +206,10 @@ export function HomeMosqueBlock({
           borderColor: colors.accent,
         },
         currentDot: {
-          width: compact ? 5 : 6,
-          height: compact ? 5 : 6,
-          borderRadius: compact ? 2.5 : 3,
           backgroundColor: colors.accent,
         },
       }),
-    [colors, typography, compact]
+    [colors, typography, compact, fillHeight]
   );
 
   const nextBlock = nextPrayerLabel ? (
@@ -243,7 +247,7 @@ export function HomeMosqueBlock({
         <View style={[styles.compactTop, rtlViewStyle]}>
           <View style={styles.compactHeaderInfo}>
             {hijri ? (
-              <Text style={[themed.hijri, rtlTextStyle]} numberOfLines={1}>
+              <Text style={[themed.hijri, rtlTextStyle]} numberOfLines={2}>
                 {hijri}
               </Text>
             ) : null}
@@ -288,35 +292,47 @@ export function HomeMosqueBlock({
 
         <View style={themed.divider} />
 
-        {prayerLoading ? (
+        {prayerLoading && !prayerTimes ? (
           <ActivityIndicator
             size="small"
             color={colors.accent}
             style={styles.loaderCompact}
           />
         ) : prayerTimes ? (
-          <View style={styles.compactPrayerBlock}>
+          <View
+            style={[
+              styles.compactPrayerBlock,
+              fillHeight && styles.compactPrayerBlockFill,
+            ]}
+          >
             {PRAYER_KEYS.map((key) => {
               const checked = isPrayerChecked(key);
               const isCurrent = currentPrayerName === key;
               return (
-                <Pressable
+                <View
                   key={key}
-                  onPress={() => onTogglePrayer(key)}
-                  style={({ pressed }) => [
+                  style={[
                     styles.compactPrayerRow,
+                    fillHeight && styles.compactPrayerRowFill,
                     isCurrent && themed.prayerRowCurrent,
-                    pressed && styles.pressed,
                   ]}
-                  accessibilityRole="checkbox"
-                  accessibilityState={{ checked }}
                 >
-                  <View style={styles.compactNameSide}>
-                    {isCurrent ? (
-                      <View style={themed.currentDot} />
-                    ) : (
-                      <View style={styles.dotSpacer} />
-                    )}
+                  <Pressable
+                    onPress={() => onTogglePrayer(key)}
+                    accessibilityRole="checkbox"
+                    accessibilityState={{ checked }}
+                    style={({ pressed }) => [
+                      StyleSheet.absoluteFill,
+                      pressed && styles.pressed,
+                    ]}
+                  />
+                  <View pointerEvents="none" style={styles.compactNameSide}>
+                    <View
+                      style={[
+                        styles.compactDotSlot,
+                        isCurrent && themed.currentDot,
+                      ]}
+                    />
                     <Text
                       style={[
                         themed.prayerLabel,
@@ -336,6 +352,7 @@ export function HomeMosqueBlock({
                     </Text>
                   </View>
                   <View
+                    pointerEvents="none"
                     style={[
                       styles.compactCheckSide,
                       { width: imageW + 8 },
@@ -356,7 +373,7 @@ export function HomeMosqueBlock({
                       ) : null}
                     </View>
                   </View>
-                </Pressable>
+                </View>
               );
             })}
           </View>
@@ -383,7 +400,7 @@ export function HomeMosqueBlock({
       <View style={[styles.headerRow, rtlViewStyle]}>
         <View style={styles.headerInfo}>
           {hijri ? (
-            <Text style={[themed.hijri, rtlTextStyle]} numberOfLines={1}>
+            <Text style={[themed.hijri, rtlTextStyle]}>
               {hijri}
             </Text>
           ) : null}
@@ -425,7 +442,7 @@ export function HomeMosqueBlock({
 
       <View style={themed.divider} />
 
-      {prayerLoading ? (
+      {prayerLoading && !prayerTimes ? (
         <ActivityIndicator
           size="small"
           color={colors.accent}
@@ -439,17 +456,33 @@ export function HomeMosqueBlock({
               const isCurrent = currentPrayerName === key;
               const isLast = index === PRAYER_KEYS.length - 1;
               return (
-                <Pressable
+                <View
                   key={key}
-                  onPress={() => onTogglePrayer(key)}
-                  style={({ pressed }) => [
+                  style={[
                     styles.prayerRow,
                     isCurrent && themed.prayerRowCurrent,
                     !isLast && themed.prayerRowBorder,
-                    pressed && styles.pressed,
                   ]}
                 >
-                  <View style={styles.prayerRowLeft}>
+                  <Pressable
+                    onPress={() => onTogglePrayer(key)}
+                    accessibilityRole="checkbox"
+                    accessibilityState={{ checked }}
+                    style={({ pressed }) => [
+                      StyleSheet.absoluteFill,
+                      pressed && styles.pressed,
+                    ]}
+                  />
+                  <View
+                    pointerEvents="none"
+                    style={[styles.prayerRowLeft, rtlViewStyle]}
+                  >
+                    <View
+                      style={[
+                        styles.currentDotSlot,
+                        isCurrent && themed.currentDot,
+                      ]}
+                    />
                     <Text
                       style={[
                         themed.prayerLabel,
@@ -460,21 +493,34 @@ export function HomeMosqueBlock({
                     >
                       {t(`qibla.prayerNames.${key}`)}
                     </Text>
-                    <View style={styles.prayerTimeRow}>
-                      {isCurrent ? <View style={themed.currentDot} /> : null}
-                      <Text style={[themed.prayerTime, rtlTextStyle]}>
-                        {prayerTimes[key]}
-                      </Text>
+                    <Text
+                      style={[
+                        themed.prayerTime,
+                        styles.prayerTimeInline,
+                        rtlTextStyle,
+                      ]}
+                      numberOfLines={1}
+                    >
+                      {prayerTimes[key]}
+                    </Text>
+                  </View>
+                  <View pointerEvents="none" style={styles.prayerRowCheckbox}>
+                    <View
+                      style={[
+                        themed.checkbox,
+                        checked && themed.checkboxChecked,
+                      ]}
+                    >
+                      {checked ? (
+                        <AppIcon
+                          name="check"
+                          size={14}
+                          color={colors.onAccent}
+                        />
+                      ) : null}
                     </View>
                   </View>
-                  <View
-                    style={[themed.checkbox, checked && themed.checkboxChecked]}
-                  >
-                    {checked ? (
-                      <AppIcon name="check" size={14} color={colors.onAccent} />
-                    ) : null}
-                  </View>
-                </Pressable>
+                </View>
               );
             })}
           </View>
@@ -502,47 +548,65 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "flex-start",
     justifyContent: "space-between",
-    gap: 8,
+    gap: 12,
   },
   headerInfo: {
     flex: 1,
     minWidth: 0,
-    paddingTop: 1,
+    paddingTop: 0,
+    paddingRight: 8,
   },
   coordsRow: {
     flexDirection: "row",
     alignItems: "center",
     gap: 4,
-    marginTop: 1,
+    marginTop: 4,
   },
   mosqueCol: {
     alignItems: "center",
     flexShrink: 0,
+    marginTop: 0,
   },
   loader: { paddingVertical: 24 },
   loaderCompact: { paddingVertical: 10 },
   prayerList: {
+    width: "100%",
     alignSelf: "stretch",
   },
   prayerRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingVertical: 14,
+    position: "relative",
+    width: "100%",
+    alignSelf: "stretch",
+    minHeight: 48,
+    paddingVertical: 12,
     paddingHorizontal: 4,
-    minHeight: 56,
-  },
-  prayerRowLeft: {
-    flex: 1,
-    marginRight: 16,
-    minWidth: 0,
+    paddingRight: 40,
     justifyContent: "center",
   },
-  prayerTimeRow: {
+  prayerRowLeft: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 6,
-    marginTop: 4,
+    gap: 10,
+    minWidth: 0,
+    maxWidth: "100%",
+  },
+  currentDotSlot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    flexShrink: 0,
+  },
+  prayerTimeInline: {
+    flexShrink: 0,
+  },
+  prayerRowCheckbox: {
+    position: "absolute",
+    right: 4,
+    top: 0,
+    bottom: 0,
+    width: 28,
+    justifyContent: "center",
+    alignItems: "center",
   },
   /** Compact carrousel : noms à gauche, coches sous la mosquée à droite. */
   compactTop: {
@@ -554,8 +618,8 @@ const styles = StyleSheet.create({
   compactHeaderInfo: {
     flex: 1,
     minWidth: 0,
-    justifyContent: "center",
-    paddingTop: 2,
+    justifyContent: "flex-start",
+    paddingTop: 0,
     paddingRight: 4,
   },
   compactMosqueCol: {
@@ -565,10 +629,21 @@ const styles = StyleSheet.create({
   compactPrayerBlock: {
     alignSelf: "stretch",
   },
+  compactPrayerBlockFill: {
+    flex: 1,
+    justifyContent: "space-evenly",
+    paddingVertical: 4,
+  },
   compactPrayerRow: {
+    position: "relative",
     flexDirection: "row",
     alignItems: "center",
     height: COMPACT_ROW_H,
+  },
+  compactPrayerRowFill: {
+    height: undefined,
+    minHeight: COMPACT_ROW_H,
+    flexGrow: 1,
   },
   compactNameSide: {
     flex: 1,
@@ -587,9 +662,11 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     flexShrink: 0,
   },
-  dotSpacer: {
+  compactDotSlot: {
     width: 5,
     height: 5,
+    borderRadius: 2.5,
+    flexShrink: 0,
   },
   nextRow: {
     flexDirection: "row",

@@ -17,7 +17,7 @@ import { ScreenBackground } from "@/components/ScreenBackground";
 import { ScreenPageHeader } from "@/components/ScreenPageHeader";
 import { SCREEN_EDGE_PADDING } from "@/constants/screen-layout";
 import { useAppTheme, type AppThemeColors } from "@/lib/app-theme";
-import { useHadithFavorites } from "@/lib/hadith";
+import { useHadithFavorites } from "@/lib/hadith/hooks/useHadithFavorites";
 import type { HadithFavorite } from "@/lib/hadith/types";
 import {
   buildHadithDuJourCatalog,

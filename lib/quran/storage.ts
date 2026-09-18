@@ -10,7 +10,7 @@ import {
   replaceFavorites,
   fetchFavorites,
 } from "@/lib/supabase/user-data";
-import { syncQuranStatePatch } from "@/lib/supabase/sync";
+import { syncQuranStatePatch } from "@/lib/supabase/sync-patches";
 
 import type { LastRead, LastListen, Favorite } from "./types";
 

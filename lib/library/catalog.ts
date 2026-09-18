@@ -1,4 +1,8 @@
-import type { AppIconName } from "@/components/AppIcon";
+import type { ImageSourcePropType } from "react-native";
+
+import type { FeatherIconName } from "@/lib/app-icons";
+
+const QURAN_ILLUSTRATION = require("@/assets/images/islamic-new-year-quran-book-with-dates-photo.jpg");
 
 export type LibraryRoute =
   | "sourates"
@@ -33,9 +37,11 @@ export type LibraryCatalogItem = {
   id: LibraryRoute;
   titleKey: string;
   shortKey: string;
-  icon: AppIconName;
+  icon: FeatherIconName;
   soon?: boolean;
   disabled?: boolean;
+  /** Illustration optionnelle pour les cartes média */
+  image?: ImageSourcePropType;
   /** Navigation directe vers une catégorie d'invocations */
   invocationSlug?: string;
   /** Navigation directe vers un recueil de hadiths */
@@ -48,10 +54,16 @@ export type LibraryCatalogSection = {
   items: LibraryCatalogItem[];
 };
 
-export const LIBRARY_CARD_GAP = 16;
-export const LIBRARY_CARD_HEIGHT = 188;
-export const LIBRARY_ICON_SIZE = 56;
+export const LIBRARY_CARD_GAP = 14;
+/** Côté du cadre carré (et largeur de carte). */
+export const LIBRARY_FRAME_SIZE = 148;
+export const LIBRARY_ICON_SIZE = 40;
 export const LIBRARY_SNAP_EXTRA = LIBRARY_CARD_GAP;
+
+/** @deprecated Utiliser LIBRARY_FRAME_SIZE (cadres carrés). */
+export const LIBRARY_CARD_HEIGHT = LIBRARY_FRAME_SIZE + 52;
+/** @deprecated Utiliser LIBRARY_FRAME_SIZE. */
+export const LIBRARY_MEDIA_FRAME_HEIGHT = LIBRARY_FRAME_SIZE;
 
 export const LIBRARY_CATALOG: LibraryCatalogSection[] = [
   {
@@ -63,6 +75,7 @@ export const LIBRARY_CATALOG: LibraryCatalogSection[] = [
         titleKey: "library.sourates",
         shortKey: "library.souratesShort",
         icon: "book-open",
+        image: QURAN_ILLUSTRATION,
       },
       {
         id: "recherche",
@@ -226,18 +239,15 @@ function findCatalogItem(id: LibraryRoute): LibraryCatalogItem {
   throw new Error(`Library catalog item missing: ${id}`);
 }
 
-/** Index Bibliothèque — hero Coran */
-export const LIBRARY_QURAN_HERO = findCatalogItem("sourates");
-
-/** Index Bibliothèque — outils Coran (grille 2×2) */
-export const LIBRARY_QURAN_TOOLS: LibraryCatalogItem[] = [
-  findCatalogItem("recherche"),
+/** Index Bibliothèque — rangée Coran (scroll horizontal) */
+export const LIBRARY_QURAN_ROW: LibraryCatalogItem[] = [
+  findCatalogItem("sourates"),
   findCatalogItem("tafsir"),
   findCatalogItem("memorisation"),
   findCatalogItem("juz"),
 ];
 
-/** Index Bibliothèque — 4 catégories d’invocations */
+/** Index Bibliothèque — catégories d’invocations */
 export const LIBRARY_INVOCATIONS_FEATURED: LibraryCatalogItem[] = [
   findCatalogItem("invocations"),
   findCatalogItem("invocations-morning"),
@@ -245,20 +255,22 @@ export const LIBRARY_INVOCATIONS_FEATURED: LibraryCatalogItem[] = [
   findCatalogItem("invocations-after-prayer"),
 ];
 
-/** Index Bibliothèque — raccourcis hadiths (hors teaser du jour) */
+/** Index Bibliothèque — catégories hadiths */
 export const LIBRARY_HADITHS_FEATURED: LibraryCatalogItem[] = [
-  findCatalogItem("hadiths-theme"),
   findCatalogItem("hadith-bukhari"),
   findCatalogItem("hadith-muslim"),
+  findCatalogItem("hadith-jour"),
+  findCatalogItem("hadiths-theme"),
 ];
 
-/** Largeur carte : ~2 visibles + aperçu du suivant */
+/** Largeur carte carrée : ~2 visibles + léger aperçu du suivant (identique partout). */
 export function getLibraryCardWidth(
   screenWidth: number,
   horizontalPadding: number
 ): number {
   const inner = screenWidth - horizontalPadding * 2;
-  const raw = (inner - LIBRARY_CARD_GAP * 2) / 2.12;
-  return Math.round(Math.min(176, Math.max(152, raw)));
+  const raw = (inner - LIBRARY_CARD_GAP) / 2.35;
+  return Math.round(
+    Math.min(LIBRARY_FRAME_SIZE, Math.max(132, raw))
+  );
 }
-

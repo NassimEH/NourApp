@@ -242,9 +242,6 @@ export function createHomeStyles(c: AppThemeColors) {
       paddingTop: 14,
       gap: 6,
     },
-    weatherDou3aRule: {
-      marginBottom: 12,
-    },
     weatherDou3aLabel: {
       fontSize: 11,
       fontFamily: "PlusJakartaSans-SemiBold",

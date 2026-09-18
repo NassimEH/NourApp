@@ -1,4 +1,5 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as Location from "expo-location";
 
 import {
@@ -13,6 +14,7 @@ import {
 
 const ALADHAN_BY_ADDRESS = "https://api.aladhan.com/v1/timingsByAddress";
 const ALADHAN_BY_COORDS = "https://api.aladhan.com/v1/timings";
+const CACHE_KEY = "@prayer_timings_cache_v1";
 
 export type PrayerKey = "Fajr" | "Sunrise" | "Dhuhr" | "Asr" | "Maghrib" | "Isha";
 
@@ -24,6 +26,14 @@ export interface PrayerTimes {
   Maghrib: string;
   Isha: string;
 }
+
+type CachedPrayerPayload = {
+  dateKey: string;
+  timings: PrayerTimes;
+  cityName: string | null;
+  coords: { latitude: number; longitude: number } | null;
+  methodId: number;
+};
 
 const PRAYER_LABELS: Record<PrayerKey, string> = {
   Fajr: "Fajr",
@@ -45,6 +55,29 @@ export const PRAYER_ORDER: PrayerKey[] = [
 
 export function getPrayerLabel(key: PrayerKey): string {
   return PRAYER_LABELS[key];
+}
+
+function todayDateKey(): string {
+  const now = new Date();
+  return `${now.getFullYear()}-${now.getMonth() + 1}-${now.getDate()}`;
+}
+
+async function readCache(): Promise<CachedPrayerPayload | null> {
+  try {
+    const raw = await AsyncStorage.getItem(CACHE_KEY);
+    if (!raw) return null;
+    return JSON.parse(raw) as CachedPrayerPayload;
+  } catch {
+    return null;
+  }
+}
+
+async function writeCache(payload: CachedPrayerPayload): Promise<void> {
+  try {
+    await AsyncStorage.setItem(CACHE_KEY, JSON.stringify(payload));
+  } catch {
+    // ignore
+  }
 }
 
 async function fetchTimingsByCoords(
@@ -103,6 +136,26 @@ async function reverseGeocodeLabel(
   return null;
 }
 
+async function resolvePosition(): Promise<{
+  latitude: number;
+  longitude: number;
+} | null> {
+  const last = await Location.getLastKnownPositionAsync();
+  if (last) {
+    return {
+      latitude: last.coords.latitude,
+      longitude: last.coords.longitude,
+    };
+  }
+  const position = await Location.getCurrentPositionAsync({
+    accuracy: Location.Accuracy.Balanced,
+  });
+  return {
+    latitude: position.coords.latitude,
+    longitude: position.coords.longitude,
+  };
+}
+
 export type ApplyLocationResult =
   | { ok: true }
   | { ok: false; reason: "empty" | "not_found" | "error" };
@@ -113,51 +166,85 @@ export function usePrayerTimes() {
   const [applyingLocation, setApplyingLocation] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [cityName, setCityName] = useState<string | null>(null);
-  const [coords, setCoords] = useState<{ latitude: number; longitude: number } | null>(
-    null
-  );
+  const [coords, setCoords] = useState<{
+    latitude: number;
+    longitude: number;
+  } | null>(null);
   const [refetchTrigger, setRefetchTrigger] = useState(0);
+  const hasTimingsRef = useRef(false);
+
+  useEffect(() => {
+    hasTimingsRef.current = timings != null;
+  }, [timings]);
 
   useEffect(() => {
     let cancelled = false;
-    setLoading(true);
     setError(null);
 
     (async () => {
+      const cached = await readCache();
+      if (cancelled) return;
+
+      const dateKey = todayDateKey();
+      if (cached?.timings && cached.dateKey === dateKey) {
+        setTimings(cached.timings);
+        setCityName(cached.cityName);
+        setCoords(cached.coords);
+        setLoading(false);
+      } else if (!hasTimingsRef.current) {
+        setLoading(true);
+      }
+
       try {
         const calcMethod = await getPrayerCalculationMethod();
         const methodId = getAladhanMethodId(calcMethod);
         const saved = await getPrayerLocationPreference();
 
+        const commit = async (
+          nextTimings: PrayerTimes,
+          nextCity: string | null,
+          nextCoords: { latitude: number; longitude: number } | null
+        ) => {
+          if (cancelled) return;
+          setTimings(nextTimings);
+          setCityName(nextCity);
+          setCoords(nextCoords);
+          setLoading(false);
+          await writeCache({
+            dateKey,
+            timings: nextTimings,
+            cityName: nextCity,
+            coords: nextCoords,
+            methodId,
+          });
+        };
+
         if (saved?.source === "manual") {
           let manualTimings: PrayerTimes | null = null;
+          let manualCoords: { latitude: number; longitude: number } | null =
+            null;
           if (
             typeof saved.latitude === "number" &&
             typeof saved.longitude === "number"
           ) {
+            manualCoords = {
+              latitude: saved.latitude,
+              longitude: saved.longitude,
+            };
             manualTimings = await fetchTimingsByCoords(
               saved.latitude,
               saved.longitude,
               methodId
             );
           } else {
-            manualTimings = await fetchTimingsByAddress(saved.address, methodId);
+            manualTimings = await fetchTimingsByAddress(
+              saved.address,
+              methodId
+            );
           }
           if (cancelled) return;
           if (manualTimings) {
-            setTimings(manualTimings);
-            setCityName(saved.label);
-            if (
-              typeof saved.latitude === "number" &&
-              typeof saved.longitude === "number"
-            ) {
-              setCoords({
-                latitude: saved.latitude,
-                longitude: saved.longitude,
-              });
-            } else {
-              setCoords(null);
-            }
+            await commit(manualTimings, saved.label, manualCoords);
             return;
           }
         }
@@ -166,23 +253,23 @@ export function usePrayerTimes() {
         if (cancelled) return;
 
         if (status !== "granted") {
-          const fallback = await fetchTimingsByAddress(FALLBACK_ADDRESS, methodId);
+          const fallback = await fetchTimingsByAddress(
+            FALLBACK_ADDRESS,
+            methodId
+          );
           if (!cancelled && fallback) {
-            setTimings(fallback);
-            setCityName(FALLBACK_ADDRESS);
-            setCoords(FALLBACK_COORDS);
-          } else if (!cancelled) setError("Impossible de charger les horaires");
+            await commit(fallback, FALLBACK_ADDRESS, FALLBACK_COORDS);
+          } else if (!cancelled) {
+            setError("Impossible de charger les horaires");
+            setLoading(false);
+          }
           return;
         }
 
-        const position = await Location.getCurrentPositionAsync({
-          accuracy: Location.Accuracy.Balanced,
-        });
-        if (cancelled) return;
+        const position = await resolvePosition();
+        if (cancelled || !position) return;
 
-        const { latitude, longitude } = position.coords;
-        setCoords({ latitude, longitude });
-
+        const { latitude, longitude } = position;
         const coordsTimings = await fetchTimingsByCoords(
           latitude,
           longitude,
@@ -191,31 +278,50 @@ export function usePrayerTimes() {
         if (cancelled) return;
 
         if (coordsTimings) {
-          setTimings(coordsTimings);
-          const label = await reverseGeocodeLabel(latitude, longitude);
-          if (!cancelled && label) setCityName(label);
+          const label =
+            (await reverseGeocodeLabel(latitude, longitude)) ?? null;
+          if (cancelled) return;
+          await commit(coordsTimings, label, { latitude, longitude });
         } else {
-          const fallback = await fetchTimingsByAddress(FALLBACK_ADDRESS, methodId);
+          const fallback = await fetchTimingsByAddress(
+            FALLBACK_ADDRESS,
+            methodId
+          );
           if (!cancelled && fallback) {
-            setTimings(fallback);
-            setCityName(FALLBACK_ADDRESS);
-          } else if (!cancelled) setError("Impossible de charger les horaires");
+            await commit(fallback, FALLBACK_ADDRESS, FALLBACK_COORDS);
+          } else if (!cancelled) {
+            setError("Impossible de charger les horaires");
+            setLoading(false);
+          }
         }
       } catch (err) {
         if (!cancelled) {
           setError(err instanceof Error ? err.message : "Erreur de position");
           try {
-            const methodId = getAladhanMethodId(await getPrayerCalculationMethod());
-            const fallback = await fetchTimingsByAddress(FALLBACK_ADDRESS, methodId);
+            const methodId = getAladhanMethodId(
+              await getPrayerCalculationMethod()
+            );
+            const fallback = await fetchTimingsByAddress(
+              FALLBACK_ADDRESS,
+              methodId
+            );
             if (!cancelled && fallback) {
               setTimings(fallback);
               setCityName(FALLBACK_ADDRESS);
               setCoords(FALLBACK_COORDS);
               setError(null);
+              await writeCache({
+                dateKey: todayDateKey(),
+                timings: fallback,
+                cityName: FALLBACK_ADDRESS,
+                coords: FALLBACK_COORDS,
+                methodId,
+              });
             }
           } catch {
             // keep error
           }
+          setLoading(false);
         }
       } finally {
         if (!cancelled) setLoading(false);
@@ -261,6 +367,13 @@ export function usePrayerTimes() {
           setTimings(coordsTimings);
           setCityName(label);
           setCoords({ latitude, longitude });
+          await writeCache({
+            dateKey: todayDateKey(),
+            timings: coordsTimings,
+            cityName: label,
+            coords: { latitude, longitude },
+            methodId,
+          });
           return { ok: true };
         }
 
@@ -274,6 +387,13 @@ export function usePrayerTimes() {
         setTimings(addressTimings);
         setCityName(trimmed);
         setCoords(null);
+        await writeCache({
+          dateKey: todayDateKey(),
+          timings: addressTimings,
+          cityName: trimmed,
+          coords: null,
+          methodId,
+        });
         return { ok: true };
       } catch {
         return { ok: false, reason: "error" };

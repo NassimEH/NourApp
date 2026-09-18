@@ -2,142 +2,104 @@ import { StyleSheet } from "react-native";
 
 import type { AppThemeColors } from "@/lib/app-theme";
 import type { AppTypography } from "@/lib/app-typography";
-import { CARD_RADIUS, LIST_GAP, SPACE } from "@/lib/ui/spacing";
+import { CARD_RADIUS, SPACE } from "@/lib/ui/spacing";
 
 export function createLibraryScreenStyles(
   c: AppThemeColors,
   typography: AppTypography
 ) {
   return StyleSheet.create({
-    hero: {
+    rowWrap: {
+      position: "relative",
+    },
+    horizontalRow: {
       flexDirection: "row",
-      alignItems: "center",
-      gap: SPACE.md,
-      paddingVertical: SPACE.md,
-      paddingHorizontal: SPACE.md,
-      borderRadius: CARD_RADIUS,
-      borderWidth: StyleSheet.hairlineWidth,
-      borderColor: c.border,
-      backgroundColor: c.usesBackgroundImage ? c.cardElevated : c.card,
-      marginBottom: LIST_GAP,
+      alignItems: "flex-start",
+      paddingVertical: 2,
     },
-    heroPressed: {
-      opacity: 0.9,
-      transform: [{ scale: 0.99 }],
+    mediaCard: {
+      width: "100%",
+      justifyContent: "flex-start",
     },
-    heroIconWrap: {
-      width: 52,
-      height: 52,
-      borderRadius: 16,
-      alignItems: "center",
-      justifyContent: "center",
-      backgroundColor: c.accentSurface,
-      flexShrink: 0,
-    },
-    heroText: {
-      flex: 1,
-      minWidth: 0,
-      gap: 4,
-    },
-    heroTitle: {
-      fontSize: typography.bodyMedium + 1,
-      lineHeight: typography.bodyMedium + 8,
-      fontFamily: "PlusJakartaSans-Bold",
-      color: c.text,
-      letterSpacing: -0.2,
-    },
-    heroSubtitle: {
-      fontSize: typography.caption,
-      lineHeight: typography.caption + 4,
-      fontFamily: "PlusJakartaSans-Regular",
-      color: c.textMuted,
-    },
-    grid: {
-      gap: LIST_GAP,
-    },
-    gridRow: {
-      flexDirection: "row",
-      gap: LIST_GAP,
-    },
-    gridCell: {
-      flex: 1,
-      minWidth: 0,
-    },
-    shortcuts: {
-      gap: LIST_GAP - 2,
-      marginTop: LIST_GAP,
-    },
-    shortcut: {
-      flexDirection: "row",
-      alignItems: "center",
-      gap: SPACE.sm,
-      paddingVertical: SPACE.sm,
-      paddingHorizontal: SPACE.md,
-      borderRadius: CARD_RADIUS - 2,
-      borderWidth: StyleSheet.hairlineWidth,
-      borderColor: c.border,
-      backgroundColor: c.usesBackgroundImage ? "transparent" : c.card,
-      minHeight: 52,
-    },
-    shortcutPressed: {
+    mediaCardPressed: {
       opacity: 0.88,
     },
-    shortcutIcon: {
-      width: 36,
-      height: 36,
-      borderRadius: 12,
-      alignItems: "center",
-      justifyContent: "center",
+    mediaFrame: {
+      borderRadius: CARD_RADIUS,
+      overflow: "hidden",
+      borderWidth: StyleSheet.hairlineWidth,
+      borderColor: c.border,
       backgroundColor: c.accentSurface,
-      flexShrink: 0,
     },
-    shortcutText: {
-      flex: 1,
-      minWidth: 0,
+    mediaImage: {
+      position: "absolute",
+      top: 0,
+      right: 0,
+      bottom: 0,
+      left: 0,
+      width: "100%",
+      height: "100%",
+    },
+    mediaText: {
+      marginTop: SPACE.sm,
       gap: 2,
+      paddingHorizontal: 2,
+      minHeight: typography.body + 4 + 2 + (typography.caption + 3) * 2,
     },
-    shortcutTitle: {
+    mediaTitle: {
       fontSize: typography.body,
       lineHeight: typography.body + 4,
       fontFamily: "PlusJakartaSans-SemiBold",
       color: c.text,
+      height: typography.body + 4,
     },
-    shortcutSubtitle: {
+    mediaSubtitle: {
       fontSize: typography.caption,
       lineHeight: typography.caption + 3,
       fontFamily: "PlusJakartaSans-Regular",
       color: c.textMuted,
+      minHeight: (typography.caption + 3) * 2,
     },
-    teaser: {
-      paddingVertical: SPACE.sm,
-      gap: SPACE.sm,
-      marginBottom: LIST_GAP - 2,
+    edgeFade: {
+      position: "absolute",
+      top: 0,
+      bottom: 28,
+      width: 36,
+      zIndex: 2,
+      pointerEvents: "none",
     },
-    teaserMeta: {
-      flexDirection: "row",
+    edgeFadeLeft: {
+      left: 0,
+    },
+    edgeFadeRight: {
+      right: 0,
+    },
+    arrowHit: {
+      position: "absolute",
+      top: 0,
+      bottom: 28,
+      width: 36,
+      zIndex: 3,
       alignItems: "center",
-      gap: 6,
+      justifyContent: "center",
     },
-    teaserBadge: {
-      fontSize: typography.caption,
-      fontFamily: "PlusJakartaSans-SemiBold",
-      color: c.accent,
+    arrowHitLeft: {
+      left: 0,
     },
-    teaserBody: {
-      fontSize: typography.body,
-      lineHeight: typography.body + 8,
-      fontFamily: "PlusJakartaSans-Medium",
-      color: c.text,
+    arrowHitRight: {
+      right: 0,
     },
-    teaserSource: {
-      fontSize: typography.caption,
-      lineHeight: typography.caption + 4,
-      fontFamily: "PlusJakartaSans-Regular",
-      color: c.textMuted,
-      fontStyle: "italic",
-    },
-    teaserPressed: {
-      opacity: 0.92,
+    arrowDisc: {
+      width: 28,
+      height: 28,
+      borderRadius: 14,
+      alignItems: "center",
+      justifyContent: "center",
+      backgroundColor: c.isDark
+        ? "rgba(0,0,0,0.45)"
+        : "rgba(255,255,255,0.82)",
+      borderWidth: StyleSheet.hairlineWidth,
+      borderColor: c.border,
     },
   });
 }

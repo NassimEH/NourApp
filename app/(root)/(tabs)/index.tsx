@@ -46,7 +46,7 @@ function useTodayDates(locale: "fr" | "en" | "ar") {
     const hijriMonths = TRANSLATIONS[locale].home.hijriMonths;
     try {
       const { hy, hm, hd } = toHijri(gy, gm, gd);
-      const hijri = `${hijriMonths[hm - 1] ?? ""} ${hd}, ${hy}`;
+      const hijri = `${hd} ${hijriMonths[hm - 1] ?? ""} ${hy}`;
       return { gregorian, hijri };
     } catch {
       return { gregorian, hijri: "" };
@@ -126,6 +126,7 @@ const HomeListHeader = React.memo(function HomeListHeader({
       });
     }
     const next = getNextPrayerInfo(prayerTimes);
+    if (!next) return null;
     const key = next.name as PrayerKey;
     const time = prayerTimes[key];
     if (!time) return null;
