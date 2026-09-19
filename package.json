@@ -19,7 +19,10 @@
     "submit:android": "eas submit --platform android --profile production"
   },
   "jest": {
-    "preset": "jest-expo"
+    "preset": "jest-expo",
+    "setupFiles": [
+      "<rootDir>/jest.setup.js"
+    ]
   },
   "dependencies": {
     "@expo-google-fonts/amiri": "^0.4.1",
