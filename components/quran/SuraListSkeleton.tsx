@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useState } from "react";
 import { View, StyleSheet, Animated } from "react-native";
 
 import { SCREEN_EDGE_PADDING } from "@/constants/screen-layout";
@@ -16,7 +16,7 @@ function SkeletonLine({
   width?: string | number;
   style?: object;
 }) {
-  const opacity = useRef(new Animated.Value(0.3)).current;
+  const [opacity] = useState(() => new Animated.Value(0.3));
   useEffect(() => {
     const loop = Animated.loop(
       Animated.sequence([

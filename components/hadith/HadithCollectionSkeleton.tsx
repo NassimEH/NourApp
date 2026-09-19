@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useState } from "react";
 import { View, StyleSheet, Animated, Dimensions } from "react-native";
 
 const H_PADDING = 24;
@@ -18,7 +18,7 @@ function SkeletonBox({
   height: number;
   style?: object;
 }) {
-  const opacity = useRef(new Animated.Value(0.3)).current;
+  const [opacity] = useState(() => new Animated.Value(0.3));
   useEffect(() => {
     const loop = Animated.loop(
       Animated.sequence([

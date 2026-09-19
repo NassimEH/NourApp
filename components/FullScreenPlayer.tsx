@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import {
   View,
   Pressable,
@@ -226,7 +226,7 @@ export function FullScreenPlayer({
 }) {
   const colors = useAppTheme();
   const insets = useSafeAreaInsets();
-  const translateY = useRef(new Animated.Value(SCREEN_HEIGHT)).current;
+  const [translateY] = useState(() => new Animated.Value(SCREEN_HEIGHT));
   const [reciterModalVisible, setReciterModalVisible] = useState(false);
 
   const currentReciterName =
@@ -250,36 +250,38 @@ export function FullScreenPlayer({
     }
   }, [visible, translateY]);
 
-  const panResponder = useRef(
-    PanResponder.create({
-      onStartShouldSetPanResponder: () => true,
-      onMoveShouldSetPanResponder: (_, gestureState) => {
-        return gestureState.dy > 10;
-      },
-      onPanResponderMove: (_, gestureState) => {
-        if (gestureState.dy > 0) {
-          translateY.setValue(gestureState.dy);
-        }
-      },
-      onPanResponderRelease: (_, gestureState) => {
-        if (gestureState.dy > 150 || gestureState.vy > 0.5) {
-          Animated.timing(translateY, {
-            toValue: SCREEN_HEIGHT,
-            duration: 250,
-            useNativeDriver: true,
-          }).start(() => onClose());
-        } else {
-          Animated.spring(translateY, {
-            toValue: 0,
-            useNativeDriver: true,
-            damping: 20,
-            stiffness: 200,
-            mass: 1,
-          }).start();
-        }
-      },
-    })
-  ).current;
+  const panResponder = useMemo(
+    () =>
+      PanResponder.create({
+        onStartShouldSetPanResponder: () => true,
+        onMoveShouldSetPanResponder: (_, gestureState) => {
+          return gestureState.dy > 10;
+        },
+        onPanResponderMove: (_, gestureState) => {
+          if (gestureState.dy > 0) {
+            translateY.setValue(gestureState.dy);
+          }
+        },
+        onPanResponderRelease: (_, gestureState) => {
+          if (gestureState.dy > 150 || gestureState.vy > 0.5) {
+            Animated.timing(translateY, {
+              toValue: SCREEN_HEIGHT,
+              duration: 250,
+              useNativeDriver: true,
+            }).start(() => onClose());
+          } else {
+            Animated.spring(translateY, {
+              toValue: 0,
+              useNativeDriver: true,
+              damping: 20,
+              stiffness: 200,
+              mass: 1,
+            }).start();
+          }
+        },
+      }),
+    [translateY, onClose]
+  );
 
   const currentTime = formatTime(progress * durationMs);
   const totalTime = formatTime(durationMs);

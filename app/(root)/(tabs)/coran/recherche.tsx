@@ -38,13 +38,14 @@ export default function RechercheCoranScreen() {
   const colors = useAppTheme();
   const { list, loading } = useSuraList();
   const trimmedQuery = query.trim();
+  const canSearchVerses = trimmedQuery.length >= 3;
   const suras = useMemo(() => filterSurasByQuery(list, query), [list, query]);
+  const visibleVerses = canSearchVerses ? verses : [];
+  const visibleVerseLoading = canSearchVerses ? verseLoading : false;
+  const visibleVerseError = canSearchVerses ? verseError : false;
 
   useEffect(() => {
-    if (trimmedQuery.length < 3) {
-      setVerses([]);
-      setVerseError(false);
-      setVerseLoading(false);
+    if (!canSearchVerses) {
       return;
     }
 
@@ -68,7 +69,7 @@ export default function RechercheCoranScreen() {
       clearTimeout(timeout);
       controller.abort();
     };
-  }, [locale, trimmedQuery]);
+  }, [canSearchVerses, locale, trimmedQuery]);
 
   const openSura = (number: number) =>
     router.push({
@@ -124,18 +125,18 @@ export default function RechercheCoranScreen() {
               <Text style={[styles.sectionTitle, rtlTextStyle, { color: colors.text }]}>
                 {t("screens.searchVersesSection")}
               </Text>
-              {verseLoading ? <ActivityIndicator color={colors.accent} /> : null}
-              {verseError ? (
+              {visibleVerseLoading ? <ActivityIndicator color={colors.accent} /> : null}
+              {visibleVerseError ? (
                 <Text style={[styles.hint, rtlTextStyle, { color: colors.danger }]}>
                   {t("common.retry")}
                 </Text>
               ) : null}
-              {!verseLoading && !verseError && verses.length === 0 ? (
+              {!visibleVerseLoading && !visibleVerseError && visibleVerses.length === 0 ? (
                 <Text style={[styles.hint, rtlTextStyle, { color: colors.textMuted }]}>
                   {t("library.searchNoResults")}
                 </Text>
               ) : null}
-              {verses.map((verse, index) => (
+              {visibleVerses.map((verse, index) => (
                 <Pressable
                   key={`${verse.surahNumber}-${verse.ayahNumber}-${index}`}
                   onPress={() => openSura(verse.surahNumber)}

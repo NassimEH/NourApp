@@ -10,7 +10,7 @@
   View,
 } from "react-native";
 import { AppIcon } from "@/components/AppIcon";
-import { useMemo, useRef, useState } from "react";
+import { useMemo, useState } from "react";
 import type { Reciter } from "@/lib/quran/types";
 import { useTranslation } from "@/lib/i18n";
 
@@ -60,7 +60,7 @@ export function QuranMiniPlayer({
   const { t } = useTranslation();
   const colors = useAppTheme();
   const styles = useMemo(() => createStyles(colors), [colors]);
-  const scale = useRef(new Animated.Value(1)).current;
+  const scale = useMemo(() => new Animated.Value(1), []);
   const [reciterModalVisible, setReciterModalVisible] = useState(false);
 
   const onPressIn = () => {

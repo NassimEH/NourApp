@@ -1,25 +1,23 @@
 import { Platform, StyleSheet, View, type StyleProp, type ViewStyle } from "react-native";
 import { BlurView } from "expo-blur";
 import { GlassView, isGlassEffectAPIAvailable } from "expo-glass-effect";
-import { useEffect, useState, type ReactNode } from "react";
+import { useMemo, type ReactNode } from "react";
 
 import { useAppTheme } from "@/lib/app-theme";
 import { GLASS_RADIUS } from "@/lib/ui/spacing";
 
 function useGlassAvailable() {
-  const [available, setAvailable] = useState(false);
-  useEffect(() => {
-    if (Platform.OS !== "ios") return;
+  return useMemo(() => {
+    if (Platform.OS !== "ios") return false;
     try {
-      setAvailable(
+      return (
         typeof isGlassEffectAPIAvailable === "function" &&
-          isGlassEffectAPIAvailable()
+        isGlassEffectAPIAvailable()
       );
     } catch {
-      setAvailable(false);
+      return false;
     }
   }, []);
-  return available;
 }
 
 interface ThemedGlassSurfaceProps {

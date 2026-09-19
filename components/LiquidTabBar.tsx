@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type ReactNode } from "react";
+import { useMemo, type ReactNode } from "react";
 import {
   Platform,
   Pressable,
@@ -36,19 +36,17 @@ const TAB_LABEL_KEYS: Record<string, string> = {
 };
 
 function useNativeGlassAvailable() {
-  const [available, setAvailable] = useState(false);
-  useEffect(() => {
-    if (Platform.OS !== "ios") return;
+  return useMemo(() => {
+    if (Platform.OS !== "ios") return false;
     try {
-      setAvailable(
+      return (
         typeof isGlassEffectAPIAvailable === "function" &&
-          isGlassEffectAPIAvailable()
+        isGlassEffectAPIAvailable()
       );
     } catch {
-      setAvailable(false);
+      return false;
     }
   }, []);
-  return available;
 }
 
 /** Coque verre claire (pas d’assombrissement). */

@@ -61,6 +61,7 @@ export default function QuranReaderScreen() {
 
   const [showTranslation, setShowTranslation] = useState(true);
   const [currentIndex, setCurrentIndex] = useState(0);
+  const [hydratedSura, setHydratedSura] = useState(suraNumber);
   const autoplayRequested = autoplay === "1";
   const autoplayDoneRef = useRef(false);
 
@@ -74,6 +75,18 @@ export default function QuranReaderScreen() {
     ayah && data?.translation
       ? data.translation.find((tr) => tr.number === ayah.number)
       : null;
+
+  if (suraNumber !== hydratedSura) {
+    setHydratedSura(suraNumber);
+    const restored =
+      lastRead?.suraNumber === suraNumber &&
+      typeof lastRead.scrollOffsetY === "number"
+        ? Math.max(0, Math.floor(lastRead.scrollOffsetY))
+        : 0;
+    setCurrentIndex(restored);
+  } else if (total > 0 && currentIndex > total - 1) {
+    setCurrentIndex(total - 1);
+  }
 
   const suraTitle =
     data?.arabic?.name ?? `${t("tabs.library")} ${suraNumber}`;
@@ -94,13 +107,6 @@ export default function QuranReaderScreen() {
     }
     return parts.join(" · ");
   }, [data?.arabic, total, currentIndex, t]);
-
-  useEffect(() => {
-    if (data && lastRead?.suraNumber === suraNumber && typeof lastRead.scrollOffsetY === "number") {
-      const restored = Math.max(0, Math.min(Math.floor(lastRead.scrollOffsetY), total - 1));
-      setCurrentIndex(restored);
-    }
-  }, [data, suraNumber, total, lastRead?.suraNumber, lastRead?.scrollOffsetY]);
 
   useEffect(() => {
     if (suraNumber != null && total > 0) {
@@ -130,7 +136,7 @@ export default function QuranReaderScreen() {
       Boolean
     );
     void Share.share({ message: parts.join("\n\n") });
-  }, [ayah, trans?.text, showTranslation]);
+  }, [ayah, trans, showTranslation]);
 
   const copyVerse = useCallback(async () => {
     if (!ayah) return;
@@ -139,7 +145,7 @@ export default function QuranReaderScreen() {
     );
     await Clipboard.setStringAsync(parts.join("\n\n"));
     Alert.alert(t("quran.copied"));
-  }, [ayah, trans?.text, showTranslation, t]);
+  }, [ayah, trans, showTranslation, t]);
 
   useEffect(() => {
     if (

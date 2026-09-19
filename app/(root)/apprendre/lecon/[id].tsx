@@ -104,7 +104,7 @@ export default function LearnLessonScreen() {
     if (success) {
       await markLessonCompleted(course?.id ?? "prophets-life", lesson.id);
     }
-  }, [lesson, course?.id, allAnswered, score]);
+  }, [lesson, course?.id, allAnswered, score, setPhase, setPassed]);
 
   if (!lesson) {
     return null;

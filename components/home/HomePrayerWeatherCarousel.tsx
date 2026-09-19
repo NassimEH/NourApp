@@ -120,10 +120,8 @@ export function HomePrayerWeatherCarousel({
     return () => clearInterval(id);
   }, [prayerTimes, nextPrayer]);
 
-  // Remesurer la météo quand l'invocation apparaît (évite le clip du cadre).
-  useEffect(() => {
-    setPageHeights((prev) => (prev[0] === 0 ? prev : [0, prev[1]]));
-  }, [weatherData?.imageKey, Boolean(weatherData)]);
+  // Remesurer via remount quand l'invocation météo change (évite le clip).
+  const weatherMeasureKey = weatherData?.imageKey ?? (weatherData ? "ready" : "empty");
 
   const onScroll = useCallback(
     (e: NativeSyntheticEvent<NativeScrollEvent>) => {
@@ -302,7 +300,11 @@ export function HomePrayerWeatherCarousel({
               slideHeight ? { minHeight: slideHeight } : null,
             ]}
           >
-            <View onLayout={onPageLayout(0)} style={rtlViewStyle}>
+            <View
+              key={weatherMeasureKey}
+              onLayout={onPageLayout(0)}
+              style={rtlViewStyle}
+            >
               {weatherContent}
             </View>
           </View>

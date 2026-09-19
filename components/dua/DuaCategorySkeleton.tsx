@@ -1,11 +1,11 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useState } from "react";
 import { View, StyleSheet, Animated } from "react-native";
 
 const H_PADDING = 24;
 const SKELETON_BG = "rgba(0,0,0,0.06)";
 
 function SkeletonLine({ width = "100%", style }: { width?: string | number; style?: object }) {
-  const opacity = useRef(new Animated.Value(0.3)).current;
+  const [opacity] = useState(() => new Animated.Value(0.3));
   useEffect(() => {
     const loop = Animated.loop(
       Animated.sequence([
