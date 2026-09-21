@@ -25,7 +25,8 @@ export default function IndexScreen() {
               : colors.background,
           },
         ]}
-      >        <View
+      >
+        <View
           style={[
             styles.loadingCard,
             {

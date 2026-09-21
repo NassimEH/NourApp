@@ -1,3 +1,14 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/*
+ * Annule le Preflight Tailwind sur <img> (height:auto / max-width:100%),
+ * qui déforme les Image React Native Web à dimensions fixes.
+ */
+@layer base {
+  img {
+    max-width: none;
+    height: unset;
+  }
+}
