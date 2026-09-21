@@ -14,13 +14,24 @@ import { router, useFocusEffect } from "expo-router";
 import * as Haptics from "expo-haptics";
 
 import { AppIcon } from "@/components/AppIcon";
-import { LibrarySectionDivider } from "@/components/library/LibraryEntry";
+import { CoursePicker } from "@/components/learn/CoursePicker";
+import { LearnGoalCard } from "@/components/learn/LearnGoalCard";
+import { LearnHero } from "@/components/learn/LearnHero";
+import {
+  LearnLessonPath,
+  type LearnPathItem,
+} from "@/components/learn/LearnLessonPath";
+import {
+  LearnPlanFilters,
+  type PlanLessonFilter,
+} from "@/components/learn/LearnPlanFilters";
+import { LearnPlanHeader } from "@/components/learn/LearnPlanHeader";
+import { LearnResumeCard } from "@/components/learn/LearnResumeCard";
+import { LearnWeekStrip } from "@/components/learn/LearnWeekStrip";
 import { ScreenBackground } from "@/components/ScreenBackground";
 import { SectionHeader } from "@/components/SectionHeader";
-import { ScreenPageHeader } from "@/components/ScreenPageHeader";
 import {
   SCREEN_EDGE_PADDING,
-  screenPageHeaderSpacing,
   screenScrollContent,
 } from "@/constants/screen-layout";
 import { useGlobalContext } from "@/lib/global-provider";
@@ -28,29 +39,21 @@ import { useAppTheme } from "@/lib/app-theme";
 import { useAppTypography } from "@/lib/app-typography";
 import { useAppPreferences } from "@/lib/app-preferences";
 import { useTranslation } from "@/lib/i18n";
+import { getCourseHeroColor } from "@/lib/learn/course-theme";
 import {
   getLearnCourses,
   PROPHETS_COURSE_ID,
 } from "@/lib/learn/courses";
-import { useLearnCatalog } from "@/lib/learn/hooks/useLearnCatalog";
 import { useLearnProgress } from "@/lib/learn/hooks/useLearnProgress";
+import { useLearnStreak } from "@/lib/learn/hooks/useLearnStreak";
 import { useWeeklyGoal } from "@/lib/learn/hooks/useWeeklyGoal";
-import type { LessonStatus } from "@/lib/learn/types";
+import type { LearnLesson, LessonStatus } from "@/lib/learn/types";
 import { createLearnScreenStyles } from "@/lib/learn-screen-styles";
 import { useSuraList, useRecentSuras } from "@/lib/quran/hooks";
 import type { SuraMeta } from "@/lib/quran/types";
+import { CARD_RADIUS, SECTION_GAP, SHADOW, SPACE } from "@/lib/ui/spacing";
 
 const H_PADDING = SCREEN_EDGE_PADDING;
-
-function LearnDivider({ tight }: { tight?: boolean }) {
-  const colors = useAppTheme();
-  const typography = useAppTypography();
-  const styles = useMemo(
-    () => createLearnScreenStyles(colors, typography),
-    [colors, typography]
-  );
-  return <View style={tight ? styles.dividerTight : styles.divider} />;
-}
 
 function RecentSuraTile({
   sura,
@@ -71,19 +74,26 @@ function RecentSuraTile({
     <Pressable
       onPress={onPress}
       accessibilityRole="button"
-      accessibilityLabel={sura.englishName}
+      accessibilityLabel={`${sura.englishName}, ${sura.name}`}
       style={({ pressed }) => [
         styles.recentTile,
         pressed && styles.recentTilePressed,
       ]}
     >
-      <Text style={styles.recentNumber}>{sura.number}</Text>
-      <Text style={[styles.recentTitle, rtlTextStyle]} numberOfLines={1}>
-        {sura.englishName}
-      </Text>
-      <Text style={[styles.recentSub, rtlTextStyle]} numberOfLines={2}>
-        {sura.numberOfAyahs} · {revelation}
-      </Text>
+      <View style={styles.recentBadge}>
+        <Text style={styles.recentNumber}>{sura.number}</Text>
+      </View>
+      <View>
+        <Text style={styles.recentArabic} numberOfLines={1}>
+          {sura.name}
+        </Text>
+        <Text style={[styles.recentTitle, rtlTextStyle]} numberOfLines={1}>
+          {sura.englishName}
+        </Text>
+        <Text style={[styles.recentSub, rtlTextStyle]} numberOfLines={1}>
+          {sura.numberOfAyahs} · {revelation}
+        </Text>
+      </View>
     </Pressable>
   );
 }
@@ -97,6 +107,10 @@ export default function ApprendreScreen() {
     () => createLearnScreenStyles(colors, typography),
     [colors, typography]
   );
+  const homeStyles = useMemo(
+    () => createHomeLearnStyles(colors),
+    [colors]
+  );
   const { locale } = useAppPreferences();
   const courses = useMemo(() => getLearnCourses(locale), [locale]);
   const [selectedCourseId, setSelectedCourseId] = useState(PROPHETS_COURSE_ID);
@@ -105,6 +119,7 @@ export default function ApprendreScreen() {
     [courses, selectedCourseId]
   );
   const [activeTab, setActiveTab] = useState<"today" | "plan">("today");
+  const [planFilter, setPlanFilter] = useState<PlanLessonFilter>("all");
 
   const tabs = useMemo(
     () => [
@@ -116,17 +131,22 @@ export default function ApprendreScreen() {
 
   const { list: suras } = useSuraList();
   const { recentSuraNumbers, refetch: refetchRecent } = useRecentSuras();
-  const { findNextLesson, totalCompleted, loading: catalogLoading } =
-    useLearnCatalog();
   const { getStatus, completedCount, totalLessons, loading: progressLoading } =
     useLearnProgress(activeCourse?.id ?? PROPHETS_COURSE_ID);
   const { goal: weeklyGoal, done: weeklyDone, setGoal } = useWeeklyGoal();
+  const { streak, activeDays } = useLearnStreak();
 
   useFocusEffect(
     useCallback(() => {
       refetchRecent();
     }, [refetchRecent])
   );
+
+  const firstName = useMemo(() => {
+    const raw = user?.name?.trim();
+    if (!raw) return t("home.defaultUser");
+    return raw.split(/\s+/)[0] ?? raw;
+  }, [user?.name, t]);
 
   const recentSuras = useMemo(() => {
     const byNumber = new Map(suras.map((s) => [s.number, s]));
@@ -135,15 +155,68 @@ export default function ApprendreScreen() {
       .filter((s): s is SuraMeta => s != null);
   }, [suras, recentSuraNumbers]);
 
-  const nextLesson = useMemo(() => {
-    if (catalogLoading) return null;
-    return findNextLesson();
-  }, [catalogLoading, findNextLesson]);
+  const nextLesson = useMemo((): LearnLesson | null => {
+    if (progressLoading || !activeCourse) return null;
+    for (let i = 0; i < activeCourse.lessons.length; i++) {
+      const lesson = activeCourse.lessons[i];
+      if (getStatus(lesson.id, i) === "available") return lesson;
+    }
+    return null;
+  }, [activeCourse, getStatus, progressLoading]);
+
+  const lastCompletedLesson = useMemo((): LearnLesson | null => {
+    if (progressLoading || !activeCourse) return null;
+    for (let i = activeCourse.lessons.length - 1; i >= 0; i--) {
+      const lesson = activeCourse.lessons[i];
+      if (getStatus(lesson.id, i) === "completed") return lesson;
+    }
+    return null;
+  }, [activeCourse, getStatus, progressLoading]);
+
+  const coursePercent =
+    totalLessons > 0 ? Math.round((completedCount / totalLessons) * 100) : 0;
+
+  const heroColor = getCourseHeroColor(
+    activeCourse?.id ?? PROPHETS_COURSE_ID,
+    colors.accent
+  );
+
+  const planItems = useMemo((): LearnPathItem[] => {
+    if (!activeCourse) return [];
+    return activeCourse.lessons.map((lesson, index) => {
+      const status: LessonStatus = progressLoading
+        ? index === 0
+          ? "available"
+          : "locked"
+        : getStatus(lesson.id, index);
+      return { lesson, index, status };
+    });
+  }, [activeCourse, getStatus, progressLoading]);
+
+  const filteredPlanItems = useMemo(() => {
+    switch (planFilter) {
+      case "todo":
+        return planItems.filter((i) => i.status !== "completed");
+      case "done":
+        return planItems.filter((i) => i.status === "completed");
+      case "all":
+        return planItems;
+      default: {
+        const _exhaustive: never = planFilter;
+        return _exhaustive;
+      }
+    }
+  }, [planFilter, planItems]);
 
   const hapticPress = () => {
     if (Platform.OS === "ios") {
       void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     }
+  };
+
+  const openLesson = (lessonId: string) => {
+    hapticPress();
+    router.push(`/(root)/apprendre/lecon/${lessonId}` as const);
   };
 
   const showGoalPicker = () => {
@@ -162,46 +235,48 @@ export default function ApprendreScreen() {
   return (
     <ScreenBackground style={ui.background}>
       <SafeAreaView style={ui.safeArea} edges={["top", "left", "right"]}>
-        <ScreenPageHeader
-          title={t("screens.learnTitle")}
-          subtitle={`${t("screens.learnSubtitle")} · ${user?.name ?? t("home.defaultUser")}`}
-          style={screenPageHeaderSpacing}
-          rightElement={
-            <View style={styles.headerRight}>
-              <View style={styles.streakBadge}>
-                <AppIcon name="zap" size={22} color={colors.accent} />
-                <Text style={styles.streakCount}>{totalCompleted}</Text>
-              </View>
-              <Pressable
-                onPress={() => router.push("/(root)/apprendre-stats")}
-                accessibilityRole="button"
-                accessibilityLabel={t("learn.statsLabel")}
-                style={({ pressed }) => [
-                  styles.statsButton,
-                  pressed && { opacity: 0.85 },
-                ]}
-              >
-                <Image
-                  source={{
-                    uri:
-                      user?.avatar ??
-                      "https://ui-avatars.com/api/?name=U&size=80",
-                  }}
-                  style={styles.headerAvatar}
-                />
-                <Text style={styles.statsButtonText}>
-                  {t("learn.statsLabel")}
-                </Text>
-              </Pressable>
-            </View>
-          }
-        />
-
         <ScrollView
           showsVerticalScrollIndicator={false}
-          contentContainerStyle={[screenScrollContent, styles.scrollContent]}
+          contentContainerStyle={[screenScrollContent, homeStyles.scrollContent]}
         >
-          <LibrarySectionDivider variant="header" />
+          <View style={homeStyles.header}>
+            <View style={homeStyles.headerTop}>
+              <Text style={homeStyles.greeting} numberOfLines={1}>
+                {t("learn.greetHello", { name: firstName })}
+              </Text>
+              <View style={homeStyles.headerRight}>
+                <View style={homeStyles.flamePill}>
+                  <AppIcon name="zap" size={22} color={colors.accent} />
+                  <Text style={homeStyles.flameValue}>{streak}</Text>
+                </View>
+                <Pressable
+                  onPress={() => router.push("/(root)/apprendre-stats")}
+                  accessibilityRole="button"
+                  accessibilityLabel={t("learn.statsLabel")}
+                  style={({ pressed }) => [
+                    homeStyles.statsBtn,
+                    pressed && { opacity: 0.85 },
+                  ]}
+                >
+                  <Image
+                    source={{
+                      uri:
+                        user?.avatar ??
+                        "https://ui-avatars.com/api/?name=U&size=80",
+                    }}
+                    style={homeStyles.avatar}
+                  />
+                </Pressable>
+              </View>
+            </View>
+            <View style={homeStyles.metaRow}>
+              <CoursePicker
+                courses={courses}
+                selectedCourseId={activeCourse?.id ?? PROPHETS_COURSE_ID}
+                onSelect={setSelectedCourseId}
+              />
+            </View>
+          </View>
 
           <View style={styles.tabsRow}>
             {tabs.map((tab) => (
@@ -230,67 +305,78 @@ export default function ApprendreScreen() {
 
           {activeTab === "today" && (
             <>
-              <Pressable
-                onPress={showGoalPicker}
-                style={({ pressed }) => [
-                  styles.rowPressable,
-                  pressed && styles.rowPressablePressed,
-                ]}
-                accessibilityRole="button"
-              >
-                <View style={styles.iconWrap}>
-                  <AppIcon name="flag" size={22} color={colors.accent} />
-                </View>
-                <View style={styles.rowBody}>
-                  <Text style={styles.rowTitle}>{t("learn.setWeeklyGoal")}</Text>
-                  <Text style={styles.rowSub} numberOfLines={1}>
-                    {weeklyGoal > 0
-                      ? t("learn.weeklyGoalProgress", {
-                          done: weeklyDone,
-                          goal: weeklyGoal,
-                        })
-                      : t("learn.weeklyGoalTap")}
-                  </Text>
-                </View>
-                <AppIcon name="chevron-right" size={18} color={colors.iconMuted} />
-              </Pressable>
+              <LearnWeekStrip activeDays={activeDays} />
 
-              <LearnDivider tight />
-
-              {completedCount < totalLessons && nextLesson ? (
-                <Pressable
-                  onPress={() => {
-                    hapticPress();
-                    router.push(
-                      `/(root)/apprendre/lecon/${nextLesson.id}` as const
-                    );
-                  }}
-                  style={({ pressed }) => [
-                    styles.highlightBlock,
-                    pressed && { opacity: 0.92 },
-                  ]}
-                  accessibilityRole="button"
-                >
-                  <Text style={styles.highlightLabel}>
-                    {t("learn.todayNextLesson")}
-                  </Text>
-                  <Text style={styles.highlightTitle} numberOfLines={2}>
-                    {nextLesson.title} — {nextLesson.subtitle}
-                  </Text>
-                  <View style={styles.highlightCta}>
-                    <Text style={styles.rowAction}>{t("learn.start")}</Text>
-                    <AppIcon name="chevron-right" size={16} color={colors.accent} />
-                  </View>
-                </Pressable>
-              ) : completedCount >= totalLessons ? (
-                <View style={styles.highlightBlock}>
-                  <Text style={styles.highlightTitle}>
-                    {t("learn.todayAllDone")}
-                  </Text>
-                </View>
+              {nextLesson ? (
+                <LearnHero
+                  eyebrow={`${t("learn.continuePrefix")} · ${activeCourse?.title ?? ""}`}
+                  title={`${nextLesson.title} — ${nextLesson.subtitle}`}
+                  meta={
+                    t("learn.progress", {
+                      done: completedCount,
+                      total: totalLessons,
+                    }) + ` · ${coursePercent}%`
+                  }
+                  ctaLabel={t("learn.start")}
+                  accentColor={heroColor}
+                  onPress={() => openLesson(nextLesson.id)}
+                />
+              ) : completedCount >= totalLessons && totalLessons > 0 ? (
+                <LearnHero
+                  eyebrow={t("learn.tabPlan")}
+                  title={t("learn.todayAllDone")}
+                  meta={t("learn.progress", {
+                    done: completedCount,
+                    total: totalLessons,
+                  })}
+                  ctaLabel={t("learn.tabPlan")}
+                  accentColor={heroColor}
+                  onPress={() => setActiveTab("plan")}
+                />
               ) : null}
 
-              <LearnDivider />
+              <View style={homeStyles.motivation}>
+                <View
+                  style={[
+                    homeStyles.metricCard,
+                    {
+                      backgroundColor: colors.usesBackgroundImage
+                        ? colors.card
+                        : colors.cardElevated,
+                      borderColor: colors.border,
+                    },
+                  ]}
+                >
+                  <Text style={[homeStyles.metricValue, { color: colors.text }]}>
+                    {completedCount}
+                  </Text>
+                  <Text
+                    style={[homeStyles.metricLabel, { color: colors.textMuted }]}
+                  >
+                    {t("learn.lessonsStat")}
+                  </Text>
+                </View>
+                <View style={{ flex: 1 }}>
+                  <LearnGoalCard
+                    label={t("learn.dailyObjective")}
+                    done={weeklyDone}
+                    goal={weeklyGoal > 0 ? weeklyGoal : 3}
+                    unitLabel={t("learn.lessonsStat").toLowerCase()}
+                    doneHint={t("learn.dailyObjectiveDone")}
+                    onPress={showGoalPicker}
+                  />
+                </View>
+              </View>
+
+              {lastCompletedLesson ? (
+                <LearnResumeCard
+                  eyebrow={t("learn.resumeLabel")}
+                  title={`${lastCompletedLesson.title} — ${lastCompletedLesson.subtitle}`}
+                  subtitle={t("learn.resumeHint")}
+                  ctaLabel={t("learn.review")}
+                  onPress={() => openLesson(lastCompletedLesson.id)}
+                />
+              ) : null}
 
               <View style={styles.section}>
                 <SectionHeader
@@ -336,128 +422,109 @@ export default function ApprendreScreen() {
 
           {activeTab === "plan" && (
             <>
-              <ScrollView
-                horizontal
-                showsHorizontalScrollIndicator={false}
-                contentContainerStyle={[
-                  styles.chipScroll,
-                  { paddingRight: H_PADDING },
-                ]}
-              >
-                {courses.map((course) => {
-                  const selected = course.id === activeCourse?.id;
-                  return (
-                    <Pressable
-                      key={course.id}
-                      onPress={() => setSelectedCourseId(course.id)}
-                      style={[
-                        styles.chip,
-                        selected && styles.chipActive,
-                      ]}
-                      accessibilityRole="button"
-                      accessibilityState={{ selected }}
-                    >
-                      <Text
-                        style={[
-                          styles.chipText,
-                          selected && styles.chipTextActive,
-                        ]}
-                        numberOfLines={1}
-                      >
-                        {course.title}
-                      </Text>
-                    </Pressable>
-                  );
-                })}
-              </ScrollView>
-
-              <View style={styles.planHeader}>
-                <Text style={styles.planTitle}>{activeCourse?.title}</Text>
-                <Text style={styles.planSub}>
-                  {activeCourse?.subtitle} ·{" "}
-                  {t("learn.progress", {
-                    done: completedCount,
-                    total: totalLessons,
-                  })}
-                </Text>
-              </View>
-
-              <LearnDivider tight />
-
-              <View style={styles.lessonList}>
-                {(activeCourse?.lessons ?? []).map((lesson, index) => {
-                  const status: LessonStatus = progressLoading
-                    ? index === 0
-                      ? "available"
-                      : "locked"
-                    : getStatus(lesson.id, index);
-                  const locked = status === "locked";
-                  const completed = status === "completed";
-
-                  const openLesson = () => {
-                    if (locked) return;
-                    hapticPress();
-                    router.push(
-                      `/(root)/apprendre/lecon/${lesson.id}` as const
-                    );
-                  };
-
-                  return (
-                    <Pressable
-                      key={lesson.id}
-                      onPress={openLesson}
-                      disabled={locked}
-                      accessibilityRole="button"
-                      accessibilityState={{ disabled: locked }}
-                      style={({ pressed }) => [
-                        styles.lessonRow,
-                        locked && styles.lessonRowLocked,
-                        pressed && !locked && styles.lessonRowPressed,
-                      ]}
-                    >
-                      {!locked ? (
-                        <View style={styles.lessonAccentBar} />
-                      ) : (
-                        <View style={[styles.iconWrap, styles.iconWrapMuted]}>
-                          <AppIcon name="lock" size={20} color={colors.iconMuted} />
-                        </View>
-                      )}
-                      <View style={styles.rowBody}>
-                        <Text style={styles.lessonMeta}>
-                          {t("learn.lesson")} {lesson.order}
-                          {completed ? ` · ${t("learn.lessonCompleted")}` : ""}
-                        </Text>
-                        <Text style={styles.lessonTitle} numberOfLines={2}>
-                          {lesson.title}
-                          {lesson.subtitle ? ` — ${lesson.subtitle}` : ""}
-                        </Text>
-                        {!locked ? (
-                          <Text style={styles.rowAction}>
-                            {completed ? t("learn.review") : t("learn.start")}
-                          </Text>
-                        ) : (
-                          <Text style={styles.rowSub} numberOfLines={1}>
-                            {t("learn.lessonLocked")}
-                          </Text>
-                        )}
-                      </View>
-                      {!locked ? (
-                        <AppIcon
-                          name="chevron-right"
-                          size={18}
-                          color={colors.iconMuted}
-                        />
-                      ) : null}
-                    </Pressable>
-                  );
-                })}
-              </View>
+              <LearnPlanHeader
+                title={activeCourse?.title ?? ""}
+                subtitle={activeCourse?.subtitle}
+                done={completedCount}
+                total={totalLessons}
+                heroColor={heroColor}
+              />
+              <LearnPlanFilters value={planFilter} onChange={setPlanFilter} />
+              <LearnLessonPath
+                items={filteredPlanItems}
+                heroColor={heroColor}
+                onPressLesson={openLesson}
+              />
             </>
           )}
         </ScrollView>
       </SafeAreaView>
     </ScreenBackground>
   );
+}
+
+function createHomeLearnStyles(colors: ReturnType<typeof useAppTheme>) {
+  const cardShadow = colors.isDark ? SHADOW.dark : SHADOW.light;
+  return StyleSheet.create({
+    scrollContent: {
+      paddingTop: SPACE.sm,
+      paddingBottom: 120,
+    },
+    header: {
+      marginBottom: SPACE.md,
+    },
+    headerTop: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "space-between",
+      gap: SPACE.sm,
+    },
+    headerRight: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: SPACE.sm,
+      flexShrink: 0,
+    },
+    greeting: {
+      flex: 1,
+      fontFamily: "PlusJakartaSans-Bold",
+      fontSize: 26,
+      lineHeight: 34,
+      color: colors.text,
+    },
+    metaRow: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: SPACE.sm,
+      marginTop: SPACE.xs,
+    },
+    flamePill: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 6,
+      paddingVertical: 4,
+      paddingHorizontal: 2,
+    },
+    flameValue: {
+      fontFamily: "PlusJakartaSans-Bold",
+      fontSize: 18,
+      color: colors.text,
+    },
+    statsBtn: {
+      padding: 2,
+    },
+    avatar: {
+      width: 36,
+      height: 36,
+      borderRadius: 18,
+      borderWidth: StyleSheet.hairlineWidth,
+      borderColor: colors.border,
+    },
+    motivation: {
+      flexDirection: "row",
+      gap: SPACE.sm,
+      marginTop: SPACE.md,
+      marginBottom: SECTION_GAP,
+    },
+    metricCard: {
+      width: 88,
+      borderRadius: CARD_RADIUS,
+      borderWidth: 1,
+      alignItems: "center",
+      justifyContent: "center",
+      paddingVertical: 14,
+      ...cardShadow,
+    },
+    metricValue: {
+      fontFamily: "PlusJakartaSans-Bold",
+      fontSize: 28,
+    },
+    metricLabel: {
+      fontFamily: "PlusJakartaSans-Regular",
+      fontSize: 11,
+      marginTop: 2,
+    },
+  });
 }
 
 const ui = StyleSheet.create({

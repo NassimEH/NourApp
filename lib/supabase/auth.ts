@@ -59,7 +59,15 @@ function displayNameFromUser(user: User): string {
 
 async function mapSupabaseUser(user: User): Promise<AppUser> {
   const name = displayNameFromUser(user);
-  const localAvatar = await getProfileAvatarUri();
+  let localAvatar: string | null = null;
+  try {
+    localAvatar = await Promise.race([
+      getProfileAvatarUri(),
+      new Promise<null>((resolve) => setTimeout(() => resolve(null), 1500)),
+    ]);
+  } catch {
+    localAvatar = null;
+  }
   const meta = user.user_metadata as Record<string, unknown> | undefined;
   const remoteAvatar =
     typeof meta?.avatar_url === "string" ? meta.avatar_url : undefined;
@@ -74,9 +82,10 @@ async function mapSupabaseUser(user: User): Promise<AppUser> {
 
 export async function getCurrentUser(): Promise<AppUser | null> {
   if (!isSupabaseConfigured) return null;
-  const { data, error } = await supabase.auth.getUser();
+  // getSession lit le stockage local — ne bloque pas sur le réseau (contrairement à getUser).
+  const { data, error } = await supabase.auth.getSession();
   if (error) return null;
-  const user = data.user;
+  const user = data.session?.user;
   if (!user) return null;
   return mapSupabaseUser(user);
 }

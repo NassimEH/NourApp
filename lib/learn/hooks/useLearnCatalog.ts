@@ -38,6 +38,17 @@ export function useLearnCatalog() {
     return null;
   }, [courses, completedIds]);
 
+  const findLastCompletedLesson = useCallback((): LearnLesson | null => {
+    for (let i = completedIds.length - 1; i >= 0; i--) {
+      const id = completedIds[i];
+      for (const course of courses) {
+        const lesson = course.lessons.find((l) => l.id === id);
+        if (lesson) return lesson;
+      }
+    }
+    return null;
+  }, [courses, completedIds]);
+
   const totalCompleted = useMemo(
     () =>
       courses.reduce(
@@ -59,6 +70,7 @@ export function useLearnCatalog() {
     loading,
     refresh,
     findNextLesson,
+    findLastCompletedLesson,
     totalCompleted,
     totalLessons,
   };

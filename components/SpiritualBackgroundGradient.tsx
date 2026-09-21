@@ -1,22 +1,32 @@
-import { StyleSheet } from "react-native";
-import { LinearGradient } from "expo-linear-gradient";
+import { Image, StyleSheet, View } from "react-native";
 
-/** Fond thème spirituel — dégradé crème → rose, sans décoration. */
+import images from "@/constants/images";
+
+/**
+ * Fond thème spirituel — image illustrée (crème → pêche).
+ * Uniquement monté quand `usesBackgroundImage` est true.
+ */
 export function SpiritualBackgroundGradient() {
   return (
-    <LinearGradient
-      colors={["#FAF7F2", "#F3EBE4", "#EBC8BC"]}
-      locations={[0, 0.52, 1]}
-      start={{ x: 0.12, y: 0 }}
-      end={{ x: 0.88, y: 1 }}
-      style={styles.fill}
-      pointerEvents="none"
-    />
+    <View style={styles.fill} pointerEvents="none">
+      <Image
+        source={images.background}
+        style={styles.image}
+        resizeMode="cover"
+        accessibilityElementsHidden
+        importantForAccessibility="no-hide-descendants"
+      />
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   fill: {
-    ...StyleSheet.absoluteFill,
+    ...StyleSheet.absoluteFillObject,
+  },
+  image: {
+    ...StyleSheet.absoluteFillObject,
+    width: "100%",
+    height: "100%",
   },
 });

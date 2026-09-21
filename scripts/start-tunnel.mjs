@@ -4,6 +4,7 @@
  * - Expo with EXPO_PACKAGER_PROXY_URL=https://...
  * - Expo Go URL uses exps:// (HTTPS), never exp://...:443
  * - Wait for local Metro first; QR after edge is registered
+ * - Retry cloudflared a few times (corp networks often drop first connect)
  */
 import { spawn, spawnSync } from 'node:child_process';
 import { mkdirSync } from 'node:fs';
@@ -24,10 +25,13 @@ const QR_OUTBOX = path.join(
   'NourApp',
   'expo-qr.png'
 );
+const MAX_TUNNEL_ATTEMPTS = 5;
 
 mkdirSync(RUNTIME, { recursive: true });
 process.env.METRO_CACHE_DIR = path.join(RUNTIME, 'metro-cache');
 mkdirSync(process.env.METRO_CACHE_DIR, { recursive: true });
+process.env.TUNNEL_EDGE_IP_VERSION = process.env.TUNNEL_EDGE_IP_VERSION || '4';
+process.env.TUNNEL_RETRIES = process.env.TUNNEL_RETRIES || '15';
 
 async function writeQr(url) {
   const QRCode = require('qrcode');
@@ -104,20 +108,11 @@ async function waitForTunnelHttps(url, attempts = 30) {
   return 0;
 }
 
-const tunnel = spawnLogged('npx', [
-  '--yes',
-  'cloudflared',
-  'tunnel',
-  '--url',
-  'http://127.0.0.1:8081',
-  '--protocol',
-  'http2',
-  '--no-autoupdate',
-]);
-
+let tunnel = null;
 let host = null;
 let started = false;
 let buffer = '';
+let attempt = 0;
 
 async function bootExpo(tunnelHost) {
   if (started) return;
@@ -129,7 +124,7 @@ async function bootExpo(tunnelHost) {
 
   const expo = spawnLogged(
     'npx',
-    ['expo', 'start', '--lan', '--go', '--port', '8081', '--clear'],
+    ['expo', 'start', '--lan', '--go', '--port', '8081'],
     {
       METRO_CACHE_DIR: process.env.METRO_CACHE_DIR,
       EXPO_NO_TELEMETRY: '1',
@@ -141,7 +136,7 @@ async function bootExpo(tunnelHost) {
   if (!metroOk) {
     console.error('[start-tunnel] Metro local n’a pas démarré.');
     expo.kill();
-    tunnel.kill();
+    tunnel?.kill();
     process.exit(1);
   }
   console.log('[start-tunnel] Metro local OK.');
@@ -159,13 +154,13 @@ async function bootExpo(tunnelHost) {
 
   const shutdown = () => {
     expo.kill();
-    tunnel.kill();
+    tunnel?.kill();
     process.exit(0);
   };
   process.on('SIGINT', shutdown);
   process.on('SIGTERM', shutdown);
   expo.on('exit', (code) => {
-    tunnel.kill();
+    tunnel?.kill();
     process.exit(code ?? 1);
   });
 }
@@ -179,7 +174,10 @@ function onTunnelData(buf) {
     if (m) host = m[1];
   }
 
-  if (host && /Registered tunnel connection/i.test(text)) {
+  const edgeReady =
+    /Registered tunnel connection/i.test(buffer) || /Connection registered/i.test(buffer);
+
+  if (host && edgeReady) {
     bootExpo(host).catch((e) => {
       console.error(e);
       process.exit(1);
@@ -187,12 +185,36 @@ function onTunnelData(buf) {
   }
 }
 
-tunnel.stdout.on('data', onTunnelData);
-tunnel.stderr.on('data', onTunnelData);
+function startTunnel() {
+  attempt += 1;
+  host = null;
+  buffer = '';
+  console.log(`[start-tunnel] cloudflared attempt ${attempt}/${MAX_TUNNEL_ATTEMPTS}...`);
 
-tunnel.on('exit', (code) => {
-  if (!started) {
-    console.error('[start-tunnel] cloudflared exited before Expo started.');
+  tunnel = spawnLogged('npx', [
+    '--yes',
+    'cloudflared',
+    'tunnel',
+    '--url',
+    'http://127.0.0.1:8081',
+    '--protocol',
+    'http2',
+    '--no-autoupdate',
+  ]);
+
+  tunnel.stdout.on('data', onTunnelData);
+  tunnel.stderr.on('data', onTunnelData);
+
+  tunnel.on('exit', (code) => {
+    if (started) return;
+    console.error(`[start-tunnel] cloudflared exited before Expo started (code ${code ?? '?'}).`);
+    if (attempt < MAX_TUNNEL_ATTEMPTS) {
+      console.log('[start-tunnel] Retry in 3s...');
+      setTimeout(startTunnel, 3000);
+      return;
+    }
     process.exit(code ?? 1);
-  }
-});
+  });
+}
+
+startTunnel();

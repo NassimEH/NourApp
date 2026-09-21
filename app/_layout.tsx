@@ -1,5 +1,5 @@
-import { useEffect, useMemo } from "react";
-import { StyleSheet, View } from "react-native";
+import React, { Component, useEffect, useMemo, type ReactNode } from "react";
+import { StyleSheet, Text, View } from "react-native";
 import { Stack } from "expo-router";
 import { useFonts } from "expo-font";
 import * as SplashScreen from "expo-splash-screen";
@@ -13,10 +13,40 @@ import "./global.css";
 import { GlobalProvider } from "@/lib/global-provider";
 import { OnboardingGateProvider } from "@/lib/onboarding-gate";
 import { TabBarPreferenceProvider } from "@/lib/tab-bar-preference";
-import { AppPreferencesProvider, useAppPreferences } from "@/lib/app-preferences";
+import {
+  AppPreferencesProvider,
+  useAppPreferences,
+} from "@/lib/app-preferences";
 import { getAppThemeColors } from "@/lib/app-theme";
 import { LocaleSync } from "@/components/LocaleSync";
 import { ScreenBackground } from "@/components/ScreenBackground";
+
+SplashScreen.preventAutoHideAsync().catch(() => {});
+
+type BoundaryState = { error: Error | null };
+
+class StartupErrorBoundary extends Component<
+  { children: ReactNode },
+  BoundaryState
+> {
+  state: BoundaryState = { error: null };
+
+  static getDerivedStateFromError(error: Error): BoundaryState {
+    return { error };
+  }
+
+  render() {
+    if (this.state.error) {
+      return (
+        <View style={styles.errorRoot}>
+          <Text style={styles.errorTitle}>Erreur au démarrage</Text>
+          <Text style={styles.errorBody}>{this.state.error.message}</Text>
+        </View>
+      );
+    }
+    return this.props.children;
+  }
+}
 
 function RootNavigation() {
   const { theme, accentColor, textColor } = useAppPreferences();
@@ -26,22 +56,21 @@ function RootNavigation() {
   );
 
   return (
-    <>
+    <View style={styles.navRoot}>
       <StatusBar style={colors.statusBarStyle} />
       <Stack
         screenOptions={{
           headerShown: false,
-          contentStyle: {
-            backgroundColor: "transparent",
-          },
+          contentStyle: styles.stackContent,
         }}
       />
-    </>
+    </View>
   );
 }
 
-export default function RootLayout() {
-  const [fontsLoaded] = useFonts({
+/** Charge les polices sans bloquer le rendu. */
+function FontLoader({ children }: { children: ReactNode }) {
+  const [fontsLoaded, fontError] = useFonts({
     "PlusJakartaSans-Bold": require("../fonts2/PlusJakartaSans-Bold.ttf"),
     "PlusJakartaSans-ExtraBold": require("../fonts2/PlusJakartaSans-ExtraBold.ttf"),
     "PlusJakartaSans-Light": require("../fonts2/PlusJakartaSans-Light.ttf"),
@@ -53,30 +82,39 @@ export default function RootLayout() {
   });
 
   useEffect(() => {
-    if (fontsLoaded) {
-      SplashScreen.hideAsync();
+    const t = setTimeout(() => {
+      SplashScreen.hideAsync().catch(() => {});
+    }, 2000);
+    return () => clearTimeout(t);
+  }, []);
+
+  useEffect(() => {
+    if (fontsLoaded || fontError) {
+      SplashScreen.hideAsync().catch(() => {});
     }
-  }, [fontsLoaded]);
+  }, [fontsLoaded, fontError]);
 
-  if (!fontsLoaded) {
-    return null;
-  }
+  return <>{children}</>;
+}
 
+export default function RootLayout() {
   return (
-    <AppPreferencesProvider>
-      <GlobalProvider>
-        <OnboardingGateProvider>
-          <TabBarPreferenceProvider>
-            <LocaleSync />
-            <ScreenBackground style={styles.background}>
-              <View style={styles.overlay}>
-                <RootNavigation />
-              </View>
-            </ScreenBackground>
-          </TabBarPreferenceProvider>
-        </OnboardingGateProvider>
-      </GlobalProvider>
-    </AppPreferencesProvider>
+    <StartupErrorBoundary>
+      <AppPreferencesProvider>
+        <GlobalProvider>
+          <OnboardingGateProvider>
+            <TabBarPreferenceProvider>
+              <LocaleSync />
+              <FontLoader>
+                <ScreenBackground style={styles.background}>
+                  <RootNavigation />
+                </ScreenBackground>
+              </FontLoader>
+            </TabBarPreferenceProvider>
+          </OnboardingGateProvider>
+        </GlobalProvider>
+      </AppPreferencesProvider>
+    </StartupErrorBoundary>
   );
 }
 
@@ -84,7 +122,27 @@ const styles = StyleSheet.create({
   background: {
     flex: 1,
   },
-  overlay: {
+  navRoot: {
     flex: 1,
+  },
+  stackContent: {
+    flex: 1,
+    backgroundColor: "transparent",
+  },
+  errorRoot: {
+    flex: 1,
+    justifyContent: "center",
+    padding: 24,
+    backgroundColor: "#FFFFFF",
+  },
+  errorTitle: {
+    fontSize: 18,
+    fontWeight: "700",
+    color: "#B91C1C",
+    marginBottom: 8,
+  },
+  errorBody: {
+    fontSize: 14,
+    color: "#111827",
   },
 });

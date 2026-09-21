@@ -85,7 +85,10 @@ export const GlobalProvider = ({ children }: { children: ReactNode }) => {
   const refetch = useCallback(async () => {
     setLoading(true);
     try {
-      const sessionUser = await getCurrentUser();
+      const sessionUser = await Promise.race([
+        getCurrentUser(),
+        new Promise<null>((resolve) => setTimeout(() => resolve(null), 4000)),
+      ]);
       if (sessionUser) {
         setUser(sessionUser);
         setIsGuest(false);

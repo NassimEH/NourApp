@@ -31,11 +31,19 @@ export function OnboardingGateProvider({ children }: { children: React.ReactNode
   const [isComplete, setIsComplete] = useState(sessionOnboardingComplete);
 
   const refresh = useCallback(async () => {
-    const stored = await readOnboardingFromStorage();
-    const done = sessionOnboardingComplete || stored;
-    sessionOnboardingComplete = done;
-    setIsComplete(done);
-    setHydrated(true);
+    try {
+      const stored = await Promise.race([
+        readOnboardingFromStorage(),
+        new Promise<boolean>((resolve) => setTimeout(() => resolve(false), 2000)),
+      ]);
+      const done = sessionOnboardingComplete || stored;
+      sessionOnboardingComplete = done;
+      setIsComplete(done);
+    } catch {
+      setIsComplete(sessionOnboardingComplete);
+    } finally {
+      setHydrated(true);
+    }
   }, []);
 
   useEffect(() => {

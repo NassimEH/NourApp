@@ -3,6 +3,8 @@ import type { ImageSourcePropType } from "react-native";
 import type { FeatherIconName } from "@/lib/app-icons";
 
 const QURAN_ILLUSTRATION = require("@/assets/images/islamic-new-year-quran-book-with-dates-photo.jpg");
+const TAFSIR_ILLUSTRATION = require("@/assets/images/tafsir-cover.png");
+const MEMORISATION_ILLUSTRATION = require("@/assets/images/memorisation-cover.png");
 
 export type LibraryRoute =
   | "sourates"
@@ -88,12 +90,14 @@ export const LIBRARY_CATALOG: LibraryCatalogSection[] = [
         titleKey: "screens.tafsirTitle",
         shortKey: "library.tafsirExternal",
         icon: "book",
+        image: TAFSIR_ILLUSTRATION,
       },
       {
         id: "memorisation",
         titleKey: "screens.memorisationTitle",
         shortKey: "library.memorisationShort",
         icon: "bookmark",
+        image: MEMORISATION_ILLUSTRATION,
       },
       {
         id: "juz",

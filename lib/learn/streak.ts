@@ -6,7 +6,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const KEY_ACTIVITY = "@learn_activity_days";
 
-function dayKey(date = new Date()): string {
+export function dayKey(date = new Date()): string {
   const y = date.getFullYear();
   const m = String(date.getMonth() + 1).padStart(2, "0");
   const d = String(date.getDate()).padStart(2, "0");
@@ -46,6 +46,8 @@ export type LearnStreakInfo = {
   /** 7 booléens Lun→Dim de la semaine ISO courante (lundi = 0) */
   weekDays: boolean[];
   lastActiveDay: string | null;
+  /** Toutes les dates d'activité (YYYY-MM-DD), pour WeekStrip */
+  activeDays: string[];
 };
 
 function startOfIsoWeek(date: Date): Date {
@@ -96,5 +98,6 @@ export async function getLearnStreakInfo(
     streak,
     weekDays,
     lastActiveDay: sorted.length ? sorted[sorted.length - 1]! : null,
+    activeDays: sorted,
   };
 }

@@ -2,20 +2,30 @@ import { StyleSheet } from "react-native";
 
 import type { AppThemeColors } from "@/lib/app-theme";
 import type { AppTypography } from "@/lib/app-typography";
-import { CARD_RADIUS, MIN_TOUCH_TARGET, SECTION_GAP, SPACE } from "@/lib/ui/spacing";
+import {
+  CARD_RADIUS,
+  LIST_GAP,
+  MIN_TOUCH_TARGET,
+  SECTION_GAP,
+  SECTION_TITLE_GAP,
+  SHADOW,
+  SPACE,
+} from "@/lib/ui/spacing";
 
-export const LEARN_RECENT_TILE_WIDTH = 120;
-export const LEARN_RECENT_TILE_HEIGHT = 118;
+export const LEARN_RECENT_TILE_WIDTH = 148;
+export const LEARN_RECENT_TILE_HEIGHT = 132;
+export const LEARN_GOAL_ART_SIZE = 88;
 
 export function createLearnScreenStyles(
   c: AppThemeColors,
   typography: AppTypography
 ) {
-  const cardBg = c.usesBackgroundImage ? "transparent" : c.card;
+  const elevatedBg = c.usesBackgroundImage ? c.card : c.cardElevated;
+  const cardShadow = c.isDark ? SHADOW.dark : SHADOW.light;
 
   return StyleSheet.create({
     scrollContent: {
-      paddingTop: SPACE.sm,
+      paddingTop: SPACE.md,
       paddingBottom: 120,
     },
     headerRight: {
@@ -27,12 +37,8 @@ export function createLearnScreenStyles(
       flexDirection: "row",
       alignItems: "center",
       gap: 6,
-      paddingHorizontal: SPACE.sm,
-      paddingVertical: 6,
-      borderRadius: CARD_RADIUS,
-      backgroundColor: c.accentSurface,
-      borderWidth: StyleSheet.hairlineWidth,
-      borderColor: c.border,
+      minHeight: MIN_TOUCH_TARGET,
+      paddingHorizontal: 2,
     },
     streakCount: {
       fontSize: typography.title,
@@ -70,7 +76,7 @@ export function createLearnScreenStyles(
     tabsRow: {
       flexDirection: "row",
       gap: SPACE.lg,
-      marginBottom: SPACE.md,
+      marginBottom: SECTION_GAP,
       borderBottomWidth: StyleSheet.hairlineWidth,
       borderBottomColor: c.divider,
     },
@@ -96,15 +102,84 @@ export function createLearnScreenStyles(
       borderRadius: 1,
       backgroundColor: c.accent,
     },
+    todayStack: {
+      gap: SECTION_GAP,
+    },
     rowPressable: {
       flexDirection: "row",
       alignItems: "center",
-      gap: SPACE.md,
+      gap: SPACE.sm,
       paddingVertical: SPACE.md,
       minHeight: MIN_TOUCH_TARGET + 4,
     },
     rowPressablePressed: {
       opacity: 0.88,
+    },
+    goalIcon: {
+      marginTop: 1,
+    },
+    goalCard: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: SPACE.md,
+      paddingVertical: SPACE.md,
+      paddingLeft: SPACE.lg,
+      paddingRight: SPACE.sm,
+      borderRadius: CARD_RADIUS,
+      borderWidth: 1,
+      borderColor: c.border,
+      backgroundColor: elevatedBg,
+      overflow: "hidden",
+      minHeight: 108,
+      ...cardShadow,
+    },
+    goalCardPressed: {
+      opacity: 0.94,
+    },
+    goalCardBody: {
+      flex: 1,
+      gap: SPACE.sm,
+      paddingVertical: SPACE.xs,
+      minWidth: 0,
+    },
+    goalCardHeader: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: SPACE.xs,
+    },
+    goalCardTitle: {
+      fontSize: typography.body,
+      fontFamily: "PlusJakartaSans-Bold",
+      color: c.text,
+      flexShrink: 1,
+    },
+    goalCardSub: {
+      fontSize: typography.caption,
+      fontFamily: "PlusJakartaSans-Regular",
+      color: c.textMuted,
+      lineHeight: 18,
+    },
+    goalProgressTrack: {
+      height: 6,
+      borderRadius: 3,
+      backgroundColor: c.accentSurface,
+      overflow: "hidden",
+      marginTop: 2,
+    },
+    goalProgressFill: {
+      height: "100%",
+      borderRadius: 3,
+      backgroundColor: c.accent,
+    },
+    goalArtWrap: {
+      width: LEARN_GOAL_ART_SIZE,
+      height: LEARN_GOAL_ART_SIZE,
+      alignItems: "center",
+      justifyContent: "center",
+    },
+    goalArt: {
+      width: LEARN_GOAL_ART_SIZE,
+      height: LEARN_GOAL_ART_SIZE,
     },
     iconWrap: {
       width: 48,
@@ -121,7 +196,7 @@ export function createLearnScreenStyles(
     },
     rowBody: {
       flex: 1,
-      gap: 3,
+      gap: SPACE.xs,
     },
     rowTitle: {
       fontSize: typography.body,
@@ -138,6 +213,54 @@ export function createLearnScreenStyles(
       fontSize: typography.caption,
       fontFamily: "PlusJakartaSans-SemiBold",
       color: c.accent,
+    },
+    lessonCard: {
+      flexDirection: "row",
+      alignItems: "stretch",
+      gap: SPACE.md,
+      padding: SPACE.lg,
+      borderRadius: CARD_RADIUS,
+      borderWidth: 1,
+      borderColor: c.border,
+      backgroundColor: elevatedBg,
+      minHeight: MIN_TOUCH_TARGET + 28,
+      ...cardShadow,
+    },
+    lessonCardPressed: {
+      opacity: 0.92,
+    },
+    lessonCardBody: {
+      flex: 1,
+      gap: SPACE.xs,
+      justifyContent: "center",
+    },
+    lessonCardLabel: {
+      fontSize: typography.sectionTitle,
+      fontFamily: "PlusJakartaSans-SemiBold",
+      color: c.textMuted,
+      textTransform: "uppercase",
+      letterSpacing: 0.4,
+    },
+    lessonCardTitle: {
+      fontSize: typography.bodyMedium,
+      fontFamily: "PlusJakartaSans-Bold",
+      color: c.text,
+      lineHeight: 22,
+    },
+    lessonCardHint: {
+      fontSize: typography.caption,
+      fontFamily: "PlusJakartaSans-Regular",
+      color: c.textMuted,
+      lineHeight: 18,
+    },
+    lessonCardCta: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 4,
+      marginTop: SPACE.xs,
+    },
+    lessonCardChevron: {
+      justifyContent: "center",
     },
     highlightBlock: {
       paddingVertical: SPACE.md,
@@ -166,10 +289,10 @@ export function createLearnScreenStyles(
       marginTop: SPACE.xs,
     },
     section: {
-      marginTop: SPACE.sm,
+      gap: SECTION_TITLE_GAP,
     },
     recentScroll: {
-      gap: SPACE.sm,
+      gap: LIST_GAP,
       paddingTop: SPACE.xs,
       paddingBottom: SPACE.xs,
     },
@@ -177,19 +300,37 @@ export function createLearnScreenStyles(
       width: LEARN_RECENT_TILE_WIDTH,
       height: LEARN_RECENT_TILE_HEIGHT,
       borderRadius: CARD_RADIUS,
-      borderWidth: StyleSheet.hairlineWidth,
+      borderWidth: 1,
       borderColor: c.border,
-      backgroundColor: cardBg,
-      padding: SPACE.sm,
+      backgroundColor: elevatedBg,
+      padding: SPACE.md,
       justifyContent: "space-between",
+      ...cardShadow,
     },
     recentTilePressed: {
       opacity: 0.9,
+    },
+    recentBadge: {
+      alignSelf: "flex-start",
+      minWidth: 28,
+      paddingHorizontal: 8,
+      paddingVertical: 3,
+      borderRadius: 8,
+      backgroundColor: c.accentSurface,
+      alignItems: "center",
     },
     recentNumber: {
       fontSize: typography.caption,
       fontFamily: "PlusJakartaSans-Bold",
       color: c.accent,
+    },
+    recentArabic: {
+      fontSize: typography.bodyMedium,
+      fontFamily: "PlusJakartaSans-Bold",
+      color: c.text,
+      textAlign: "right",
+      writingDirection: "rtl",
+      lineHeight: 24,
     },
     recentTitle: {
       fontSize: typography.caption,
@@ -206,92 +347,12 @@ export function createLearnScreenStyles(
       flexDirection: "row",
       alignItems: "center",
       gap: SPACE.sm,
-      paddingVertical: SPACE.md,
-    },
-    chipScroll: {
-      gap: SPACE.sm,
-      paddingBottom: SPACE.md,
-    },
-    chip: {
+      paddingVertical: SPACE.lg,
       paddingHorizontal: SPACE.md,
-      paddingVertical: 10,
-      borderRadius: 12,
-      borderWidth: StyleSheet.hairlineWidth,
+      borderRadius: CARD_RADIUS,
+      borderWidth: 1,
       borderColor: c.border,
-      backgroundColor: "transparent",
-      maxWidth: 220,
-      minHeight: MIN_TOUCH_TARGET - 4,
-      justifyContent: "center",
-    },
-    chipActive: {
-      backgroundColor: c.accent,
-      borderColor: c.accent,
-    },
-    chipText: {
-      fontSize: typography.body,
-      fontFamily: "PlusJakartaSans-SemiBold",
-      color: c.text,
-    },
-    chipTextActive: {
-      color: c.onAccent,
-    },
-    planHeader: {
-      marginBottom: SPACE.md,
-      gap: 4,
-    },
-    planTitle: {
-      fontSize: typography.title,
-      fontFamily: "PlusJakartaSans-Bold",
-      color: c.text,
-    },
-    planSub: {
-      fontSize: typography.body,
-      fontFamily: "PlusJakartaSans-Regular",
-      color: c.textMuted,
-      lineHeight: 20,
-    },
-    lessonList: {
-      marginTop: SPACE.xs,
-    },
-    lessonRow: {
-      flexDirection: "row",
-      alignItems: "center",
-      gap: SPACE.md,
-      paddingVertical: SPACE.md,
-      borderBottomWidth: StyleSheet.hairlineWidth,
-      borderBottomColor: c.divider,
-      minHeight: MIN_TOUCH_TARGET + 8,
-    },
-    lessonRowLocked: {
-      opacity: 0.52,
-    },
-    lessonRowPressed: {
-      opacity: 0.9,
-    },
-    lessonAccentBar: {
-      width: 3,
-      alignSelf: "stretch",
-      borderRadius: 2,
-      backgroundColor: c.accent,
-      marginVertical: 2,
-    },
-    lessonMeta: {
-      fontSize: typography.sectionTitle,
-      fontFamily: "PlusJakartaSans-Medium",
-      color: c.textMuted,
-      textTransform: "uppercase",
-      letterSpacing: 0.3,
-    },
-    lessonTitle: {
-      fontSize: typography.bodyMedium,
-      fontFamily: "PlusJakartaSans-SemiBold",
-      color: c.text,
-      lineHeight: 20,
-    },
-    completedBadge: {
-      fontSize: typography.caption,
-      fontFamily: "PlusJakartaSans-SemiBold",
-      color: c.accent,
+      backgroundColor: elevatedBg,
     },
   });
 }

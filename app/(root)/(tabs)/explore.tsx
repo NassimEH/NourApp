@@ -1,61 +1,41 @@
 ﻿/**
- * Écoute — architecture visuelle style Spotify (grille compacte, sections horizontales).
+ * Écoute — logique Spotify (chips + grille + reprise + rangées), design flat Nour.
  */
 
 import {
-  ScrollView,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
-  Dimensions,
   ActivityIndicator,
+  Image,
+  Pressable,
+  ScrollView,
+  Text,
+  View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { router } from "expo-router";
+import { router, useFocusEffect } from "expo-router";
 import { AppIcon, type AppIconName } from "@/components/AppIcon";
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 
+import { SectionHeader } from "@/components/SectionHeader";
+import { ScreenBackground } from "@/components/ScreenBackground";
+import { useGlobalContext } from "@/lib/global-provider";
+import { useAppTheme } from "@/lib/app-theme";
+import { useAppTypography } from "@/lib/app-typography";
+import { createExploreScreenStyles } from "@/lib/explore-screen-styles";
+import { useTranslation } from "@/lib/i18n";
+import { useLastListen } from "@/lib/quran/hooks/useLastListen";
 import { useSuraList } from "@/lib/quran/hooks/useSuraList";
 import { JUZ_TO_FIRST_SURA } from "@/lib/quran/juzMapping";
 import { useQuranAudioContext } from "@/lib/quran/QuranAudioContext";
 import { AVAILABLE_RECITERS } from "@/lib/quran/types";
-import { ScreenBackground } from "@/components/ScreenBackground";
-import {
-  SCREEN_EDGE_PADDING,
-  screenPageHeaderSpacing,
-  screenScrollContent,
-} from "@/constants/screen-layout";
-import { SectionHeader } from "@/components/SectionHeader";
-import { ScreenPageHeader } from "@/components/ScreenPageHeader";
-import { useTranslation } from "@/lib/i18n";
-import { useAppTheme, type AppThemeColors } from "@/lib/app-theme";
-import {
-  useAppTypography,
-  type AppTypography,
-} from "@/lib/app-typography";
-import { MIN_TOUCH_TARGET, SECTION_GAP } from "@/lib/ui/spacing";
-
-const H_PADDING = SCREEN_EDGE_PADDING;
-const GAP = 8;
-const SCROLL_PADDING_BOTTOM = 120;
 
 function useExploreStyles() {
   const colors = useAppTheme();
   const typography = useAppTypography();
   return useMemo(
-    () => createExploreStyles(colors, typography),
+    () => createExploreScreenStyles(colors, typography),
     [colors, typography]
   );
 }
-
-const { width: SCREEN_WIDTH } = Dimensions.get("window");
-const GRID_CARD_WIDTH = (SCREEN_WIDTH - H_PADDING * 2 - GAP) / 2;
-const GRID_CARD_HEIGHT = 56;
-const GRID_IMAGE_SIZE = 56;
-
-const FEATURED_CARD_WIDTH = 150;
-const FEATURED_CARD_HEIGHT = 200;
 
 type TabId = "tout" | "sourates" | "recitateurs" | "juz";
 
@@ -72,93 +52,136 @@ function useExploreTabs(): { id: TabId; label: string }[] {
   );
 }
 
-const FEATURED_RECITERS = AVAILABLE_RECITERS.slice(0, 4);
-
+const FEATURED_RECITERS = AVAILABLE_RECITERS.slice(0, 6);
 const JUZ_ITEMS = Array.from({ length: 30 }, (_, i) => i + 1);
 
-function usePlaySuraOnExplore() {
-  const audio = useQuranAudioContext();
-  return (suraNumber: number) => {
-    audio.playSura(suraNumber);
-  };
-}
-
-function CompactCard({
+function CompactTile({
   title,
   icon,
+  progress,
   onPress,
 }: {
   title: string;
   icon: AppIconName;
+  progress?: number;
   onPress: () => void;
 }) {
   const colors = useAppTheme();
   const styles = useExploreStyles();
+  const showProgress = progress != null && progress > 0 && progress < 1;
+
   return (
-    <TouchableOpacity
-      style={[styles.compactCard, { minHeight: MIN_TOUCH_TARGET }]}
+    <Pressable
       onPress={onPress}
-      activeOpacity={0.8}
+      style={({ pressed }) => [
+        styles.compactCard,
+        pressed && styles.compactCardPressed,
+      ]}
+      accessibilityRole="button"
     >
       <View style={styles.compactCardIconWrap}>
         <AppIcon name={icon} size={20} color={colors.accent} />
       </View>
-      <Text style={styles.compactCardTitle} numberOfLines={2}>
-        {title}
-      </Text>
-    </TouchableOpacity>
+      <View style={styles.compactCardBody}>
+        <Text style={styles.compactCardTitle} numberOfLines={2}>
+          {title}
+        </Text>
+        {showProgress ? (
+          <View style={styles.progressTrack}>
+            <View
+              style={[
+                styles.progressFill,
+                { width: `${Math.round(progress * 100)}%` },
+              ]}
+            />
+          </View>
+        ) : null}
+      </View>
+    </Pressable>
   );
 }
 
-function FeaturedAudioCard({
+function ResumeCard({
+  title,
+  subtitle,
+  onPress,
+}: {
+  title: string;
+  subtitle: string;
+  onPress: () => void;
+}) {
+  const colors = useAppTheme();
+  const styles = useExploreStyles();
+  const { t } = useTranslation();
+
+  return (
+    <Pressable
+      onPress={onPress}
+      style={({ pressed }) => [
+        styles.resumeCard,
+        pressed && styles.resumeCardPressed,
+      ]}
+      accessibilityRole="button"
+      accessibilityLabel={`${t("explore.resumePlay")}, ${title}`}
+    >
+      <View style={styles.resumeArt}>
+        <AppIcon name="headphones" size={36} color={colors.accent} />
+      </View>
+      <View style={styles.resumeBody}>
+        <View>
+          <Text style={styles.resumeEyebrow}>{t("explore.resumeEyebrow")}</Text>
+          <Text style={styles.resumeTitle} numberOfLines={2}>
+            {title}
+          </Text>
+          <Text style={styles.resumeSubtitle} numberOfLines={2}>
+            {subtitle}
+          </Text>
+        </View>
+        <View style={styles.resumeActions}>
+          <View style={styles.playBtn}>
+            <AppIcon name="play" size={18} color={colors.onAccent} />
+          </View>
+        </View>
+      </View>
+    </Pressable>
+  );
+}
+
+function SquareTile({
   title,
   subtitle,
   icon,
   onPress,
 }: {
   title: string;
-  subtitle: string;
+  subtitle?: string;
   icon: AppIconName;
   onPress: () => void;
 }) {
   const colors = useAppTheme();
   const styles = useExploreStyles();
+
   return (
-    <TouchableOpacity style={styles.featuredCard} onPress={onPress} activeOpacity={0.8}>
-      <View style={styles.featuredCardIconWrap}>
-        <AppIcon name={icon} size={28} color={colors.accent} />
+    <Pressable
+      onPress={onPress}
+      style={({ pressed }) => [
+        styles.squareTile,
+        pressed && styles.squareTilePressed,
+      ]}
+      accessibilityRole="button"
+    >
+      <View style={styles.squareArt}>
+        <AppIcon name={icon} size={36} color={colors.accent} />
       </View>
-      <Text style={styles.featuredCardTitle} numberOfLines={1}>
+      <Text style={styles.squareTitle} numberOfLines={1}>
         {title}
       </Text>
-      <Text style={styles.featuredCardSubtitle} numberOfLines={2}>
-        {subtitle}
-      </Text>
-    </TouchableOpacity>
-  );
-}
-
-function ReciterCard({
-  name,
-  tag,
-  onPress,
-}: {
-  name: string;
-  tag: string;
-  onPress: () => void;
-}) {
-  const colors = useAppTheme();
-  const styles = useExploreStyles();
-  return (
-    <TouchableOpacity style={styles.reciterCard} onPress={onPress} activeOpacity={0.8}>
-      <View style={styles.reciterAvatar}>
-        <AppIcon name="mic" size={32} color={colors.accent} />
-      </View>
-      <Text style={styles.reciterName} numberOfLines={1}>
-        {name}
-      </Text>
-      <Text style={styles.reciterTag}>{tag}</Text>
-    </TouchableOpacity>
+      {subtitle ? (
+        <Text style={styles.squareSubtitle} numberOfLines={1}>
+          {subtitle}
+        </Text>
+      ) : null}
+    </Pressable>
   );
 }
 
@@ -167,44 +190,119 @@ export default function ExploreScreen() {
   const colors = useAppTheme();
   const styles = useExploreStyles();
   const tabs = useExploreTabs();
+  const { user } = useGlobalContext();
   const [activeTab, setActiveTab] = useState<TabId>("tout");
   const { list: suras, loading } = useSuraList();
-  const playSura = usePlaySuraOnExplore();
+  const audio = useQuranAudioContext();
+  const { lastListen, refresh: refreshLastListen } = useLastListen();
 
-  const quickAccessSuras = useMemo(() => suras.slice(0, 8), [suras]);
-  const featuredSuras = useMemo(() => suras.slice(0, 6), [suras]);
-  const discoverSuras = useMemo(() => suras.slice(8, 14), [suras]);
+  useFocusEffect(
+    useCallback(() => {
+      void refreshLastListen();
+    }, [refreshLastListen])
+  );
+
+  const playSura = useCallback(
+    (suraNumber: number) => {
+      audio.playSura(suraNumber);
+    },
+    [audio]
+  );
+
+  const lastListenSura = useMemo(() => {
+    if (!lastListen || lastListen.timestamp <= 0) return null;
+    const meta = suras.find((s) => s.number === lastListen.suraNumber);
+    return {
+      number: lastListen.suraNumber,
+      name:
+        meta?.englishName ??
+        t("home.continueSuraFallback", { number: lastListen.suraNumber }),
+      nameAr: meta?.name,
+      progress: lastListen.progress,
+      subtitle:
+        lastListen.progress > 0
+          ? t("home.continueListenProgress", {
+              percent: Math.round(lastListen.progress * 100),
+            })
+          : t("home.continueListen"),
+    };
+  }, [lastListen, suras, t]);
+
+  const quickAccessSuras = useMemo(() => {
+    const result: {
+      number: number;
+      title: string;
+      progress?: number;
+    }[] = [];
+    const used = new Set<number>();
+
+    if (lastListenSura) {
+      result.push({
+        number: lastListenSura.number,
+        title: lastListenSura.name,
+        progress: lastListenSura.progress,
+      });
+      used.add(lastListenSura.number);
+    }
+
+    for (const s of suras) {
+      if (result.length >= 8) break;
+      if (used.has(s.number)) continue;
+      result.push({ number: s.number, title: s.englishName });
+      used.add(s.number);
+    }
+    return result;
+  }, [lastListenSura, suras]);
+
+  const featuredSuras = useMemo(() => suras.slice(0, 8), [suras]);
+  const discoverSuras = useMemo(() => suras.slice(8, 16), [suras]);
 
   const showSourates = activeTab === "tout" || activeTab === "sourates";
   const showJuz = activeTab === "tout" || activeTab === "juz";
   const showRecitateurs = activeTab === "tout" || activeTab === "recitateurs";
+  const showResume = showSourates && lastListenSura != null;
+
   return (
     <ScreenBackground style={styles.container}>
       <SafeAreaView style={styles.safeArea} edges={["top", "left", "right"]}>
-        <ScreenPageHeader
-          title={t("screens.exploreTitle")}
-          subtitle={t("screens.exploreSubtitle")}
-          style={screenPageHeaderSpacing}
-        />
-        <View style={styles.header}>
+        <View style={styles.topBar}>
+          <Pressable
+            onPress={() => router.push("/(root)/(tabs)/profile")}
+            accessibilityRole="button"
+            accessibilityLabel={t("tabs.profile")}
+            style={styles.avatarBtn}
+          >
+            <Image
+              source={{
+                uri:
+                  user?.avatar ??
+                  "https://ui-avatars.com/api/?name=U&size=80",
+              }}
+              style={styles.avatarImage}
+            />
+          </Pressable>
           <ScrollView
             horizontal
             showsHorizontalScrollIndicator={false}
+            style={styles.tabsScroll}
             contentContainerStyle={styles.tabsContent}
           >
             {tabs.map((tab) => {
               const isActive = activeTab === tab.id;
               return (
-                <TouchableOpacity
+                <Pressable
                   key={tab.id}
-                  style={[styles.tab, isActive && styles.tabActive]}
                   onPress={() => setActiveTab(tab.id)}
-                  activeOpacity={0.8}
+                  accessibilityRole="button"
+                  accessibilityState={{ selected: isActive }}
+                  style={[styles.tab, isActive && styles.tabActive]}
                 >
-                  <Text style={[styles.tabLabel, isActive && styles.tabLabelActive]}>
+                  <Text
+                    style={[styles.tabLabel, isActive && styles.tabLabelActive]}
+                  >
                     {tab.label}
                   </Text>
-                </TouchableOpacity>
+                </Pressable>
               );
             })}
           </ScrollView>
@@ -218,51 +316,86 @@ export default function ExploreScreen() {
           {showSourates && (
             <>
               {loading && suras.length === 0 ? (
-                <ActivityIndicator size="large" color={colors.accent} style={styles.loader} />
+                <ActivityIndicator
+                  size="large"
+                  color={colors.accent}
+                  style={styles.loader}
+                />
               ) : (
                 <View style={styles.compactGrid}>
                   {quickAccessSuras.map((sura) => (
-                    <CompactCard
+                    <CompactTile
                       key={sura.number}
-                      title={sura.englishName}
+                      title={sura.title}
                       icon="book-open"
+                      progress={sura.progress}
                       onPress={() => playSura(sura.number)}
                     />
                   ))}
                 </View>
               )}
-
-              <View style={styles.section}>
-                <SectionHeader
-                  title={t("explore.popularSuras")}
-                  onSeeAll={() => router.push("/(root)/(tabs)/coran/sourates")}
-                  seeAllLabel={t("library.seeAll")}
-                />
-                <ScrollView
-                  horizontal
-                  showsHorizontalScrollIndicator={false}
-                  contentContainerStyle={styles.horizontalScroll}
-                >
-                  {featuredSuras.map((sura) => (
-                    <FeaturedAudioCard
-                      key={sura.number}
-                      title={sura.englishName}
-                      subtitle={`${t("library.verseCount", { count: sura.numberOfAyahs })} • ${sura.revelationType === "Meccan" ? t("library.suraMeccan") : t("library.suraMedinan")}`}
-                      icon="book-open"
-                      onPress={() => playSura(sura.number)}
-                    />
-                  ))}
-                </ScrollView>
-              </View>
             </>
           )}
 
+          {showResume && lastListenSura ? (
+            <View style={[styles.section, styles.sectionFirst]}>
+              <SectionHeader
+                title={t("explore.resumeSection")}
+                style={styles.sectionHeader}
+              />
+              <ResumeCard
+                title={lastListenSura.name}
+                subtitle={lastListenSura.subtitle}
+                onPress={() => playSura(lastListenSura.number)}
+              />
+            </View>
+          ) : null}
+
+          {showSourates && featuredSuras.length > 0 && (
+            <View
+              style={[
+                styles.section,
+                !showResume && styles.sectionFirst,
+              ]}
+            >
+              <SectionHeader
+                title={t("explore.popularSuras")}
+                onSeeAll={() => router.push("/(root)/(tabs)/coran/sourates")}
+                seeAllLabel={t("library.seeAll")}
+                style={styles.sectionHeader}
+              />
+              <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                contentContainerStyle={styles.horizontalScroll}
+              >
+                {featuredSuras.map((sura) => (
+                  <SquareTile
+                    key={sura.number}
+                    title={sura.englishName}
+                    subtitle={t("library.verseCount", {
+                      count: sura.numberOfAyahs,
+                    })}
+                    icon="book-open"
+                    onPress={() => playSura(sura.number)}
+                  />
+                ))}
+              </ScrollView>
+            </View>
+          )}
+
           {showRecitateurs && (
-            <View style={styles.section}>
+            <View
+              style={[
+                styles.section,
+                !showSourates && styles.sectionFirst,
+              ]}
+            >
               <SectionHeader
                 title={t("explore.recitersSection")}
                 onSeeAll={() => router.push("/(root)/(tabs)/coran/recitateurs")}
                 seeAllLabel={t("library.seeAll")}
+                style={styles.sectionHeader}
               />
               <ScrollView
                 horizontal
@@ -270,10 +403,11 @@ export default function ExploreScreen() {
                 contentContainerStyle={styles.horizontalScroll}
               >
                 {FEATURED_RECITERS.map((r) => (
-                  <ReciterCard
+                  <SquareTile
                     key={r.id}
-                    name={r.name}
-                    tag={t(r.styleKey)}
+                    title={r.name}
+                    subtitle={t(r.styleKey)}
+                    icon="mic"
                     onPress={() =>
                       router.push({
                         pathname: "/(root)/(tabs)/coran/recitateur-detail",
@@ -287,25 +421,42 @@ export default function ExploreScreen() {
           )}
 
           {showJuz && (
-            <View style={styles.section}>
-              <SectionHeader title={t("explore.juzSection")} />
+            <View
+              style={[
+                styles.section,
+                !showSourates && !showRecitateurs && styles.sectionFirst,
+              ]}
+            >
+              <SectionHeader
+                title={t("explore.juzSection")}
+                style={styles.sectionHeader}
+              />
               <ScrollView
                 horizontal
                 showsHorizontalScrollIndicator={false}
                 contentContainerStyle={styles.horizontalScroll}
               >
-                {JUZ_ITEMS.slice(0, 10).map((n) => (
-                  <TouchableOpacity
+                {JUZ_ITEMS.slice(0, 12).map((n) => (
+                  <Pressable
                     key={n}
-                    style={styles.juzCard}
                     onPress={() => playSura(JUZ_TO_FIRST_SURA[n] ?? 1)}
-                    activeOpacity={0.8}
+                    style={({ pressed }) => [
+                      styles.juzTile,
+                      pressed && styles.squareTilePressed,
+                    ]}
+                    accessibilityRole="button"
                   >
-                    <View style={styles.juzIconWrap}>
-                      <AppIcon name="book-open" size={24} color={colors.accent} />
+                    <View style={styles.juzArt}>
+                      <AppIcon
+                        name="book-open"
+                        size={28}
+                        color={colors.accent}
+                      />
                     </View>
-                    <Text style={styles.juzNumber}>{`Juz' ${n}`}</Text>
-                  </TouchableOpacity>
+                    <Text style={styles.juzLabel}>
+                      {t("screens.juzNumber", { number: n })}
+                    </Text>
+                  </Pressable>
                 ))}
               </ScrollView>
             </View>
@@ -316,6 +467,7 @@ export default function ExploreScreen() {
               <SectionHeader
                 title={t("explore.discoverSection")}
                 onSeeAll={() => router.push("/(root)/(tabs)/coran/sourates")}
+                style={styles.sectionHeader}
               />
               <ScrollView
                 horizontal
@@ -323,10 +475,13 @@ export default function ExploreScreen() {
                 contentContainerStyle={styles.horizontalScroll}
               >
                 {discoverSuras.map((sura) => (
-                  <FeaturedAudioCard
+                  <SquareTile
                     key={sura.number}
                     title={sura.englishName}
-                    subtitle={`Sourate ${sura.number} • ${sura.numberOfAyahs} versets`}
+                    subtitle={t("explore.suraMeta", {
+                      number: sura.number,
+                      count: sura.numberOfAyahs,
+                    })}
                     icon="book-open"
                     onPress={() => playSura(sura.number)}
                   />
@@ -335,212 +490,9 @@ export default function ExploreScreen() {
             </View>
           )}
 
-          <View style={styles.bottomSpacer} />
+          <View style={styles.sectionTail} />
         </ScrollView>
       </SafeAreaView>
     </ScreenBackground>
   );
 }
-
-function createExploreStyles(c: AppThemeColors, typography: AppTypography) {
-  return StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  safeArea: {
-    flex: 1,
-  },
-  header: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingHorizontal: H_PADDING,
-    paddingVertical: 8,
-    gap: 12,
-  },
-  avatarWrap: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: c.accent,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  avatarText: {
-    fontFamily: "PlusJakartaSans-Bold",
-    fontSize: 16,
-    color: c.onAccent,
-  },
-  tabsContent: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-  },
-  tab: {
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    minHeight: MIN_TOUCH_TARGET,
-    justifyContent: "center",
-    borderRadius: 20,
-    backgroundColor: c.accentSurface,
-    borderWidth: 1.5,
-    borderColor: c.accentBorder,
-  },
-  tabActive: {
-    backgroundColor: c.accent,
-    borderColor: c.accent,
-  },
-  tabLabel: {
-    fontSize: typography.caption,
-    fontFamily: "PlusJakartaSans-Medium",
-    color: c.text,
-  },
-  tabLabelActive: {
-    color: c.onAccent,
-    fontFamily: "PlusJakartaSans-SemiBold",
-  },
-  scroll: {
-    flex: 1,
-  },
-  scrollContent: {
-    ...screenScrollContent,
-    paddingTop: 8,
-    paddingBottom: SCROLL_PADDING_BOTTOM,
-  },
-  loader: {
-    marginVertical: 40,
-  },
-  compactGrid: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: GAP,
-  },
-  compactCard: {
-    width: GRID_CARD_WIDTH,
-    height: GRID_CARD_HEIGHT,
-    backgroundColor: c.card,
-    borderRadius: 6,
-    flexDirection: "row",
-    alignItems: "center",
-    overflow: "hidden",
-    borderWidth: 1,
-    borderColor: c.border,
-  },
-  compactCardIconWrap: {
-    width: GRID_IMAGE_SIZE,
-    height: GRID_IMAGE_SIZE,
-    borderTopLeftRadius: 5,
-    borderBottomLeftRadius: 5,
-    backgroundColor: c.accentSurface,
-    borderRightWidth: 1,
-    borderRightColor: c.accentBorder,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  compactCardTitle: {
-    flex: 1,
-    fontFamily: "PlusJakartaSans-SemiBold",
-    fontSize: typography.caption,
-    color: c.text,
-    paddingHorizontal: 10,
-  },
-  section: {
-    marginTop: SECTION_GAP,
-  },
-  horizontalScroll: {
-    flexDirection: "row",
-    gap: 12,
-    paddingRight: H_PADDING,
-  },
-  featuredCard: {
-    width: FEATURED_CARD_WIDTH,
-    height: FEATURED_CARD_HEIGHT,
-    padding: 12,
-    borderRadius: 10,
-    borderWidth: 1,
-    borderColor: c.border,
-    backgroundColor: c.cardElevated,
-  },
-  featuredCardIconWrap: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    backgroundColor: c.accentSurface,
-    borderWidth: 1,
-    borderColor: c.accentBorder,
-    alignItems: "center",
-    justifyContent: "center",
-    marginBottom: 10,
-  },
-  featuredCardTitle: {
-    fontFamily: "PlusJakartaSans-SemiBold",
-    fontSize: typography.body,
-    color: c.text,
-    marginBottom: 4,
-  },
-  featuredCardSubtitle: {
-    fontFamily: "PlusJakartaSans-Regular",
-    fontSize: typography.caption,
-    color: c.textMuted,
-    lineHeight: 16,
-  },
-  reciterCard: {
-    width: 140,
-    alignItems: "center",
-    paddingVertical: 16,
-    paddingHorizontal: 12,
-    backgroundColor: c.card,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: c.border,
-  },
-  reciterAvatar: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    backgroundColor: c.accentSurface,
-    alignItems: "center",
-    justifyContent: "center",
-    marginBottom: 12,
-  },
-  reciterName: {
-    fontFamily: "PlusJakartaSans-SemiBold",
-    fontSize: typography.body,
-    color: c.text,
-    textAlign: "center",
-  },
-  reciterTag: {
-    fontFamily: "PlusJakartaSans-Regular",
-    fontSize: typography.caption,
-    color: c.textMuted,
-    marginTop: 4,
-  },
-  juzCard: {
-    width: 100,
-    alignItems: "center",
-    paddingVertical: 16,
-    paddingHorizontal: 8,
-    backgroundColor: c.card,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: c.border,
-  },
-  juzIconWrap: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    backgroundColor: c.accentSurface,
-    alignItems: "center",
-    justifyContent: "center",
-    marginBottom: 10,
-  },
-  juzNumber: {
-    fontFamily: "PlusJakartaSans-SemiBold",
-    fontSize: typography.caption,
-    color: c.text,
-  },
-  bottomSpacer: {
-    height: 100,
-  },
-  });
-}
-

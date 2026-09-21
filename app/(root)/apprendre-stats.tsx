@@ -27,6 +27,7 @@ export default function ApprendreStatsScreen() {
     streak: 0,
     weekDays: Array(7).fill(false),
     lastActiveDay: null,
+    activeDays: [],
   });
   const pct =
     totalLessons > 0 ? Math.round((totalCompleted / totalLessons) * 100) : 0;
