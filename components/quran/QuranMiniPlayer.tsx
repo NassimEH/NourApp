@@ -211,13 +211,21 @@ function createStyles(colors: ReturnType<typeof useAppTheme>) {
     },
     glassOuter: {
       width: "100%",
-      ...(Platform.OS === "android" && {
-        elevation: 12,
-        shadowColor: "#000",
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: colors.isDark ? 0.35 : 0.08,
-        shadowRadius: 20,
-      }),
+      ...(Platform.OS === "android"
+        ? {
+            elevation: 12,
+            shadowColor: "#000",
+            shadowOffset: { width: 0, height: 2 },
+            shadowOpacity: colors.isDark ? 0.35 : 0.08,
+            shadowRadius: 20,
+          }
+        : Platform.OS === "web"
+          ? {
+              boxShadow: colors.isDark
+                ? "0px 2px 20px rgba(0,0,0,0.35)"
+                : "0px 2px 20px rgba(0,0,0,0.08)",
+            }
+          : {}),
     },
     contentWrapper: {
       paddingHorizontal: 12,

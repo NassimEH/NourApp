@@ -2117,6 +2117,13 @@ const ar: TranslationMessages = {
     lessonsStat: "دروس",
     dailyObjective: "هدف الأسبوع",
     dailyObjectiveDone: "تحقق الهدف",
+    weekdayMon: "إثن",
+    weekdayTue: "ثلا",
+    weekdayWed: "أرب",
+    weekdayThu: "خمي",
+    weekdayFri: "جمع",
+    weekdaySat: "سبت",
+    weekdaySun: "أحد",
   },
   hadith: {
     notFound: "الحديث غير موجود",

@@ -1,5 +1,5 @@
-import { ReactNode } from "react";
-import { StyleSheet, View } from "react-native";
+import type { ReactNode } from "react";
+import { Platform, StyleSheet, View } from "react-native";
 
 export const ONBOARDING_PHONE_WIDTH = 268;
 export const ONBOARDING_PHONE_HEIGHT = 402;
@@ -14,7 +14,7 @@ export function OnboardingPhoneMockup({ children }: Props) {
     <View style={styles.shadowWrap}>
       <View style={styles.frame}>
         <View style={styles.content}>{children}</View>
-        <View style={styles.notch} pointerEvents="none" />
+        <View style={styles.notch} />
       </View>
     </View>
   );
@@ -22,11 +22,15 @@ export function OnboardingPhoneMockup({ children }: Props) {
 
 const styles = StyleSheet.create({
   shadowWrap: {
-    shadowColor: "#191D31",
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.1,
-    shadowRadius: 20,
-    elevation: 8,
+    ...(Platform.OS === "web"
+      ? { boxShadow: "0px 8px 20px rgba(25, 29, 49, 0.1)" }
+      : {
+          shadowColor: "#191D31",
+          shadowOffset: { width: 0, height: 8 },
+          shadowOpacity: 0.1,
+          shadowRadius: 20,
+          elevation: 8,
+        }),
     marginBottom: 4,
   },
   frame: {
@@ -49,6 +53,7 @@ const styles = StyleSheet.create({
     height: 5,
     borderRadius: 3,
     backgroundColor: "rgba(25, 29, 49, 0.12)",
+    pointerEvents: "none",
   },
 });
 

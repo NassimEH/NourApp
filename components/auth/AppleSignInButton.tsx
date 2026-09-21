@@ -28,8 +28,12 @@ export function AppleSignInButton({
 
   return (
     <View
-      style={[styles.wrapper, disabled && styles.wrapperDisabled, style]}
-      pointerEvents={disabled ? "none" : "auto"}
+      style={[
+        styles.wrapper,
+        disabled && styles.wrapperDisabled,
+        disabled && styles.wrapperNoPointer,
+        style,
+      ]}
     >
       <AppleAuthentication.AppleAuthenticationButton
         buttonType={AppleAuthentication.AppleAuthenticationButtonType.CONTINUE}
@@ -52,6 +56,9 @@ const styles = StyleSheet.create({
   },
   wrapperDisabled: {
     opacity: 0.55,
+  },
+  wrapperNoPointer: {
+    pointerEvents: "none",
   },
   button: {
     width: "100%",

@@ -69,9 +69,8 @@ export function ThemedGlassSurface({
       <View
         style={[
           StyleSheet.absoluteFill,
-          { backgroundColor: colors.glassOverlay, borderRadius },
+          { backgroundColor: colors.glassOverlay, borderRadius, pointerEvents: "none" },
         ]}
-        pointerEvents="none"
       />
       {children}
     </View>

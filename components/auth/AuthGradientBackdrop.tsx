@@ -17,7 +17,6 @@ function ScreenTopGradient({ enabled }: { enabled: boolean }) {
       ]}
       locations={[0, 0.35, 0.72]}
       style={styles.gradient}
-      pointerEvents="none"
     />
   );
 }
@@ -36,6 +35,7 @@ export function AuthGradientBackdrop() {
 
 const styles = StyleSheet.create({
   gradient: {
-    ...StyleSheet.absoluteFillObject,
+    ...StyleSheet.absoluteFill,
+    pointerEvents: "none",
   },
 });

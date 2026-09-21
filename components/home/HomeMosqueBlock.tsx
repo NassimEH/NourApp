@@ -326,7 +326,7 @@ export function HomeMosqueBlock({
                       pressed && styles.pressed,
                     ]}
                   />
-                  <View pointerEvents="none" style={styles.compactNameSide}>
+                  <View style={[styles.compactNameSide, styles.noPointer]}>
                     <View
                       style={[
                         styles.compactDotSlot,
@@ -352,9 +352,9 @@ export function HomeMosqueBlock({
                     </Text>
                   </View>
                   <View
-                    pointerEvents="none"
                     style={[
                       styles.compactCheckSide,
+                      styles.noPointer,
                       { width: imageW + 8 },
                     ]}
                   >
@@ -474,8 +474,7 @@ export function HomeMosqueBlock({
                     ]}
                   />
                   <View
-                    pointerEvents="none"
-                    style={[styles.prayerRowLeft, rtlViewStyle]}
+                    style={[styles.prayerRowLeft, styles.noPointer, rtlViewStyle]}
                   >
                     <View
                       style={[
@@ -504,7 +503,7 @@ export function HomeMosqueBlock({
                       {prayerTimes[key]}
                     </Text>
                   </View>
-                  <View pointerEvents="none" style={styles.prayerRowCheckbox}>
+                  <View style={[styles.prayerRowCheckbox, styles.noPointer]}>
                     <View
                       style={[
                         themed.checkbox,
@@ -679,6 +678,9 @@ const styles = StyleSheet.create({
   nextTextRow: {
     flexDirection: "row",
     alignItems: "center",
+  },
+  noPointer: {
+    pointerEvents: "none",
   },
   pressed: { opacity: 0.7 },
 });

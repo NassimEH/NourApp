@@ -60,7 +60,9 @@ export default function TabsLayout() {
           borderTopWidth: StyleSheet.hairlineWidth,
           borderTopColor: colors.border,
           elevation: 0,
-          shadowOpacity: 0,
+          ...(Platform.OS === "web"
+            ? { boxShadow: "none" }
+            : { shadowOpacity: 0 }),
           height: nativeTabBarHeight,
           paddingTop: NATIVE_TAB_TOP_PADDING,
           paddingBottom: nativeTabBottomInset,
@@ -102,7 +104,9 @@ export default function TabsLayout() {
           position: "absolute" as const,
           borderTopWidth: 0,
           elevation: 0,
-          shadowOpacity: 0,
+          ...(Platform.OS === "web"
+            ? { boxShadow: "none" }
+            : { shadowOpacity: 0 }),
           backgroundColor: "transparent",
         },
       };

@@ -19,15 +19,20 @@ async function cancelPrayerNotificationsOnly(): Promise<void> {
   }
 }
 
-Notifications.setNotificationHandler({
-  handleNotification: async () => ({
-    shouldShowAlert: true,
-    shouldPlaySound: await getAdhanEnabled(),
-    shouldSetBadge: false,
-    shouldShowBanner: true,
-    shouldShowList: true,
-  }),
-});
+function ensureNotificationHandler() {
+  if (Platform.OS === "web") return;
+  Notifications.setNotificationHandler({
+    handleNotification: async () => ({
+      shouldShowAlert: true,
+      shouldPlaySound: await getAdhanEnabled(),
+      shouldSetBadge: false,
+      shouldShowBanner: true,
+      shouldShowList: true,
+    }),
+  });
+}
+
+ensureNotificationHandler();
 
 export async function getAdhanEnabled(): Promise<boolean> {
   try {

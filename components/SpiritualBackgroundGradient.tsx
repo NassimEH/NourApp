@@ -8,7 +8,7 @@ import images from "@/constants/images";
  */
 export function SpiritualBackgroundGradient() {
   return (
-    <View style={styles.fill} pointerEvents="none">
+    <View style={styles.fill}>
       <Image
         source={images.background}
         style={styles.image}
@@ -22,10 +22,11 @@ export function SpiritualBackgroundGradient() {
 
 const styles = StyleSheet.create({
   fill: {
-    ...StyleSheet.absoluteFillObject,
+    ...StyleSheet.absoluteFill,
+    pointerEvents: "none",
   },
   image: {
-    ...StyleSheet.absoluteFillObject,
+    ...StyleSheet.absoluteFill,
     width: "100%",
     height: "100%",
   },

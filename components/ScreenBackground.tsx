@@ -44,7 +44,6 @@ export function ScreenBackground({
           source={images.background}
           style={styles.bgImage}
           resizeMode="cover"
-          pointerEvents="none"
           accessibilityElementsHidden
           importantForAccessibility="no-hide-descendants"
         />
@@ -62,11 +61,13 @@ const styles = StyleSheet.create({
     overflow: "hidden",
   },
   bgImage: {
-    ...StyleSheet.absoluteFillObject,
+    ...StyleSheet.absoluteFill,
+    width: "100%",
+    height: "100%",
     zIndex: 0,
   },
   foreground: {
-    flex: 1,
+    ...StyleSheet.absoluteFill,
     zIndex: 1,
     elevation: 1,
   },

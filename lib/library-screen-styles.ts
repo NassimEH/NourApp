@@ -68,6 +68,9 @@ export function createLibraryScreenStyles(
       zIndex: 2,
       pointerEvents: "none",
     },
+    overlayBoxNone: {
+      pointerEvents: "box-none",
+    },
     edgeFadeLeft: {
       left: 0,
     },

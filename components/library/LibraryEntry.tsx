@@ -212,13 +212,12 @@ export function LibraryHorizontalRow({
       </ScrollView>
 
       {showLeft ? (
-        <View pointerEvents="box-none" style={StyleSheet.absoluteFill}>
+        <View style={[StyleSheet.absoluteFill, styles.overlayBoxNone]}>
           <LinearGradient
             colors={[fadeColor, fadeClear]}
             start={{ x: 0, y: 0.5 }}
             end={{ x: 1, y: 0.5 }}
             style={[styles.edgeFade, styles.edgeFadeLeft]}
-            pointerEvents="none"
           />
           <Pressable
             accessibilityRole="button"
@@ -239,13 +238,12 @@ export function LibraryHorizontalRow({
       ) : null}
 
       {showRight ? (
-        <View pointerEvents="box-none" style={StyleSheet.absoluteFill}>
+        <View style={[StyleSheet.absoluteFill, styles.overlayBoxNone]}>
           <LinearGradient
             colors={[fadeClear, fadeColor]}
             start={{ x: 0, y: 0.5 }}
             end={{ x: 1, y: 0.5 }}
             style={[styles.edgeFade, styles.edgeFadeRight]}
-            pointerEvents="none"
           />
           <Pressable
             accessibilityRole="button"

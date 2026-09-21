@@ -16,8 +16,16 @@ export default function IndexScreen() {
 
   if (loading || !hydrated) {
     return (
-      <View style={styles.loading}>
-        <View
+      <View
+        style={[
+          styles.loading,
+          {
+            backgroundColor: colors.usesBackgroundImage
+              ? "transparent"
+              : colors.background,
+          },
+        ]}
+      >        <View
           style={[
             styles.loadingCard,
             {

@@ -37,9 +37,9 @@ export function TabBarChrome({ children }: { children: ReactNode }) {
           styles.container,
           {
             paddingBottom: paddingBottom + (Platform.OS === "ios" ? 10 : 8),
+            pointerEvents: "box-none",
           },
         ]}
-        pointerEvents="box-none"
       >
         {isPlayerVisible && audio && audio.currentSura != null ? (
           <View style={styles.miniPlayerWrap}>

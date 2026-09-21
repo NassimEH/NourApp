@@ -155,9 +155,9 @@ export default function QiblaToolScreen() {
                         }),
                       },
                     ],
+                    pointerEvents: "none",
                   },
                 ]}
-                pointerEvents="none"
               >
                 <View
                   style={[

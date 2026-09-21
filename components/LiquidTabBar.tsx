@@ -76,7 +76,13 @@ function GlassShell({
       backgroundColor: colors.isDark
         ? "rgba(40,40,42,0.28)"
         : "rgba(255,255,255,0.28)",
-      shadowOpacity: colors.isDark ? 0.28 : 0.1,
+      ...(Platform.OS === "web"
+        ? {
+            boxShadow: colors.isDark
+              ? "0px 8px 18px rgba(0,0,0,0.28)"
+              : "0px 8px 18px rgba(0,0,0,0.1)",
+          }
+        : { shadowOpacity: colors.isDark ? 0.28 : 0.1 }),
     },
   ];
 
@@ -103,8 +109,10 @@ function GlassShell({
         />
       ) : null}
       <View
-        pointerEvents="none"
-        style={[StyleSheet.absoluteFill, { backgroundColor: frost }]}
+        style={[
+          StyleSheet.absoluteFill,
+          { backgroundColor: frost, pointerEvents: "none" },
+        ]}
       />
       {children}
     </View>
@@ -154,7 +162,7 @@ export function LiquidTabBar({ state, navigation }: BottomTabBarProps) {
   );
 
   return (
-    <View style={styles.row} pointerEvents="box-none">
+    <View style={[styles.row, styles.rowBoxNone]}>
       <View style={styles.pillWrap}>
         <GlassShell>
           <View style={styles.pillInner}>
@@ -234,6 +242,9 @@ const styles = StyleSheet.create({
     gap: 10,
     paddingHorizontal: 2,
   },
+  rowBoxNone: {
+    pointerEvents: "box-none",
+  },
   pillWrap: {
     flex: 1,
     minWidth: 0,
@@ -244,10 +255,14 @@ const styles = StyleSheet.create({
     borderRadius: PILL_HEIGHT / 2,
     borderWidth: StyleSheet.hairlineWidth,
     overflow: "hidden",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 8 },
-    shadowRadius: 18,
-    elevation: 8,
+    ...(Platform.OS === "web"
+      ? { boxShadow: "0px 8px 18px rgba(0,0,0,0.12)" }
+      : {
+          shadowColor: "#000",
+          shadowOffset: { width: 0, height: 8 },
+          shadowRadius: 18,
+          elevation: 8,
+        }),
   },
   circlePress: {
     flexShrink: 0,
@@ -258,10 +273,14 @@ const styles = StyleSheet.create({
     borderRadius: CIRCLE_SIZE / 2,
     borderWidth: StyleSheet.hairlineWidth,
     overflow: "hidden",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 8 },
-    shadowRadius: 18,
-    elevation: 8,
+    ...(Platform.OS === "web"
+      ? { boxShadow: "0px 8px 18px rgba(0,0,0,0.12)" }
+      : {
+          shadowColor: "#000",
+          shadowOffset: { width: 0, height: 8 },
+          shadowRadius: 18,
+          elevation: 8,
+        }),
   },
   pillInner: {
     flex: 1,

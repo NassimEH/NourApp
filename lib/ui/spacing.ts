@@ -1,3 +1,5 @@
+import { Platform, type ViewStyle } from "react-native";
+
 /** Grille d'espacement (multiples de 4) — à utiliser à la place des valeurs magiques */
 export const SPACE = {
   xs: 8,
@@ -20,22 +22,42 @@ export const GLASS_RADIUS = 20;
 /** Pills pleine largeur (tab bar liquid) */
 export const PILL_RADIUS = 32;
 
-/** Ombres légères (light / dark) */
+type ShadowStyle = Pick<
+  ViewStyle,
+  | "boxShadow"
+  | "shadowColor"
+  | "shadowOffset"
+  | "shadowOpacity"
+  | "shadowRadius"
+  | "elevation"
+>;
+
+function platformShadow(
+  web: string,
+  native: Omit<ShadowStyle, "boxShadow">
+): ShadowStyle {
+  return Platform.select<ShadowStyle>({
+    web: { boxShadow: web },
+    default: native,
+  })!;
+}
+
+/** Ombres légères (light / dark) — boxShadow sur web, shadow* sur natif. */
 export const SHADOW = {
-  light: {
+  light: platformShadow("0px 2px 8px rgba(0,0,0,0.08)", {
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.08,
     shadowRadius: 8,
     elevation: 2,
-  },
-  dark: {
+  }),
+  dark: platformShadow("0px 2px 10px rgba(0,0,0,0.35)", {
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.35,
     shadowRadius: 10,
     elevation: 4,
-  },
+  }),
 } as const;
 
 /** Écart vertical entre sections d'un écran */
