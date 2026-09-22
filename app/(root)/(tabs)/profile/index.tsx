@@ -1,8 +1,7 @@
-﻿import { useCallback, useState } from "react";
+import { useCallback, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
-  Image,
   Linking,
   ScrollView,
   Share,
@@ -17,6 +16,7 @@ import * as Location from "expo-location";
 import { router, useFocusEffect, type Href } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { AppIcon, type AppIconName } from "@/components/AppIcon";
+import { AppImage } from "@/components/AppImage";
 
 import { getProfileAvatarUri, setProfileAvatarUri } from "@/lib/profile-avatar";
 import { useGlobalContext } from "@/lib/global-provider";
@@ -400,9 +400,11 @@ export default function ProfileScreen() {
                 ]}
               >
                 {(localAvatarUri ?? user?.avatar) ? (
-                  <Image
+                  <AppImage
                     source={{ uri: localAvatarUri ?? user?.avatar }}
                     style={styles.avatar}
+                    contentFit="cover"
+                    cachePolicy="memory-disk"
                   />
                 ) : null}
               </View>

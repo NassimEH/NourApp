@@ -20,8 +20,18 @@ import {
 import { getAppThemeColors } from "@/lib/app-theme";
 import { LocaleSync } from "@/components/LocaleSync";
 import { ScreenBackground } from "@/components/ScreenBackground";
+import { warmAppImages } from "@/lib/warm-app-images";
 
 SplashScreen.preventAutoHideAsync().catch(() => {});
+
+// Warm-up images après le 1er tick — ne pas bloquer le boot.
+setTimeout(() => {
+  try {
+    warmAppImages();
+  } catch {
+    // ignore
+  }
+}, 0);
 
 type BoundaryState = { error: Error | null };
 
@@ -56,12 +66,12 @@ function RootNavigation() {
   );
 
   return (
-    <View style={styles.navRoot}>
+    <View style={[styles.navRoot, { backgroundColor: colors.background }]}>
       <StatusBar style={colors.statusBarStyle} />
       <Stack
         screenOptions={{
           headerShown: false,
-          contentStyle: styles.stackContent,
+          contentStyle: { flex: 1, backgroundColor: colors.background },
         }}
       />
     </View>
@@ -124,10 +134,6 @@ const styles = StyleSheet.create({
   },
   navRoot: {
     flex: 1,
-  },
-  stackContent: {
-    flex: 1,
-    backgroundColor: "transparent",
   },
   errorRoot: {
     flex: 1,

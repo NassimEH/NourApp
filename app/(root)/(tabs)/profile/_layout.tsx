@@ -1,21 +1,15 @@
 import { Stack } from "expo-router";
 
+import { useAppTheme } from "@/lib/app-theme";
+
 export default function ProfileLayout() {
+  const colors = useAppTheme();
   return (
     <Stack
       screenOptions={{
         headerShown: false,
-        contentStyle: { backgroundColor: "transparent" },
+        contentStyle: { flex: 1, backgroundColor: colors.background },
       }}
-    >
-      <Stack.Screen name="index" />
-      <Stack.Screen name="theme" />
-      <Stack.Screen name="tab-bar" />
-      <Stack.Screen name="icon-style" />
-      <Stack.Screen name="text-size" />
-      <Stack.Screen name="accent" />
-      <Stack.Screen name="language" />
-      <Stack.Screen name="security" />
-    </Stack>
+    />
   );
 }

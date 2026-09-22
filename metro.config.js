@@ -1,3 +1,4 @@
+const path = require("path");
 const { getDefaultConfig } = require("expo/metro-config");
 const { withNativeWind } = require("nativewind/metro");
 
@@ -16,4 +17,32 @@ config.resolver.blockList = [
   /[\\/]node_modules[\\/]ws[\\/].*/,
 ];
 
-module.exports = withNativeWind(config, { input: "./app/global.css" });
+const withNw = withNativeWind(config, { input: "./app/global.css" });
+
+// Metro + packageExports doesn't follow nested package.json "main" for
+// react-native-css-interop/jsx-runtime (NativeWind JSX importSource).
+const CSS_INTEROP_JSX = {
+  "react-native-css-interop/jsx-runtime": path.resolve(
+    __dirname,
+    "node_modules/react-native-css-interop/dist/runtime/jsx-runtime.js"
+  ),
+  "react-native-css-interop/jsx-dev-runtime": path.resolve(
+    __dirname,
+    "node_modules/react-native-css-interop/dist/runtime/jsx-dev-runtime.js"
+  ),
+};
+
+const previousResolveRequest = withNw.resolver?.resolveRequest;
+withNw.resolver = withNw.resolver ?? {};
+withNw.resolver.resolveRequest = (context, moduleName, platform) => {
+  const aliased = CSS_INTEROP_JSX[moduleName];
+  if (aliased) {
+    return { type: "sourceFile", filePath: aliased };
+  }
+  if (previousResolveRequest) {
+    return previousResolveRequest(context, moduleName, platform);
+  }
+  return context.resolveRequest(context, moduleName, platform);
+};
+
+module.exports = withNw;

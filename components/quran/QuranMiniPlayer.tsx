@@ -1,6 +1,5 @@
-﻿import {
+import {
   Animated,
-  Image,
   Modal,
   Platform,
   Pressable,
@@ -10,6 +9,7 @@
   View,
 } from "react-native";
 import { AppIcon } from "@/components/AppIcon";
+import { AppImage } from "@/components/AppImage";
 import { useMemo, useState } from "react";
 import type { Reciter } from "@/lib/quran/types";
 import { useTranslation } from "@/lib/i18n";
@@ -97,7 +97,12 @@ export function QuranMiniPlayer({
             </View>
 
             <View style={styles.row}>
-              <Image source={quranArtwork} style={styles.artwork} />
+              <AppImage
+                source={quranArtwork}
+                style={styles.artwork}
+                contentFit="cover"
+                recyclingKey="quran-artwork"
+              />
 
               <Pressable style={styles.info} onPress={onPress}>
                 <Text style={styles.title} numberOfLines={1}>

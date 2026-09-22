@@ -1,4 +1,4 @@
-﻿import { useCallback, useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import {
   Alert,
   Image,
@@ -29,9 +29,11 @@ import { LearnPlanHeader } from "@/components/learn/LearnPlanHeader";
 import { LearnResumeCard } from "@/components/learn/LearnResumeCard";
 import { LearnWeekStrip } from "@/components/learn/LearnWeekStrip";
 import { ScreenBackground } from "@/components/ScreenBackground";
+import { ScreenPageHeader } from "@/components/ScreenPageHeader";
 import { SectionHeader } from "@/components/SectionHeader";
 import {
   SCREEN_EDGE_PADDING,
+  screenPageHeaderSpacing,
   screenScrollContent,
 } from "@/constants/screen-layout";
 import { useGlobalContext } from "@/lib/global-provider";
@@ -142,12 +144,6 @@ export default function ApprendreScreen() {
     }, [refetchRecent])
   );
 
-  const firstName = useMemo(() => {
-    const raw = user?.name?.trim();
-    if (!raw) return t("home.defaultUser");
-    return raw.split(/\s+/)[0] ?? raw;
-  }, [user?.name, t]);
-
   const recentSuras = useMemo(() => {
     const byNumber = new Map(suras.map((s) => [s.number, s]));
     return recentSuraNumbers
@@ -235,47 +231,47 @@ export default function ApprendreScreen() {
   return (
     <ScreenBackground style={ui.background}>
       <SafeAreaView style={ui.safeArea} edges={["top", "left", "right"]}>
+        <ScreenPageHeader
+          title={t("screens.learnTitle")}
+          subtitle={t("screens.learnSubtitle")}
+          style={screenPageHeaderSpacing}
+          rightElement={
+            <View style={homeStyles.headerRight}>
+              <View style={homeStyles.flamePill}>
+                <AppIcon name="zap" size={22} color={colors.accent} />
+                <Text style={homeStyles.flameValue}>{streak}</Text>
+              </View>
+              <Pressable
+                onPress={() => router.push("/(root)/apprendre-stats")}
+                accessibilityRole="button"
+                accessibilityLabel={t("learn.statsLabel")}
+                style={({ pressed }) => [
+                  homeStyles.statsBtn,
+                  pressed && { opacity: 0.85 },
+                ]}
+              >
+                <Image
+                  source={{
+                    uri:
+                      user?.avatar ??
+                      "https://ui-avatars.com/api/?name=U&size=80",
+                  }}
+                  style={homeStyles.avatar}
+                />
+              </Pressable>
+            </View>
+          }
+        />
         <ScrollView
           showsVerticalScrollIndicator={false}
           contentContainerStyle={[screenScrollContent, homeStyles.scrollContent]}
         >
-          <View style={homeStyles.header}>
-            <View style={homeStyles.headerTop}>
-              <Text style={homeStyles.greeting} numberOfLines={1}>
-                {t("learn.greetHello", { name: firstName })}
-              </Text>
-              <View style={homeStyles.headerRight}>
-                <View style={homeStyles.flamePill}>
-                  <AppIcon name="zap" size={22} color={colors.accent} />
-                  <Text style={homeStyles.flameValue}>{streak}</Text>
-                </View>
-                <Pressable
-                  onPress={() => router.push("/(root)/apprendre-stats")}
-                  accessibilityRole="button"
-                  accessibilityLabel={t("learn.statsLabel")}
-                  style={({ pressed }) => [
-                    homeStyles.statsBtn,
-                    pressed && { opacity: 0.85 },
-                  ]}
-                >
-                  <Image
-                    source={{
-                      uri:
-                        user?.avatar ??
-                        "https://ui-avatars.com/api/?name=U&size=80",
-                    }}
-                    style={homeStyles.avatar}
-                  />
-                </Pressable>
-              </View>
-            </View>
-            <View style={homeStyles.metaRow}>
-              <CoursePicker
-                courses={courses}
-                selectedCourseId={activeCourse?.id ?? PROPHETS_COURSE_ID}
-                onSelect={setSelectedCourseId}
-              />
-            </View>
+          <View style={homeStyles.metaRow}>
+            <CoursePicker
+              courses={courses}
+              selectedCourseId={activeCourse?.id ?? PROPHETS_COURSE_ID}
+              onSelect={setSelectedCourseId}
+            />
           </View>
 
           <View style={styles.tabsRow}>
@@ -447,17 +443,8 @@ function createHomeLearnStyles(colors: ReturnType<typeof useAppTheme>) {
   const cardShadow = colors.isDark ? SHADOW.dark : SHADOW.light;
   return StyleSheet.create({
     scrollContent: {
-      paddingTop: SPACE.sm,
+      paddingTop: SPACE.xs,
       paddingBottom: 120,
-    },
-    header: {
-      marginBottom: SPACE.md,
-    },
-    headerTop: {
-      flexDirection: "row",
-      alignItems: "center",
-      justifyContent: "space-between",
-      gap: SPACE.sm,
     },
     headerRight: {
       flexDirection: "row",
@@ -465,18 +452,11 @@ function createHomeLearnStyles(colors: ReturnType<typeof useAppTheme>) {
       gap: SPACE.sm,
       flexShrink: 0,
     },
-    greeting: {
-      flex: 1,
-      fontFamily: "PlusJakartaSans-Bold",
-      fontSize: 26,
-      lineHeight: 34,
-      color: colors.text,
-    },
     metaRow: {
       flexDirection: "row",
       alignItems: "center",
       gap: SPACE.sm,
-      marginTop: SPACE.xs,
+      marginBottom: SPACE.sm,
     },
     flamePill: {
       flexDirection: "row",

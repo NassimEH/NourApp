@@ -37,6 +37,7 @@ interface GlobalContextType {
 const GlobalContext = createContext<GlobalContextType | undefined>(undefined);
 
 const KEY_SYNC_PROMPT = "@louma_sync_prompt_done";
+const KEY_GUEST_MODE = "@louma_guest_mode";
 
 async function resolveGuestUser(): Promise<LocalUser> {
   return loadLocalUser();
@@ -92,23 +93,36 @@ export const GlobalProvider = ({ children }: { children: ReactNode }) => {
       if (sessionUser) {
         setUser(sessionUser);
         setIsGuest(false);
+        void AsyncStorage.removeItem(KEY_GUEST_MODE);
         if (syncPrompted.current !== sessionUser.id) {
           syncPrompted.current = sessionUser.id;
           void promptAndMaybeSync(sessionUser.id, locale);
         }
         return;
       }
-      if (isGuest) {
+
+      const guestFlag = await AsyncStorage.getItem(KEY_GUEST_MODE);
+      const guest = guestFlag === "1";
+      setIsGuest(guest);
+      if (guest) {
         setUser(await resolveGuestUser());
       } else {
         setUser(null);
       }
     } catch {
-      setUser(isGuest ? await resolveGuestUser() : null);
+      try {
+        const guestFlag = await AsyncStorage.getItem(KEY_GUEST_MODE);
+        const guest = guestFlag === "1";
+        setIsGuest(guest);
+        setUser(guest ? await resolveGuestUser() : null);
+      } catch {
+        setUser(null);
+        setIsGuest(false);
+      }
     } finally {
       setLoading(false);
     }
-  }, [isGuest, locale]);
+  }, [locale]);
 
   useEffect(() => {
     void refetch();
@@ -118,15 +132,16 @@ export const GlobalProvider = ({ children }: { children: ReactNode }) => {
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(() => {
-      if (!isGuest) void refetch();
+      void refetch();
     });
     return () => subscription.unsubscribe();
-  }, [isGuest, refetch]);
+  }, [refetch]);
 
   const enterAsGuest = useCallback(async () => {
     setLoading(true);
     try {
       await supabaseLogout();
+      await AsyncStorage.setItem(KEY_GUEST_MODE, "1");
       setIsGuest(true);
       setUser(await resolveGuestUser());
     } finally {
@@ -139,6 +154,7 @@ export const GlobalProvider = ({ children }: { children: ReactNode }) => {
     try {
       const ok = await supabaseLogout();
       if (!ok) return false;
+      await AsyncStorage.removeItem(KEY_GUEST_MODE);
       setIsGuest(false);
       setUser(null);
       syncPrompted.current = null;

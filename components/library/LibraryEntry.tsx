@@ -1,6 +1,5 @@
-﻿import { useCallback, useMemo, useRef, useState } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 import {
-  Image,
   NativeScrollEvent,
   NativeSyntheticEvent,
   Pressable,
@@ -13,6 +12,7 @@ import {
 import { LinearGradient } from "expo-linear-gradient";
 
 import { AppIcon } from "@/components/AppIcon";
+import { AppImage } from "@/components/AppImage";
 import { HomeSectionRule } from "@/components/home/HomeSectionRule";
 import { SCREEN_EDGE_PADDING } from "@/constants/screen-layout";
 import { useAppTheme } from "@/lib/app-theme";
@@ -89,10 +89,10 @@ export function LibraryMediaCard({
     >
       <View style={[styles.mediaFrame, { width, height: width }]}>
         {hasImage ? (
-          <Image
+          <AppImage
             source={item.image}
             style={styles.mediaImage}
-            resizeMode="cover"
+            contentFit="cover"
           />
         ) : (
           <LinearGradient

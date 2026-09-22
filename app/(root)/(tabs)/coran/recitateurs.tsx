@@ -1,4 +1,4 @@
-﻿import { ScrollView, StyleSheet } from "react-native";
+import { ScrollView, StyleSheet } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router } from "expo-router";
 
@@ -33,7 +33,7 @@ export default function RecitateursScreen() {
               subtitle={t(reciter.styleKey)}
               onPress={() =>
                 router.push({
-                  pathname: "/(root)/(tabs)/coran/recitateur-detail",
+                  pathname: "/(root)/recitateur-detail",
                   params: { id: reciter.id },
                 })
               }

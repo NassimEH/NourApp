@@ -14,8 +14,8 @@ type Props = {
 export function HomeSectionRule({ style }: Props) {
   const colors = useAppTheme();
   const mid = colors.isDark
-    ? "rgba(255,255,255,0.14)"
-    : "rgba(0,0,0,0.10)";
+    ? "rgba(255,255,255,0.20)"
+    : "rgba(0,0,0,0.15)";
   const edge = colors.isDark
     ? "rgba(255,255,255,0)"
     : "rgba(0,0,0,0)";
@@ -39,9 +39,8 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   line: {
-    width: "68%",
-    height: StyleSheet.hairlineWidth < 1 ? 1 : StyleSheet.hairlineWidth,
-    maxHeight: 1,
+    width: "70%",
+    height: 1.5,
     borderRadius: 1,
   },
 });

@@ -1,6 +1,7 @@
-import { Image, Pressable, StyleSheet, Text, View } from "react-native";
+import { Pressable, StyleSheet, Text, View } from "react-native";
 
 import { AppIcon } from "@/components/AppIcon";
+import { AppImage } from "@/components/AppImage";
 import { useAppTheme } from "@/lib/app-theme";
 import { CARD_RADIUS, SECTION_GAP, SHADOW, SPACE } from "@/lib/ui/spacing";
 
@@ -61,7 +62,12 @@ export function LearnHero({
             <AppIcon name="chevron-right" size={16} color={heroBg} />
           </View>
         </View>
-        <Image source={HERO_ART} style={styles.image} resizeMode="contain" />
+        <AppImage
+          source={HERO_ART}
+          style={styles.image}
+          contentFit="contain"
+          recyclingKey="learn-hero"
+        />
       </View>
     </Pressable>
   );

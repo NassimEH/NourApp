@@ -54,6 +54,8 @@ const DEFAULT_PREFS: AppPreferencesState = {
 };
 
 interface AppPreferencesContextType extends AppPreferencesState {
+  /** false tant que AsyncStorage n’a pas hydraté le thème */
+  prefsReady: boolean;
   setTheme: (v: ThemeMode) => void;
   setIconStyle: (v: IconStyleMode) => void;
   setTextSize: (v: TextSizeMode) => void;
@@ -106,10 +108,13 @@ async function saveStored(prefs: AppPreferencesState) {
 
 export function AppPreferencesProvider({ children }: { children: React.ReactNode }) {
   const [state, setState] = useState<AppPreferencesState>(DEFAULT_PREFS);
+  const [prefsReady, setPrefsReady] = useState(Platform.OS === "web");
   const hydrationPendingRef = useRef(true);
 
   useEffect(() => {
+    let cancelled = false;
     loadStored().then((stored) => {
+      if (cancelled) return;
       setState((prev) => {
         const hydrated = { ...DEFAULT_PREFS, ...stored };
         if (!hydrationPendingRef.current) {
@@ -118,7 +123,11 @@ export function AppPreferencesProvider({ children }: { children: React.ReactNode
         hydrationPendingRef.current = false;
         return hydrated;
       });
+      setPrefsReady(true);
     });
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   const persist = useCallback((next: Partial<AppPreferencesState>) => {
@@ -153,6 +162,7 @@ export function AppPreferencesProvider({ children }: { children: React.ReactNode
   const value = useMemo<AppPreferencesContextType>(
     () => ({
       ...state,
+      prefsReady,
       setTheme,
       setIconStyle,
       setTextSize,
@@ -164,6 +174,7 @@ export function AppPreferencesProvider({ children }: { children: React.ReactNode
     }),
     [
       state,
+      prefsReady,
       setTheme,
       setIconStyle,
       setTextSize,
@@ -174,6 +185,11 @@ export function AppPreferencesProvider({ children }: { children: React.ReactNode
       setQuranTranslationLang,
     ]
   );
+
+  // Attendre l’hydratation du thème pour éviter un frame « clair » incorrect.
+  if (!prefsReady) {
+    return null;
+  }
 
   return (
     <AppPreferencesContext.Provider value={value}>
@@ -187,6 +203,7 @@ export function useAppPreferences(): AppPreferencesContextType {
   if (!ctx) {
   return {
     ...DEFAULT_PREFS,
+    prefsReady: false,
     setTheme: () => {},
     setIconStyle: () => {},
     setTextSize: () => {},

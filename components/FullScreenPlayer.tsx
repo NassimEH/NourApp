@@ -8,13 +8,13 @@ import {
   Modal,
   TouchableOpacity,
   Text,
-  Image,
   PanResponder,
   ScrollView,
 } from "react-native";
 import { ThemedGlassSurface } from "@/components/ThemedGlassSurface";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { AppIcon } from "@/components/AppIcon";
+import { AppImage } from "@/components/AppImage";
 import { useAppTheme } from "@/lib/app-theme";
 import { useTranslation } from "@/lib/i18n";
 import type { Reciter } from "@/lib/quran/types";
@@ -306,7 +306,12 @@ export function FullScreenPlayer({
       </View>
 
       <View style={styles.fullPlayerArtworkWrap}>
-        <Image source={quranArtwork} style={styles.fullPlayerArtwork} />
+        <AppImage
+          source={quranArtwork}
+          style={styles.fullPlayerArtwork}
+          contentFit="cover"
+          recyclingKey="quran-artwork"
+        />
       </View>
 
       <View style={styles.fullPlayerInfo}>

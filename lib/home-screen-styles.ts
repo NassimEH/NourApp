@@ -10,10 +10,14 @@ export function createHomeStyles(c: AppThemeColors) {
       fontFamily: "PlusJakartaSans-Bold",
       color: c.text,
     },
-    welcomeDate: {
+    welcomeSubtitle: {
       fontFamily: "PlusJakartaSans-Medium",
-      color: c.text,
       marginTop: 6,
+    },
+    welcomeDate: {
+      fontFamily: "PlusJakartaSans-Regular",
+      color: c.textMuted,
+      marginTop: 4,
     },
     welcomePrayer: {
       fontFamily: "PlusJakartaSans-Medium",

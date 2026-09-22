@@ -182,10 +182,12 @@ function buildTheme(
   }
 
   // spiritual — fond illustré crème → pêche ; surfaces semi-opaques
+  // `background` doit rester opaque (jamais transparent) pour éviter le flash blanc
+  // des navigateurs natifs pendant les transitions.
   return {
     mode: "spiritual",
     isDark: false,
-    background: "transparent",
+    background: "#FAF7F2",
     backgroundSecondary: "#FAF7F2",
     text: lightText.text,
     textMuted: lightText.textMuted,

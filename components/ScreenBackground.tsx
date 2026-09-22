@@ -17,8 +17,8 @@ interface ScreenBackgroundProps {
 
 /**
  * Fond d’écran selon le thème.
- * L’image spirituelle est strictement en absolute + zIndex bas ;
- * le contenu est au-dessus (zIndex / elevation) pour éviter l’écran « fond seul ».
+ * Image RN (pas expo-image) : les tabs gardent plusieurs écrans montés ;
+ * un recyclingKey partagé faisait disparaître le fond sur Prières / Bibliothèque / Apprendre.
  */
 export function ScreenBackground({
   children,
@@ -32,9 +32,7 @@ export function ScreenBackground({
       style={[
         styles.root,
         {
-          backgroundColor: isSpiritual
-            ? colors.backgroundSecondary
-            : colors.background,
+          backgroundColor: colors.background,
         },
         style,
       ]}

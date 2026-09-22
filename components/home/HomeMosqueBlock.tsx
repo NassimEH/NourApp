@@ -29,7 +29,9 @@ const MOSQUE_IMAGE_HEIGHT_COMPACT = Math.round(
 );
 
 const PRAYER_KEYS = PRAYER_ORDER.filter((k) => k !== "Sunrise") as PrayerKey[];
-const COMPACT_ROW_H = 34;
+/** Hauteur fixe + gap régulier (évite space-evenly qui écrase le pied de carte). */
+const COMPACT_ROW_H = 32;
+const COMPACT_ROW_GAP = 2;
 
 export interface HomeMosqueBlockProps {
   prayerLoading: boolean;
@@ -89,14 +91,14 @@ export function HomeMosqueBlock({
             ? "transparent"
             : colors.card,
           borderRadius: compact ? 14 : 20,
-          paddingVertical: compact ? (fillHeight ? 10 : 6) : 16,
+          paddingVertical: compact ? 8 : 16,
           paddingHorizontal: compact ? 10 : 18,
           borderLeftWidth: 3,
           borderLeftColor: colors.accentBorder,
           alignSelf: "stretch",
           width: "100%",
           ...(compact && fillHeight
-            ? { flex: 1, justifyContent: "space-between" as const }
+            ? { flex: 1, justifyContent: "flex-start" as const }
             : {}),
         },
         hijri: {
@@ -181,7 +183,7 @@ export function HomeMosqueBlock({
         },
         divider: {
           height: StyleSheet.hairlineWidth,
-          marginVertical: compact ? (fillHeight ? 8 : 3) : 10,
+          marginVertical: compact ? 4 : 10,
           backgroundColor: colors.divider,
         },
         prayerRowCurrent: {
@@ -299,12 +301,7 @@ export function HomeMosqueBlock({
             style={styles.loaderCompact}
           />
         ) : prayerTimes ? (
-          <View
-            style={[
-              styles.compactPrayerBlock,
-              fillHeight && styles.compactPrayerBlockFill,
-            ]}
-          >
+          <View style={styles.compactPrayerBlock}>
             {PRAYER_KEYS.map((key) => {
               const checked = isPrayerChecked(key);
               const isCurrent = currentPrayerName === key;
@@ -313,7 +310,6 @@ export function HomeMosqueBlock({
                   key={key}
                   style={[
                     styles.compactPrayerRow,
-                    fillHeight && styles.compactPrayerRowFill,
                     isCurrent && themed.prayerRowCurrent,
                   ]}
                 >
@@ -383,7 +379,11 @@ export function HomeMosqueBlock({
           </Text>
         )}
 
-        {prayerTimes ? nextBlock : null}
+        {prayerTimes ? (
+          <View style={fillHeight ? styles.nextFooterPinned : undefined}>
+            {nextBlock}
+          </View>
+        ) : null}
       </View>
     );
 
@@ -627,11 +627,7 @@ const styles = StyleSheet.create({
   },
   compactPrayerBlock: {
     alignSelf: "stretch",
-  },
-  compactPrayerBlockFill: {
-    flex: 1,
-    justifyContent: "space-evenly",
-    paddingVertical: 4,
+    gap: COMPACT_ROW_GAP,
   },
   compactPrayerRow: {
     position: "relative",
@@ -639,10 +635,11 @@ const styles = StyleSheet.create({
     alignItems: "center",
     height: COMPACT_ROW_H,
   },
-  compactPrayerRowFill: {
-    height: undefined,
-    minHeight: COMPACT_ROW_H,
-    flexGrow: 1,
+  /** Colle le bloc « prochaine prière » en bas sans écraser la liste. */
+  nextFooterPinned: {
+    marginTop: "auto",
+    flexShrink: 0,
+    paddingTop: 2,
   },
   compactNameSide: {
     flex: 1,

@@ -1,4 +1,4 @@
-﻿import {
+import {
   ScrollView,
   StyleSheet,
   Text,
@@ -156,13 +156,25 @@ const HomeListHeader = React.memo(function HomeListHeader({
             </Text>
             <Text
               style={[
+                themed.welcomeSubtitle,
+                rtlTextStyle,
+                {
+                  fontSize: typography.subtitle,
+                  lineHeight: Math.round(typography.subtitle * 1.35),
+                  color: colors.textMuted,
+                },
+              ]}
+              numberOfLines={2}
+            >
+              {t("screens.homeSubtitle")}
+            </Text>
+            <Text
+              style={[
                 themed.welcomeDate,
                 rtlTextStyle,
                 {
-                  fontSize: typography.body,
-                  lineHeight: typography.body * 1.35,
-                  marginTop: 4,
-                  color: colors.textMuted,
+                  fontSize: typography.caption,
+                  lineHeight: typography.caption * 1.35,
                 },
               ]}
               numberOfLines={1}
@@ -205,11 +217,11 @@ const HomeListHeader = React.memo(function HomeListHeader({
 
         <HomeHadithDuJourSection />
 
-        <HomeContinueSection />
-
         <HomeToolsSection />
 
         <HomeRamadanBanner />
+
+        <HomeContinueSection />
       </View>
     </View>
   );

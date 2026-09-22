@@ -1,48 +1,47 @@
-﻿/**
- * Écoute — aligné Spotify :
- * 1) titre « Écoute »
- * 2) barre [avatar | chips]
- * 3) grille 2 cols cartes horizontales (cover | titre)
- */
-
-import {
-  ActivityIndicator,
-  Image,
-  Pressable,
-  ScrollView,
-  Text,
-  useWindowDimensions,
-  View,
-} from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
-import { router, useFocusEffect } from "expo-router";
-import { AppIcon } from "@/components/AppIcon";
-import { useCallback, useMemo, useState } from "react";
-
+import { CoverCaptionBand, COVER_FADE_HEIGHT_RATIO } from "@/components/explore/CoverCaptionBand";
+import { AppImage } from "@/components/AppImage";
+import { FeaturedListenHero } from "@/components/FeaturedListenHero";
 import { SectionHeader } from "@/components/SectionHeader";
 import { ScreenBackground } from "@/components/ScreenBackground";
-import { SCREEN_EDGE_PADDING } from "@/constants/screen-layout";
-import { useGlobalContext } from "@/lib/global-provider";
+import { ScreenPageHeader } from "@/components/ScreenPageHeader";
+import {
+  SCREEN_EDGE_PADDING,
+  screenPageHeaderSpacing,
+} from "@/constants/screen-layout";
 import { useAppTheme } from "@/lib/app-theme";
 import { useAppTypography } from "@/lib/app-typography";
 import {
   createExploreScreenStyles,
   GRID_COVER,
   GRID_GAP,
+  JUZ_TILE_SIZE,
+  SQUARE_TILE_SIZE,
 } from "@/lib/explore-screen-styles";
 import { useTranslation } from "@/lib/i18n";
 import { useLastListen } from "@/lib/quran/hooks/useLastListen";
 import { useSuraList } from "@/lib/quran/hooks/useSuraList";
 import { JUZ_TO_FIRST_SURA } from "@/lib/quran/juzMapping";
 import { useQuranAudioContext } from "@/lib/quran/QuranAudioContext";
+import { getReciterImageSource } from "@/lib/quran/reciter-profiles";
 import { AVAILABLE_RECITERS } from "@/lib/quran/types";
+import type { ImageSource } from "expo-image";
+import { useCallback, useMemo, useState } from "react";
+import {
+  ActivityIndicator,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  useWindowDimensions,
+  View,
+} from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { router, useFocusEffect } from "expo-router";
 
 const quranArtwork = require("@/assets/images/islamic-new-year-quran-book-with-dates-photo.jpg");
 
-const COVER_IMG = {
-  width: GRID_COVER,
-  height: GRID_COVER,
-} as const;
+const SQUARE_CAPTION_H = Math.round(SQUARE_TILE_SIZE * COVER_FADE_HEIGHT_RATIO);
+const JUZ_CAPTION_H = Math.round(JUZ_TILE_SIZE * COVER_FADE_HEIGHT_RATIO);
 
 function useExploreStyles() {
   const colors = useAppTheme();
@@ -50,11 +49,12 @@ function useExploreStyles() {
   const { width: windowWidth } = useWindowDimensions();
   const contentWidth = windowWidth - SCREEN_EDGE_PADDING * 2;
   const tileWidth = Math.floor((contentWidth - GRID_GAP) / 2);
-  return useMemo(
+  const styles = useMemo(
     () =>
       createExploreScreenStyles(colors, typography, { contentWidth, tileWidth }),
     [colors, typography, contentWidth, tileWidth]
   );
+  return { styles, contentWidth };
 }
 
 type TabId = "tout" | "sourates" | "recitateurs" | "juz";
@@ -91,21 +91,21 @@ function reciterInitials(name: string): string {
 }
 
 /**
- * Carte Spotify : layout dans un View interne.
- * Pressable (surtout web/<button>) ne doit PAS porter le flexDirection.
+ * Tuile compacte : cover plein cadre + fondu noir doux + titre blanc
+ * (même recette que SquareTile / Reprendre, hauteur = grille).
  */
 function CompactTile({
   title,
-  suraNumber,
+  subtitle,
   progress,
   onPress,
 }: {
   title: string;
-  suraNumber: number;
+  subtitle?: string;
   progress?: number;
   onPress: () => void;
 }) {
-  const styles = useExploreStyles();
+  const { styles } = useExploreStyles();
   const showProgress = progress != null && progress > 0 && progress < 1;
 
   return (
@@ -116,22 +116,27 @@ function CompactTile({
         pressed && styles.tilePressed,
       ]}
       accessibilityRole="button"
+      accessibilityLabel={subtitle ? `${title}, ${subtitle}` : title}
     >
       <View style={styles.tileInner}>
-        <View style={styles.tileCover}>
-          <Image
-            source={quranArtwork}
-            style={COVER_IMG}
-            resizeMode="cover"
-          />
-          <View style={styles.tileBadge}>
-            <Text style={styles.tileBadgeText}>{suraNumber}</Text>
-          </View>
-        </View>
-        <View style={styles.tileBody}>
-          <Text style={styles.tileTitle} numberOfLines={2}>
+        <AppImage
+          source={quranArtwork}
+          style={StyleSheet.absoluteFill}
+          contentFit="cover"
+          recyclingKey="explore-quran-cover"
+        />
+        <CoverCaptionBand
+          height={GRID_COVER}
+          contentStyle={styles.tileCaptionContent}
+        >
+          <Text style={styles.tileTitle} numberOfLines={1}>
             {title}
           </Text>
+          {subtitle ? (
+            <Text style={styles.tileSubtitle} numberOfLines={1}>
+              {subtitle}
+            </Text>
+          ) : null}
           {showProgress ? (
             <View style={styles.progressTrack}>
               <View
@@ -142,65 +147,15 @@ function CompactTile({
               />
             </View>
           ) : null}
-        </View>
+        </CoverCaptionBand>
       </View>
     </Pressable>
   );
 }
 
-function FeaturedListenHero({
-  title,
-  subtitle,
-  onPress,
-}: {
-  title: string;
-  subtitle: string;
-  onPress: () => void;
-}) {
-  const colors = useAppTheme();
-  const styles = useExploreStyles();
-  const { t } = useTranslation();
-
-  return (
-    <Pressable
-      onPress={onPress}
-      style={({ pressed }) => [
-        styles.heroCard,
-        pressed && styles.heroCardPressed,
-      ]}
-      accessibilityRole="button"
-      accessibilityLabel={`${t("explore.resumePlay")}, ${title}`}
-    >
-      <View style={styles.heroMedia}>
-        <Image
-          source={quranArtwork}
-          style={styles.heroMediaImage}
-          resizeMode="cover"
-        />
-        <View style={styles.heroOverlay} />
-        <View style={styles.heroPlayBtn} pointerEvents="none">
-          <AppIcon name="play" size={22} color={colors.onAccent} />
-        </View>
-      </View>
-      <View style={styles.heroMeta}>
-        <Image
-          source={quranArtwork}
-          style={styles.heroThumb}
-          resizeMode="cover"
-        />
-        <View style={styles.heroMetaText}>
-          <Text style={styles.heroTitle} numberOfLines={1}>
-            {title}
-          </Text>
-          <Text style={styles.heroSubtitle} numberOfLines={1}>
-            {subtitle}
-          </Text>
-        </View>
-      </View>
-    </Pressable>
-  );
-}
-
+/**
+ * Cadre carré — cover + blur progressif + typo premium blanche.
+ */
 function SquareTile({
   title,
   subtitle,
@@ -209,10 +164,24 @@ function SquareTile({
 }: {
   title: string;
   subtitle?: string;
-  art: { type: "image" } | { type: "initials"; label: string };
+  art:
+    | { type: "image" }
+    | { type: "source"; source: ImageSource; fallbackLabel?: string }
+    | { type: "initials"; label: string };
   onPress: () => void;
 }) {
-  const styles = useExploreStyles();
+  const colors = useAppTheme();
+  const { styles } = useExploreStyles();
+  const { rtlTextStyle } = useTranslation();
+  const [sourceFailed, setSourceFailed] = useState(false);
+
+  const showSource = art.type === "source" && !sourceFailed;
+  const initialsLabel =
+    art.type === "initials"
+      ? art.label
+      : art.type === "source"
+        ? (art.fallbackLabel ?? "?")
+        : "?";
 
   return (
     <Pressable
@@ -222,26 +191,50 @@ function SquareTile({
         pressed && styles.squareTilePressed,
       ]}
       accessibilityRole="button"
+      accessibilityLabel={subtitle ? `${title}, ${subtitle}` : title}
     >
       <View style={styles.squareArt}>
         {art.type === "image" ? (
-          <Image
+          <AppImage
             source={quranArtwork}
             style={styles.squareArtImage}
-            resizeMode="cover"
+            contentFit="cover"
+            recyclingKey="explore-quran-cover"
+          />
+        ) : showSource ? (
+          <AppImage
+            source={art.source}
+            style={styles.squareArtImage}
+            contentFit="cover"
+            onError={() => setSourceFailed(true)}
           />
         ) : (
-          <Text style={styles.squareArtInitials}>{art.label}</Text>
+          <View
+            style={[
+              styles.squareArtFallback,
+              { backgroundColor: colors.accentSurface },
+            ]}
+          >
+            <Text style={[styles.squareArtInitials, { color: colors.accent }]}>
+              {initialsLabel}
+            </Text>
+          </View>
         )}
+        <CoverCaptionBand height={SQUARE_CAPTION_H}>
+          <Text style={[styles.squareTitle, rtlTextStyle]} numberOfLines={2}>
+            {title}
+          </Text>
+          {subtitle ? (
+            <Text
+              style={[styles.squareSubtitle, rtlTextStyle]}
+              numberOfLines={1}
+            >
+              {subtitle}
+            </Text>
+          ) : null}
+        </CoverCaptionBand>
+        <View style={styles.squareRim} pointerEvents="none" />
       </View>
-      <Text style={styles.squareTitle} numberOfLines={1}>
-        {title}
-      </Text>
-      {subtitle ? (
-        <Text style={styles.squareSubtitle} numberOfLines={1}>
-          {subtitle}
-        </Text>
-      ) : null}
     </Pressable>
   );
 }
@@ -249,9 +242,8 @@ function SquareTile({
 export default function ExploreScreen() {
   const { t } = useTranslation();
   const colors = useAppTheme();
-  const styles = useExploreStyles();
+  const { styles, contentWidth } = useExploreStyles();
   const tabs = useExploreTabs();
-  const { user } = useGlobalContext();
   const [activeTab, setActiveTab] = useState<TabId>("tout");
   const { list: suras, loading } = useSuraList();
   const audio = useQuranAudioContext();
@@ -278,19 +270,17 @@ export default function ExploreScreen() {
   const lastListenSura = useMemo(() => {
     if (!lastListen || lastListen.timestamp <= 0) return null;
     const meta = suras.find((s) => s.number === lastListen.suraNumber);
-    const progressLabel =
-      lastListen.progress > 0
-        ? t("home.continueListenProgress", {
-            percent: Math.round(lastListen.progress * 100),
-          })
-        : t("home.continueListen");
     return {
       number: lastListen.suraNumber,
       name:
         meta?.englishName ??
         t("home.continueSuraFallback", { number: lastListen.suraNumber }),
       progress: lastListen.progress,
-      subtitle: `${currentReciterName} · ${progressLabel}`,
+      progressLabel:
+        lastListen.progress > 0
+          ? `${Math.round(lastListen.progress * 100)} %`
+          : undefined,
+      reciter: currentReciterName,
     };
   }, [lastListen, suras, t, currentReciterName]);
 
@@ -314,7 +304,10 @@ export default function ExploreScreen() {
     for (const s of suras) {
       if (result.length >= 8) break;
       if (used.has(s.number)) continue;
-      result.push({ number: s.number, title: s.englishName });
+      result.push({
+        number: s.number,
+        title: s.englishName,
+      });
       used.add(s.number);
     }
     return result;
@@ -346,28 +339,13 @@ export default function ExploreScreen() {
   return (
     <ScreenBackground style={styles.container}>
       <SafeAreaView style={styles.safeArea} edges={["top", "left", "right"]}>
-        <Text style={styles.pageTitle} numberOfLines={1}>
-          {t("screens.exploreTitle")}
-        </Text>
+        <ScreenPageHeader
+          title={t("screens.exploreTitle")}
+          subtitle={t("screens.exploreSubtitle")}
+          style={screenPageHeaderSpacing}
+        />
 
         <View style={styles.topBar}>
-          <Pressable
-            onPress={() => router.push("/(root)/(tabs)/profile")}
-            accessibilityRole="button"
-            accessibilityLabel={t("tabs.profile")}
-            style={styles.avatarBtn}
-            hitSlop={8}
-          >
-            <Image
-              source={{
-                uri:
-                  user?.avatar ??
-                  "https://ui-avatars.com/api/?name=U&size=80",
-              }}
-              style={styles.avatarImage}
-            />
-          </Pressable>
-
           <ScrollView
             horizontal
             showsHorizontalScrollIndicator={false}
@@ -419,7 +397,9 @@ export default function ExploreScreen() {
                         <CompactTile
                           key={sura.number}
                           title={sura.title}
-                          suraNumber={sura.number}
+                          subtitle={t("home.continueSuraFallback", {
+                            number: sura.number,
+                          })}
                           progress={sura.progress}
                           onPress={() => playSura(sura.number)}
                         />
@@ -444,7 +424,10 @@ export default function ExploreScreen() {
               />
               <FeaturedListenHero
                 title={lastListenSura.name}
-                subtitle={lastListenSura.subtitle}
+                reciter={lastListenSura.reciter}
+                progressLabel={lastListenSura.progressLabel}
+                progress={lastListenSura.progress}
+                contentWidth={contentWidth}
                 onPress={() => playSura(lastListenSura.number)}
               />
             </View>
@@ -466,20 +449,34 @@ export default function ExploreScreen() {
                 showsHorizontalScrollIndicator={false}
                 contentContainerStyle={styles.horizontalScroll}
               >
-                {FEATURED_RECITERS.map((r) => (
-                  <SquareTile
-                    key={r.id}
-                    title={r.name}
-                    subtitle={t(r.styleKey)}
-                    art={{ type: "initials", label: reciterInitials(r.name) }}
-                    onPress={() =>
-                      router.push({
-                        pathname: "/(root)/(tabs)/coran/recitateur-detail",
-                        params: { id: r.id },
-                      })
-                    }
-                  />
-                ))}
+                {FEATURED_RECITERS.map((r) => {
+                  const image = getReciterImageSource(r.id);
+                  return (
+                    <SquareTile
+                      key={r.id}
+                      title={r.name}
+                      subtitle={t(r.styleKey)}
+                      art={
+                        image
+                          ? {
+                              type: "source",
+                              source: image,
+                              fallbackLabel: reciterInitials(r.name),
+                            }
+                          : {
+                              type: "initials",
+                              label: reciterInitials(r.name),
+                            }
+                      }
+                      onPress={() =>
+                        router.push({
+                          pathname: "/(root)/recitateur-detail",
+                          params: { id: r.id },
+                        })
+                      }
+                    />
+                  );
+                })}
               </ScrollView>
             </View>
           )}
@@ -540,13 +537,23 @@ export default function ExploreScreen() {
                       pressed && styles.squareTilePressed,
                     ]}
                     accessibilityRole="button"
+                    accessibilityLabel={t("screens.juzNumber", { number: n })}
                   >
                     <View style={styles.juzArt}>
-                      <Text style={styles.juzNumber}>{n}</Text>
+                      <AppImage
+                        source={quranArtwork}
+                        style={StyleSheet.absoluteFill}
+                        contentFit="cover"
+                        recyclingKey="explore-quran-cover"
+                      />
+                      <CoverCaptionBand height={JUZ_CAPTION_H}>
+                        <Text style={styles.juzNumber}>{n}</Text>
+                        <Text style={styles.juzLabel} numberOfLines={1}>
+                          {t("screens.juzNumber", { number: n })}
+                        </Text>
+                      </CoverCaptionBand>
+                      <View style={styles.squareRim} pointerEvents="none" />
                     </View>
-                    <Text style={styles.juzLabel}>
-                      {t("screens.juzNumber", { number: n })}
-                    </Text>
                   </Pressable>
                 ))}
               </ScrollView>

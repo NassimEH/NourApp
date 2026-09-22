@@ -1,4 +1,4 @@
-﻿import { BlurView } from "expo-blur";
+import { BlurView } from "expo-blur";
 import { Tabs } from "expo-router";
 import { Platform, StyleSheet } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -7,7 +7,6 @@ import { AppIcon } from "@/components/AppIcon";
 import BottomBar from "@/components/BottomBar";
 import LiquidBottomBar from "@/components/LiquidBottomBar";
 import { useTabBarPreference } from "@/lib/tab-bar-preference";
-import { QuranAudioProvider } from "@/lib/quran/QuranAudioContext";
 import { useAppTheme } from "@/lib/app-theme";
 import { useTranslation } from "@/lib/i18n";
 
@@ -51,9 +50,7 @@ export default function TabsLayout() {
     ? {
         headerShown: false,
         sceneContainerStyle: {
-          backgroundColor: colors.usesBackgroundImage
-            ? "transparent"
-            : colors.background,
+          backgroundColor: colors.background,
         },
         tabBarStyle: {
           position: "absolute" as const,
@@ -96,9 +93,7 @@ export default function TabsLayout() {
     : {
         headerShown: false,
         sceneContainerStyle: {
-          backgroundColor: colors.usesBackgroundImage
-            ? "transparent"
-            : colors.background,
+          backgroundColor: colors.background,
         },
         tabBarStyle: {
           position: "absolute" as const,
@@ -117,7 +112,6 @@ export default function TabsLayout() {
   };
 
   return (
-    <QuranAudioProvider>
       <Tabs
         initialRouteName="index"
         tabBar={
@@ -147,6 +141,5 @@ export default function TabsLayout() {
       <Tabs.Screen name="explore" options={{ title: t("tabs.explore") }} />
       <Tabs.Screen name="profile" options={{ title: t("tabs.profile") }} />
       </Tabs>
-    </QuranAudioProvider>
   );
 }
